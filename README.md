@@ -1,4 +1,4 @@
-# pyxmss
+# QRL Fast
 
 ## Compiling
 

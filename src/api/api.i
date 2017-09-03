@@ -1,4 +1,4 @@
-%module pyqrl
+%module pyqrlfast
 
 %{
     #include "api.h"

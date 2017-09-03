@@ -10,7 +10,7 @@ unset(SWIG_LANG_TYPE)
 
 # Python related stuff
 set(language python)
-find_package(PythonLibs REQUIRED)
+find_package(PythonLibs 2.7 REQUIRED)
 include_directories(${PYTHON_INCLUDE_PATH})
 set(SWIG_LANG_LIBRARIES ${PYTHON_LIBRARIES})
 #############
@@ -89,21 +89,31 @@ add_executable(qrlfast_test
 target_link_libraries(qrlfast_test gtest_main)
 
 # SWIG + API
+set(CMAKE_SWIG_OUTDIR ${CMAKE_CURRENT_SOURCE_DIR}/pyqrlfast)
 set_source_files_properties(${SWIG_INTERFACE} PROPERTIES CPLUSPLUS ON)
 set_source_files_properties(${SWIG_INTERFACE} PROPERTIES SWIG_FLAGS "-includeall")
-SWIG_ADD_LIBRARY(pyqrl
+SWIG_ADD_LIBRARY(pyqrlfast
         LANGUAGE "${language}"
         ${SWIG_LANG_TYPE}
         SOURCES ${SWIG_INTERFACE}
         src/api/api.cxx
         ${LIB_SRC}
         ${LIBXMSSREF_SRC})
-SWIG_LINK_LIBRARIES(pyqrl ${SWIG_LANG_LIBRARIES} ${OPENSSL_LIBRARIES})
+SWIG_LINK_LIBRARIES(pyqrlfast ${SWIG_LANG_LIBRARIES} ${OPENSSL_LIBRARIES})
 
-add_dependencies(testlib prepareXMSSParams)
-
+add_dependencies(qrlfast_test prepareXMSSParams)
+add_dependencies(${SWIG_MODULE_pyqrlfast_REAL_NAME} prepareXMSSParams)
 
 # DEPLOYMENT
+
+add_custom_command(TARGET ${SWIG_MODULE_pyqrlfast_REAL_NAME}
+        POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E cmake_echo_color --cyan $<TARGET_FILE:${SWIG_MODULE_pyqrlfast_REAL_NAME}>
+        COMMENT "Moving SWIG files to output dir"
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different $<TARGET_FILE:${SWIG_MODULE_pyqrlfast_REAL_NAME}> ${CMAKE_CURRENT_SOURCE_DIR}/pyqrlfast
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different $<TARGET_FILE:${SWIG_MODULE_pyqrlfast_REAL_NAME}> ${CMAKE_CURRENT_SOURCE_DIR}/pyqrlfast
+        )
+
 # Get python packages destination
 #execute_process(COMMAND python -c "from distutils.sysconfig import get_python_lib; print get_python_lib()"
 #                OUTPUT_VARIABLE PYTHON_SITE_PACKAGES OUTPUT_STRIP_TRAILING_WHITESPACE)

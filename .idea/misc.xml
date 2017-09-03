@@ -3,6 +3,7 @@
   <component name="CMakeWorkspace" PROJECT_DIR="$PROJECT_DIR$" />
   <component name="CidrRootsConfiguration">
     <sourceRoots>
+      <file path="$PROJECT_DIR$/pyqrlfast" />
       <file path="$PROJECT_DIR$/src" />
       <file path="$PROJECT_DIR$/xmss-reference" />
       <file path="$PROJECT_DIR$/xmss-reference_patch" />
