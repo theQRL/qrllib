@@ -7,13 +7,7 @@ set(CMAKE_VERBOSE_MAKEFILE ON)
 find_package(SWIG REQUIRED)
 INCLUDE(${SWIG_USE_FILE})
 unset(SWIG_LANG_TYPE)
-
-# Python related stuff
-set(language python)
-find_package(PythonLibs 2.7 REQUIRED)
-include_directories(${PYTHON_INCLUDE_PATH})
-set(SWIG_LANG_LIBRARIES ${PYTHON_LIBRARIES})
-#############
+find_package(OpenSSL REQUIRED)
 
 include_directories(
         ${CMAKE_CURRENT_SOURCE_DIR}/src/api
@@ -78,7 +72,6 @@ endif()
 
 
 # LIBRARY RELATED
-find_package(OpenSSL REQUIRED)
 
 # Test library
 add_executable(qrlfast_test
@@ -88,7 +81,13 @@ add_executable(qrlfast_test
 
 target_link_libraries(qrlfast_test gtest_main)
 
-# SWIG + API
+
+
+## SWIG + API - Python related stuff
+set(language python)
+find_package(PythonLibs 2.7 REQUIRED)
+include_directories(${PYTHON_INCLUDE_PATH})
+set(SWIG_LANG_LIBRARIES ${PYTHON_LIBRARIES})
 set(CMAKE_SWIG_OUTDIR ${CMAKE_CURRENT_SOURCE_DIR}/pyqrlfast)
 set_source_files_properties(${SWIG_INTERFACE} PROPERTIES CPLUSPLUS ON)
 set_source_files_properties(${SWIG_INTERFACE} PROPERTIES SWIG_FLAGS "-includeall")
@@ -101,25 +100,50 @@ SWIG_ADD_LIBRARY(pyqrlfast
         ${LIBXMSSREF_SRC})
 SWIG_LINK_LIBRARIES(pyqrlfast ${SWIG_LANG_LIBRARIES} ${OPENSSL_LIBRARIES})
 
+
+# SWIG + API - Golang related stuff
+set(language go)
+#find_package(go 1.5 REQUIRED)
+#include_directories(${PYTHON_INCLUDE_PATH})
+set(SWIG_LANG_LIBRARIES ${PYTHON_LIBRARIES})
+set(CMAKE_SWIG_OUTDIR ${CMAKE_CURRENT_SOURCE_DIR}/goqrlfast)
+set_source_files_properties(${SWIG_INTERFACE} PROPERTIES CPLUSPLUS ON)
+set_property(SOURCE ${SWIG_INTERFACE} PROPERTY SWIG_FLAGS "-includeall" "-intgosize" "64")
+SWIG_ADD_LIBRARY(goqrlfast
+        LANGUAGE "${language}"
+        ${SWIG_LANG_TYPE}
+        SOURCES ${SWIG_INTERFACE}
+        src/api/api.cxx
+        ${LIB_SRC}
+        ${LIBXMSSREF_SRC})
+SWIG_LINK_LIBRARIES(goqrlfast ${SWIG_LANG_LIBRARIES} ${OPENSSL_LIBRARIES})
+
+
+
+# Connecting dependencies
 add_dependencies(qrlfast_test prepareXMSSParams)
 add_dependencies(${SWIG_MODULE_pyqrlfast_REAL_NAME} prepareXMSSParams)
+add_dependencies(${SWIG_MODULE_goqrlfast_REAL_NAME} prepareXMSSParams)
+
 
 # DEPLOYMENT
-
 add_custom_command(TARGET ${SWIG_MODULE_pyqrlfast_REAL_NAME}
         POST_BUILD
         COMMAND ${CMAKE_COMMAND} -E cmake_echo_color --cyan $<TARGET_FILE:${SWIG_MODULE_pyqrlfast_REAL_NAME}>
         COMMENT "Moving SWIG files to output dir"
         COMMAND ${CMAKE_COMMAND} -E copy_if_different $<TARGET_FILE:${SWIG_MODULE_pyqrlfast_REAL_NAME}> ${CMAKE_CURRENT_SOURCE_DIR}/pyqrlfast
-        COMMAND ${CMAKE_COMMAND} -E copy_if_different $<TARGET_FILE:${SWIG_MODULE_pyqrlfast_REAL_NAME}> ${CMAKE_CURRENT_SOURCE_DIR}/pyqrlfast
+        )
+
+add_custom_command(TARGET ${SWIG_MODULE_goqrlfast_REAL_NAME}
+        POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E cmake_echo_color --cyan $<TARGET_FILE:${SWIG_MODULE_goqrlfast_REAL_NAME}>
+        COMMENT "Moving SWIG files to output dir"
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different $<TARGET_FILE:${SWIG_MODULE_goqrlfast_REAL_NAME}> ${CMAKE_CURRENT_SOURCE_DIR}/goqrlfast
         )
 
 # Get python packages destination
 #execute_process(COMMAND python -c "from distutils.sysconfig import get_python_lib; print get_python_lib()"
 #                OUTPUT_VARIABLE PYTHON_SITE_PACKAGES OUTPUT_STRIP_TRAILING_WHITESPACE)
-
-
 # Use CPack to create wheel packages
-
 #install(TARGETS _target DESTINATION ${PYTHON_SITE_PACKAGES})
 #install(FILES ${CMAKE_BINARY_DIR}/src/target.py DESTINATION ${PYTHON_SITE_PACKAGES})

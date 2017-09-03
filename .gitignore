@@ -4,33 +4,16 @@ CMakeScripts
 Makefile
 cmake_install.cmake
 install_manifest.txt
-
 cmake-build-debug/
 
 \.idea/workspace\.xml
 
-pyqrl/_pyqrl\.so
-
-pyqrl/__init__\.pyc
-
-pyqrl/apiPYTHON_wrap\.cxx
-
-pyqrl/pyqrl\.py
-
-pyqrl/pyqrl\.pyc
-
 pyqrlfast/__init__\.pyc
-
 pyqrlfast/_pyqrl\.so
-
 pyqrlfast/apiPYTHON_wrap\.cxx
-
 pyqrlfast/pyqrl\.py
-
 pyqrlfast/pyqrl\.pyc
-
 pyqrlfast/_pyqrlfast\.so
-
 pyqrlfast/pyqrlfast\.py
-
 pyqrlfast/pyqrlfast\.pyc
+
