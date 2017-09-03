@@ -1,8 +1,8 @@
 cmake_minimum_required(VERSION 2.8)
-project(testlib)
+project(qrlfast)
 
-set(CMAKE_CXX_STANDARD 11)
-set(CMAKE_VERBOSE_MAKEFILE OFF)
+set(CMAKE_CXX_STANDARD 14)
+set(CMAKE_VERBOSE_MAKEFILE ON)
 
 find_package(SWIG REQUIRED)
 INCLUDE(${SWIG_USE_FILE})
@@ -18,12 +18,29 @@ set(SWIG_LANG_LIBRARIES ${PYTHON_LIBRARIES})
 include_directories(
         ${CMAKE_CURRENT_SOURCE_DIR}/src/api
         ${CMAKE_CURRENT_SOURCE_DIR}/src/lib
+        ${CMAKE_CURRENT_SOURCE_DIR}/xmss-reference
 )
 
-set(SWIG_INTERFACE src/api/api.i)
-file(GLOB_RECURSE LIB_SRC "src/lib/*.cpp" "src/lib/*.hpp")
-file(GLOB_RECURSE LIBTEST_SRC "src/tests/*.cpp")
+set(SWIG_INTERFACE
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/api/api.i)
+file(GLOB_RECURSE LIB_SRC
+        "${CMAKE_CURRENT_SOURCE_DIR}/src/lib/*.cpp"
+        "${CMAKE_CURRENT_SOURCE_DIR}/src/lib/*.hpp")
+file(GLOB_RECURSE LIBTEST_SRC
+        "${CMAKE_CURRENT_SOURCE_DIR}/src/tests/*.cpp")
+set(LIBXMSSREF_SRC
+        ${CMAKE_CURRENT_SOURCE_DIR}/xmss-reference/hash.c
+        ${CMAKE_CURRENT_SOURCE_DIR}/xmss-reference/hash_address.c
+        ${CMAKE_CURRENT_SOURCE_DIR}/xmss-reference/xmss_commons.c
+        ${CMAKE_CURRENT_SOURCE_DIR}/xmss-reference/randombytes.c
+        ${CMAKE_CURRENT_SOURCE_DIR}/xmss-reference/wots.c
+        ${CMAKE_CURRENT_SOURCE_DIR}/xmss-reference/fips202.c
+        )
 
+add_custom_target(
+        prepareXMSSParams
+        COMMAND python3 ${CMAKE_CURRENT_SOURCE_DIR}/xmss-reference/params.h.py XMSS_SHAKE128_W16_H10 > ${CMAKE_CURRENT_SOURCE_DIR}/xmss-reference/params.h
+)
 
 ##############################
 # Google Test
@@ -64,9 +81,12 @@ endif()
 find_package(OpenSSL REQUIRED)
 
 # Test library
-add_executable(testlib ${LIBTEST_SRC} ${LIB_SRC})
-target_link_libraries(testlib gtest_main)
-#add_test(NAME example_test COMMAND example)
+add_executable(qrlfast_test
+        ${LIBTEST_SRC}
+        ${LIB_SRC}
+        ${LIBXMSSREF_SRC})
+
+target_link_libraries(qrlfast_test gtest_main)
 
 # SWIG + API
 set_source_files_properties(${SWIG_INTERFACE} PROPERTIES CPLUSPLUS ON)
@@ -76,8 +96,11 @@ SWIG_ADD_LIBRARY(pyqrl
         ${SWIG_LANG_TYPE}
         SOURCES ${SWIG_INTERFACE}
         src/api/api.cxx
-        ${LIB_SRC} )
+        ${LIB_SRC}
+        ${LIBXMSSREF_SRC})
 SWIG_LINK_LIBRARIES(pyqrl ${SWIG_LANG_LIBRARIES} ${OPENSSL_LIBRARIES})
+
+add_dependencies(testlib prepareXMSSParams)
 
 
 # DEPLOYMENT

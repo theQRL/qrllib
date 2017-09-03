@@ -4,6 +4,6 @@
 #ifndef API_API_H
 #define API_API_H
 
-void helloworld();
+// Expose the API here
 
 #endif //API_API_H

@@ -1,6 +1,6 @@
-#ifndef CMAKETEST_LIBRARY_H
-#define CMAKETEST_LIBRARY_H
+#ifndef QRLFAST_LIBRARY_H
+#define QRLFAST_LIBRARY_H
 
-void hello();
+// Add any additional functions here
 
 #endif
