@@ -31,6 +31,10 @@ set(LIBXMSSREF_SRC
         ${CMAKE_CURRENT_SOURCE_DIR}/xmss-reference/fips202.c
         )
 
+# Forcing XMSS to be compiled as C++
+add_definitions("-x c++")
+SET_SOURCE_FILES_PROPERTIES( LIBXMSSREF_SRC PROPERTIES LANGUAGE CXX )
+
 add_custom_target(
         prepareXMSSParams
         COMMAND python3 ${CMAKE_CURRENT_SOURCE_DIR}/xmss-reference/params.h.py XMSS_SHAKE128_W16_H10 > ${CMAKE_CURRENT_SOURCE_DIR}/xmss-reference/params.h

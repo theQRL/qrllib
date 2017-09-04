@@ -4,8 +4,3 @@
 #include <cstdio>
 #include "api.h"
 #include "library.h"
-
-void helloworld()
-{
-    printf("hello world");
-}

@@ -17,3 +17,13 @@ pyqrlfast/_pyqrlfast\.so
 pyqrlfast/pyqrlfast\.py
 pyqrlfast/pyqrlfast\.pyc
 
+
+*.pyc
+
+goqrlfast/apiGO_wrap\.cxx
+
+goqrlfast/goqrlfast\.so
+
+goqrlfast/pyqrlfast_gc\.c
+
+goqrlfast/pyqrlfast\.go

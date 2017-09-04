@@ -4,8 +4,7 @@
 #ifndef API_API_H
 #define API_API_H
 
-// Expose the API here
-void helloworld();
+#include "fips202.h"
 
 
 #endif //API_API_H

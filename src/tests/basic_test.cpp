@@ -1,10 +1,7 @@
 #include "gtest/gtest.h"
 
-extern "C"
-{
-    // Direct access to XMSS-Reference
-    #include "randombytes.h"
-}
+// Direct access to XMSS-Reference
+#include "randombytes.h"
 
 namespace {
     TEST(XMSS_Reference, Correct_Linking) {
