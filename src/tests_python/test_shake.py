@@ -20,8 +20,8 @@ class TestShake128(TestCase):
     def verify(self, data_text, expected):
         size_in = len(data_text)
         size_out = 32
-        data_in = pyqrlfast.ucharArray(size_in)
-        data_out = pyqrlfast.ucharArray(size_out)
+        data_in = pyqrlfast.ucharCArray(size_in)
+        data_out = pyqrlfast.ucharCArray(size_out)
 
         # Move data into array
         pyqrlfast.memmove(data_in, data_text)
@@ -61,8 +61,8 @@ class TestShake256(TestCase):
     def verify(self, data_text, expected):
         size_in = len(data_text)
         size_out = 64
-        data_in = pyqrlfast.ucharArray(size_in)
-        data_out = pyqrlfast.ucharArray(size_out)
+        data_in = pyqrlfast.ucharCArray(size_in)
+        data_out = pyqrlfast.ucharCArray(size_out)
 
         # Move data into array
         pyqrlfast.memmove(data_in, data_text)

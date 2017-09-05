@@ -5,9 +5,12 @@
     <sourceRoots>
       <file path="$PROJECT_DIR$/pyqrlfast" />
       <file path="$PROJECT_DIR$/src" />
-      <file path="$PROJECT_DIR$/xmss-reference" />
+      <file path="$PROJECT_DIR$/xmss-alt" />
       <file path="$PROJECT_DIR$/xmss-reference_patch" />
     </sourceRoots>
+    <excludeRoots>
+      <file path="$PROJECT_DIR$/xmss-reference" />
+    </excludeRoots>
   </component>
   <component name="PythonCompatibilityInspectionAdvertiser">
     <option name="version" value="2" />

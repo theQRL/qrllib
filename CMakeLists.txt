@@ -2,6 +2,7 @@ cmake_minimum_required(VERSION 2.8)
 project(qrlfast)
 
 set(CMAKE_CXX_STANDARD 14)
+#set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -Wall -Wextra -pedantic")
 set(CMAKE_VERBOSE_MAKEFILE ON)
 
 find_package(SWIG REQUIRED)
@@ -12,32 +13,48 @@ find_package(OpenSSL REQUIRED)
 include_directories(
         ${CMAKE_CURRENT_SOURCE_DIR}/src/api
         ${CMAKE_CURRENT_SOURCE_DIR}/src/lib
-        ${CMAKE_CURRENT_SOURCE_DIR}/xmss-reference
+        ${CMAKE_CURRENT_SOURCE_DIR}/xmss-alt
+#        ${CMAKE_CURRENT_SOURCE_DIR}/xmss-reference
 )
 
 set(SWIG_INTERFACE
         ${CMAKE_CURRENT_SOURCE_DIR}/src/api/api.i)
 file(GLOB_RECURSE LIB_SRC
-        "${CMAKE_CURRENT_SOURCE_DIR}/src/lib/*.cpp"
-        "${CMAKE_CURRENT_SOURCE_DIR}/src/lib/*.hpp")
+        "${CMAKE_CURRENT_SOURCE_DIR}/src/lib/*.cpp")
 file(GLOB_RECURSE LIBTEST_SRC
         "${CMAKE_CURRENT_SOURCE_DIR}/src/tests/*.cpp")
+
+set(LIBXMSSALT_SRC
+        ${CMAKE_CURRENT_SOURCE_DIR}/xmss-alt/algsxmss.c
+        ${CMAKE_CURRENT_SOURCE_DIR}/xmss-alt/hash.c
+        ${CMAKE_CURRENT_SOURCE_DIR}/xmss-alt/hash_address.c
+        ${CMAKE_CURRENT_SOURCE_DIR}/xmss-alt/xmss_commons.c
+        ${CMAKE_CURRENT_SOURCE_DIR}/xmss-alt/randombytes.c
+        ${CMAKE_CURRENT_SOURCE_DIR}/xmss-alt/wots.c
+        #${CMAKE_CURRENT_SOURCE_DIR}/xmss-alt/xmss_core.c
+        ${CMAKE_CURRENT_SOURCE_DIR}/xmss-alt/fips202.c
+        )
+
 set(LIBXMSSREF_SRC
         ${CMAKE_CURRENT_SOURCE_DIR}/xmss-reference/hash.c
         ${CMAKE_CURRENT_SOURCE_DIR}/xmss-reference/hash_address.c
         ${CMAKE_CURRENT_SOURCE_DIR}/xmss-reference/xmss_commons.c
         ${CMAKE_CURRENT_SOURCE_DIR}/xmss-reference/randombytes.c
         ${CMAKE_CURRENT_SOURCE_DIR}/xmss-reference/wots.c
+        ${CMAKE_CURRENT_SOURCE_DIR}/xmss-reference/xmss_core.c
         ${CMAKE_CURRENT_SOURCE_DIR}/xmss-reference/fips202.c
         )
 
 # Forcing XMSS to be compiled as C++
-add_definitions("-x c++")
-SET_SOURCE_FILES_PROPERTIES( LIBXMSSREF_SRC PROPERTIES LANGUAGE CXX )
+#add_definitions("-x c++")
+SET_SOURCE_FILES_PROPERTIES( ${LIB_SRC} PROPERTIES LANGUAGE CXX )
+SET_SOURCE_FILES_PROPERTIES( ${LIBTEST_SRC} PROPERTIES LANGUAGE CXX )
+SET_SOURCE_FILES_PROPERTIES( ${LIBXMSSALT_SRC} PROPERTIES LANGUAGE CXX )
+#SET_SOURCE_FILES_PROPERTIES( ${LIBXMSSREF_SRC} PROPERTIES LANGUAGE CXX )
 
 add_custom_target(
         prepareXMSSParams
-        COMMAND python3 ${CMAKE_CURRENT_SOURCE_DIR}/xmss-reference/params.h.py XMSS_SHAKE128_W16_H10 > ${CMAKE_CURRENT_SOURCE_DIR}/xmss-reference/params.h
+        COMMAND python3 ${CMAKE_CURRENT_SOURCE_DIR}/xmss-reference/params.h.py XMSS_SHAKE256_W16_H10 > ${CMAKE_CURRENT_SOURCE_DIR}/xmss-reference/params.h
 )
 
 ##############################
@@ -81,10 +98,11 @@ endif()
 add_executable(qrlfast_test
         ${LIBTEST_SRC}
         ${LIB_SRC}
-        ${LIBXMSSREF_SRC})
+        ${LIBXMSSALT_SRC}
+#        ${LIBXMSSREF_SRC}
+        )
 
 target_link_libraries(qrlfast_test gtest_main)
-
 
 
 ## SWIG + API - Python related stuff
@@ -94,14 +112,16 @@ include_directories(${PYTHON_INCLUDE_PATH})
 set(SWIG_LANG_LIBRARIES ${PYTHON_LIBRARIES})
 set(CMAKE_SWIG_OUTDIR ${CMAKE_CURRENT_SOURCE_DIR}/pyqrlfast)
 set_source_files_properties(${SWIG_INTERFACE} PROPERTIES CPLUSPLUS ON)
-set_source_files_properties(${SWIG_INTERFACE} PROPERTIES SWIG_FLAGS "-includeall")
+set_property(SOURCE ${SWIG_INTERFACE} PROPERTY SWIG_FLAGS "-includeall" "-ignoremissing")
 SWIG_ADD_LIBRARY(pyqrlfast
         LANGUAGE "${language}"
         ${SWIG_LANG_TYPE}
         SOURCES ${SWIG_INTERFACE}
         src/api/api.cxx
         ${LIB_SRC}
-        ${LIBXMSSREF_SRC})
+        ${LIBXMSSALT_SRC}
+#        ${LIBXMSSREF_SRC}
+        )
 SWIG_LINK_LIBRARIES(pyqrlfast ${SWIG_LANG_LIBRARIES} ${OPENSSL_LIBRARIES})
 
 
@@ -112,14 +132,16 @@ set(language go)
 set(SWIG_LANG_LIBRARIES ${PYTHON_LIBRARIES})
 set(CMAKE_SWIG_OUTDIR ${CMAKE_CURRENT_SOURCE_DIR}/goqrlfast)
 set_source_files_properties(${SWIG_INTERFACE} PROPERTIES CPLUSPLUS ON)
-set_property(SOURCE ${SWIG_INTERFACE} PROPERTY SWIG_FLAGS "-includeall" "-intgosize" "64")
+set_property(SOURCE ${SWIG_INTERFACE} PROPERTY SWIG_FLAGS "-includeall" "-ignoremissing" "-intgosize" "64")
 SWIG_ADD_LIBRARY(goqrlfast
         LANGUAGE "${language}"
         ${SWIG_LANG_TYPE}
         SOURCES ${SWIG_INTERFACE}
         src/api/api.cxx
         ${LIB_SRC}
-        ${LIBXMSSREF_SRC})
+        ${LIBXMSSALT_SRC}
+        #${LIBXMSSREF_SRC}
+        )
 SWIG_LINK_LIBRARIES(goqrlfast ${SWIG_LANG_LIBRARIES} ${OPENSSL_LIBRARIES})
 
 
