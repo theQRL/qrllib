@@ -19,17 +19,26 @@ public:
     // TODO: Apply consts, this requires changes in the underlying lib
     Xmss(const TSEED &seed, unsigned char height);
 
-    inline int getHeight()
-    {
-        return _height;
-    }
-
     TSIGNATURE sign(const TMESSAGE &message);
 
-    bool verify(const TMESSAGE &message, TSIGNATURE &signature);
+    bool verify(const TMESSAGE &message,
+                TSIGNATURE &signature,
+                const TKEY &pk,
+                unsigned char height);
 
+    int getHeight() {  return _height; }
+    TKEY getPK() {  return _pk; }
+    TKEY getSK() {  return _sk; }
+    TSEED getSeed() {  return _seed; }
+    uint32_t getSignatureSize();
+    uint32_t getSecretKeySize();
 private:
-    int _height;
+
+    unsigned char _height;
+
+    TKEY _pk;
+    TKEY _sk;
+    TSEED _seed;
 };
 
 #endif //QRLFAST_XMSS_H

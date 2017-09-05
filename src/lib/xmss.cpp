@@ -4,35 +4,53 @@
 
 Xmss::Xmss(const TSEED &seed, unsigned char height): _height(height)
 {
-    std::cout << "\nCreating Xmss" << std::endl;
+// secret key size
+//    * Format sk: [(32bit) idx || SK_SEED || SK_PRF || PUB_SEED || root]
+//    * Format pk: [root || PUB_SEED]
 
-    TKEY pk(1000);
-    TKEY sk(1000);
-    auto seed_ptr = const_cast<unsigned char *>(seed.data());
+    // idx          4
+    // sk_seed      32
+    // sk_prf       32
+    // pub_seed     32
+    // root         32
 
-    xmss_Genkeypair(pk.data(), sk.data(), seed_ptr, height);
+    _sk = TKEY(132, 0);
+    _pk = TKEY(64, 0);
+    _seed = seed;
 
-    std::cout << "Done" << std::endl;
+    xmss_Genkeypair(_pk.data(), _sk.data(), _seed.data(), height);
+}
+
+uint32_t Xmss::getSignatureSize()
+{
+    return static_cast<uint32_t>(4 + 32 + 67 * 32 + _height * 32);
+}
+
+uint32_t Xmss::getSecretKeySize()
+{
+    return 132;
 }
 
 TSIGNATURE Xmss::sign(const TMESSAGE &message)
 {
-    std::cout << "Call to sign" << std::endl;
+    auto signature = TSIGNATURE(getSignatureSize(), 0);
+    auto tmp = static_cast<TMESSAGE>(message);
 
-    for(auto v : message)
-    {
-        std::cout << v << std::endl;
-    }
+    xmss_Signmsg(_sk.data(),
+                 signature.data(),
+                 tmp.data(),
+                 _height);
 
-    auto answer = std::vector<unsigned char>(message);
-    answer.push_back(80);
-
-    return answer;
+    return signature;
 }
 
 bool Xmss::verify(const TMESSAGE &message,
-                  TSIGNATURE &signature)
+                  TSIGNATURE &signature,
+                  const TKEY &pk,
+                  unsigned char height)
 {
-    std::cout << "Call to verify" << std::endl;
-    return false;
+    return xmss_Verifysig(static_cast<TMESSAGE>(message).data(),
+                          signature.data(),
+                          _pk.data(),
+                          height) == 0;
 }

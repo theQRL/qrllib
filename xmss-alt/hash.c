@@ -99,9 +99,6 @@ int hash_h(unsigned char *out, const unsigned char *in, const unsigned char *pub
   setKeyAndMask(addr, 1);
   addr_to_byte(byte_addr, addr);
   prf(bitmask, byte_addr, pub_seed, n);
-  printf("\n");
-//  hexdump(bitmask,32);
-  printf("\n");
   setKeyAndMask(addr, 2);
   addr_to_byte(byte_addr, addr);
   prf(bitmask+n, byte_addr, pub_seed, n);

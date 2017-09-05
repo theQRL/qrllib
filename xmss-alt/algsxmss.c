@@ -406,7 +406,11 @@ int xmss_Signmsg(unsigned char *sk, unsigned char *sig_msg, unsigned char *msg, 
 /**
  * Verifies a given message signature pair under a given public key.
  */
-int xmss_Verifysig(unsigned char *msg, unsigned char *sig_msg, const unsigned char *pk, unsigned char h) {
+int xmss_Verifysig(unsigned char *msg,
+                   unsigned char *sig_msg,
+                   const unsigned char *pk,
+                   unsigned char h) {
+
     xmss_set_params(&params, 32, h, 16);
     unsigned long long msglen = 32;
     unsigned long long sig_msg_len = 4 + 32 + 67 * 32 + h * 32;
@@ -433,9 +437,12 @@ int xmss_Verifysig(unsigned char *msg, unsigned char *sig_msg, const unsigned ch
     setType(node_addr, 2);
 
     // Extract index
-    idx = ((unsigned long) sig_msg[0] << 24) | ((unsigned long) sig_msg[1] << 16) | ((unsigned long) sig_msg[2] << 8) |
+    idx = ((unsigned long) sig_msg[0] << 24) |
+          ((unsigned long) sig_msg[1] << 16) |
+          ((unsigned long) sig_msg[2] << 8) |
           sig_msg[3];
-    //  printf("verify:: idx = %lu\n", idx);
+
+    // printf("verify:: idx = %lu\n", idx);
 
     // Generate hash key (R || root || idx)
     memcpy(hash_key, sig_msg + 4, n);
@@ -444,7 +451,6 @@ int xmss_Verifysig(unsigned char *msg, unsigned char *sig_msg, const unsigned ch
 
     sig_msg += (n + 4);
     sig_msg_len -= (n + 4);
-
 
     // hash message
     unsigned long long tmp_sig_len = params.wots_par.keysize + params.h * n;
@@ -482,7 +488,6 @@ int xmss_Verifysig(unsigned char *msg, unsigned char *sig_msg, const unsigned ch
         msg[i] = sig_msg[i];
 
     return 0;
-
 
     fail:
     msglen = sig_msg_len;

@@ -14,14 +14,18 @@ class TestHash(TestCase):
         super(TestHash, self).__init__(*args, **kwargs)
 
     def test_xmss(self):
+        HEIGHT = 10
+
         seed = [i for i in range(32)]
-        xmss = pyqrlfast.Xmss(seed=seed, height=10)
+        xmss = pyqrlfast.Xmss(seed=seed, height=HEIGHT)
 
         self.assertIsNotNone(xmss)
-        self.assertEqual(xmss.getHeight(), 10)
+        self.assertEqual(xmss.getHeight(), HEIGHT)
 
         # It is not necessary to use a bytearray, list would work
-        msg = pyqrlfast.ucharVector(bytearray([66, 67, 69]))
+        msg = pyqrlfast.ucharVector([66, 67, 69])
 
         signature = bytearray(xmss.sign(msg))
+
         print(signature)
+        print(len(signature))
