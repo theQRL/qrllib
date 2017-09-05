@@ -4,15 +4,17 @@
 
 Xmss::Xmss(const TSEED &seed, unsigned char height): _height(height)
 {
-// secret key size
-//    * Format sk: [(32bit) idx || SK_SEED || SK_PRF || PUB_SEED || root]
-//    * Format pk: [root || PUB_SEED]
-
-    // idx          4
-    // sk_seed      32
-    // sk_prf       32
-    // pub_seed     32
-    // root         32
+//    PK format
+//    32 root address
+//    32 pub_seed
+//
+//    SK format
+//    4  idx
+//    32 sk_seed
+//    32 sk_prf
+//    32 pub_seed
+//    32 root
+// TODO: Use a union? to operated on partial fields
 
     _sk = TKEY(132, 0);
     _pk = TKEY(64, 0);

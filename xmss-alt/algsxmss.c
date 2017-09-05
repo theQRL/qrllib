@@ -413,7 +413,7 @@ int xmss_Verifysig(unsigned char *msg,
 
     xmss_set_params(&params, 32, h, 16);
     unsigned long long msglen = 32;
-    unsigned long long sig_msg_len = 4 + 32 + 67 * 32 + h * 32;
+    unsigned long long sig_msg_len = static_cast<unsigned long long int>(4 + 32 + 67 * 32 + h * 32);
     uint16_t n = params.n;
 
     unsigned long long i, m_len;

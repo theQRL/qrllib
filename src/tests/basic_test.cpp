@@ -92,6 +92,7 @@ namespace {
         Xmss xmss(seed, XMSS_HEIGHT);
 
         std::string message = "This is a test message";
+        std::vector<unsigned char> data_ref(message.begin(), message.end());
         std::vector<unsigned char> data(message.begin(), message.end());
 
         auto pk = xmss.getPK();
@@ -102,6 +103,8 @@ namespace {
         std::cout << "sk  :" << sk.size() << " bytes\n" << vec2hexstr(sk, 32) << std::endl;
 
         auto signature = xmss.sign(data);
+
+        EXPECT_EQ(data, data_ref);
 
         std::cout << std::endl;
         std::cout << std::endl;
