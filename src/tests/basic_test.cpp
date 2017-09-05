@@ -111,7 +111,7 @@ namespace {
         std::cout << "data       :" << data.size() << " bytes\n" << vec2hexstr(data, 64) << std::endl;
         std::cout << "signature  :" << signature.size() << " bytes\n" << vec2hexstr(signature, 64) << std::endl;
 
-        EXPECT_TRUE(xmss.verify(data, signature, xmss.getPK(), XMSS_HEIGHT));
+        EXPECT_TRUE(xmss.verify(data, signature, pk, XMSS_HEIGHT));
 
 //        signature[1] += 1;
 //        EXPECT_FALSE(xmss.verify(data, signature, xmss.getPK(), XMSS_HEIGHT));

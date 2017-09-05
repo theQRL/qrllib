@@ -16,13 +16,13 @@
 
 class Xmss {
 public:
-    // TODO: Apply consts, this requires changes in the underlying lib
+    // TODO: Fix constness / passing by copy, this requires changes in the underlying lib
     Xmss(const TSEED &seed, unsigned char height);
 
     TSIGNATURE sign(const TMESSAGE &message);
 
     bool verify(const TMESSAGE &message,
-                TSIGNATURE &signature,
+                const TSIGNATURE &signature,
                 const TKEY &pk,
                 unsigned char height);
 

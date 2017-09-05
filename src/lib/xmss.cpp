@@ -1,6 +1,7 @@
 #include <iostream>
 #include "xmss.h"
 #include "algsxmss.h"
+#include "misc.h"
 
 Xmss::Xmss(const TSEED &seed, unsigned char height): _height(height)
 {
@@ -35,6 +36,7 @@ uint32_t Xmss::getSecretKeySize()
 
 TSIGNATURE Xmss::sign(const TMESSAGE &message)
 {
+    // TODO: Fix constness in library
     auto signature = TSIGNATURE(getSignatureSize(), 0);
     auto tmp = static_cast<TMESSAGE>(message);
 
@@ -47,12 +49,14 @@ TSIGNATURE Xmss::sign(const TMESSAGE &message)
 }
 
 bool Xmss::verify(const TMESSAGE &message,
-                  TSIGNATURE &signature,
+                  const TSIGNATURE &signature,
                   const TKEY &pk,
                   unsigned char height)
 {
+    // TODO: Fix constness in library
+    auto tmp = static_cast<TSIGNATURE>(signature);
     return xmss_Verifysig(static_cast<TMESSAGE>(message).data(),
-                          signature.data(),
+                          tmp.data(),
                           _pk.data(),
                           height) == 0;
 }

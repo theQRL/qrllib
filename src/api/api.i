@@ -2,11 +2,13 @@
 %include "carrays.i"
 %include "cdata.i"
 %include "std_vector.i"
+%include "std_string.i"
 
 %module pyqrlfast
 %{
     #include "api.h"
     #include "xmss.h"
+    #include "misc.h"
     #include "fips202.h"
     #include "hash.h"
 %}
@@ -26,5 +28,6 @@ namespace std {
 
 %include "api.h"
 %include "xmss.h"
+%include "misc.h"
 %include "fips202.h"
 %include "hash.h"
