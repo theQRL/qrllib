@@ -17,16 +17,6 @@ namespace {
         EXPECT_EQ(1, 1);
     }
 
-//    TEST(XMSS_Alt, GenKeyPairs) {
-//        unsigned char pk[1000];
-//        unsigned char sk[1000];
-//        unsigned char seed[1000];
-//
-//        xmss_Genkeypair(pk, sk, seed, 10);
-//
-//        EXPECT_EQ(1, 1);
-//    }
-
 #define XMSS_HEIGHT 4
 
     TEST(XMSS, vec2hex) {

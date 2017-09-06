@@ -2,7 +2,7 @@
 # file LICENSE or http://www.opensource.org/licenses/mit-license.php.
 from __future__ import print_function
 
-from time import sleep
+from time import sleep, time
 from unittest import TestCase
 
 from pyqrlfast import pyqrlfast
@@ -43,6 +43,34 @@ class TestHash(TestCase):
 
         print('----------------------------------------------------------------------')
         # Verify signature
+        start = time()
+        for i in range(1000):
+            self.assertTrue(xmss.verify(message,
+                                        signature,
+                                        xmss.getPK(),
+                                        xmss.getHeight()))
+        end = time()
+        print(end-start)
+
+        # Touch the signature
+        signature[100]+=1
+        self.assertFalse(xmss.verify(message,
+                                     signature,
+                                     xmss.getPK(),
+                                     xmss.getHeight()))
+        signature[100]-=1
+        self.assertTrue(xmss.verify(message,
+                                    signature,
+                                    xmss.getPK(),
+                                    xmss.getHeight()))
+
+        # Touch the message
+        message[2]+=1
+        self.assertFalse(xmss.verify(message,
+                                     signature,
+                                     xmss.getPK(),
+                                     xmss.getHeight()))
+        message[2]-=1
         self.assertTrue(xmss.verify(message,
                                     signature,
                                     xmss.getPK(),
