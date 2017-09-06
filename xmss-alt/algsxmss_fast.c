@@ -18,7 +18,6 @@ Public domain.
 #include "xmss_commons.h"
 #include "hash_address.h"
 #include <stdio.h>
-#include <fips202.h>
 
 xmssfast_params paramsfast;
 
@@ -529,4 +528,196 @@ int xmssfast_Genkeypair(unsigned char *pk, unsigned char *sk, bds_state *state, 
   // copy root to sk
   memcpy(sk+4+3*n, pk, pks);
   return 0;
+}
+
+
+int xmssfast_Signmsg(unsigned char *sk, bds_state *state, unsigned char *sig_msg, unsigned char *msg, unsigned long long msglen, unsigned char h)
+{
+  xmssfast_set_params(&paramsfast, 32, h, 16, 2);
+  unsigned int n = paramsfast.n;
+  unsigned int k = paramsfast.k;
+  uint16_t i = 0;
+
+  // Extract SK
+  unsigned long idx = ((unsigned long)sk[0] << 24) | ((unsigned long)sk[1] << 16) | ((unsigned long)sk[2] << 8) | sk[3];
+  unsigned char sk_seed[n];
+  memcpy(sk_seed, sk+4, n);
+  unsigned char sk_prf[n];
+  memcpy(sk_prf, sk+4+n, n);
+  unsigned char pub_seed[n];
+  memcpy(pub_seed, sk+4+2*n, n);
+  
+  // index as 32 bytes string
+  unsigned char idx_bytes_32[32];
+  to_byte(idx_bytes_32, idx, 32);
+  
+  unsigned char hash_key[3*n]; 
+  
+  // Update SK
+  sk[0] = ((idx + 1) >> 24) & 255;
+  sk[1] = ((idx + 1) >> 16) & 255;
+  sk[2] = ((idx + 1) >> 8) & 255;
+  sk[3] = (idx + 1) & 255;
+  // -- Secret key for this non-forward-secure version is now updated.
+  // -- A productive implementation should use a file handle instead and write the updated secret key at this point!
+  unsigned long long sig_msg_len;
+  // Init working params
+  unsigned char R[n];
+  unsigned char msg_h[n];
+  unsigned char ots_seed[n];
+  uint32_t ots_addr[8] = {0, 0, 0, 0, 0, 0, 0, 0};
+
+  // ---------------------------------
+  // Message Hashing
+  // ---------------------------------
+
+  // Message Hash:
+  // First compute pseudorandom value
+  prf(R, idx_bytes_32, sk_prf, n);
+  // Generate hash key (R || root || idx)
+  memcpy(hash_key, R, n);
+  memcpy(hash_key+n, sk+4+3*n, n);
+  to_byte(hash_key+2*n, idx, n);
+  // Then use it for message digest
+  h_msg(msg_h, msg, msglen, hash_key, 3*n, n);
+
+  // Start collecting signature
+  sig_msg_len = 0;
+
+  // Copy index to signature
+  sig_msg[0] = (idx >> 24) & 255;
+  sig_msg[1] = (idx >> 16) & 255;
+  sig_msg[2] = (idx >> 8) & 255;
+  sig_msg[3] = idx & 255;
+
+  sig_msg += 4;
+  sig_msg_len += 4;
+
+  // Copy R to signature
+  for (i = 0; i < n; i++)
+    sig_msg[i] = R[i];
+
+  sig_msg += n;
+  sig_msg_len += n;
+
+  // ----------------------------------
+  // Now we start to "really sign"
+  // ----------------------------------
+
+  // Prepare Address
+  setType(ots_addr, 0);
+  setOTSADRS(ots_addr, idx);
+
+  // Compute seed for OTS key pair
+  get_seed(ots_seed, sk_seed, n, ots_addr);
+
+  // Compute WOTS signature
+  wots_sign(sig_msg, msg_h, ots_seed, &(paramsfast.wots_par), pub_seed, ots_addr);
+  
+  sig_msg += paramsfast.wots_par.keysize;
+  sig_msg_len += paramsfast.wots_par.keysize;
+
+  // the auth path was already computed during the previous round
+  memcpy(sig_msg, state->auth, h*n);
+
+  if (idx < (1U << h) - 1) {
+    bds_round(state, idx, sk_seed, &paramsfast, pub_seed, ots_addr);
+    bds_treehash_update(state, (h - k) >> 1, sk_seed, &paramsfast, pub_seed, ots_addr);
+  }
+
+  sig_msg += paramsfast.h*n;
+  sig_msg_len += paramsfast.h*n;
+
+  //Whipe secret elements?
+  //zerobytes(tsk, CRYPTO_SECRETKEYBYTES);
+
+  //  memcpy(sig_msg, msg, msglen);
+  //*sig_msg_len += msglen;
+
+  return 0;
+}
+
+int xmssfast_Verifysig(unsigned char *msg, unsigned long long msglen, unsigned char *sig_msg, const unsigned char *pk, unsigned char h)
+{
+  xmssfast_set_params(&paramsfast, 32, h, 16,2);
+  unsigned int n = paramsfast.n;
+
+  unsigned long long sig_msg_len = 4 + 32 + 67 * 32 + h * 32;
+
+  unsigned long long i, m_len;
+  unsigned long idx=0;
+  unsigned char wots_pk[paramsfast.wots_par.keysize];
+  unsigned char pkhash[n];
+  unsigned char root[n];
+  unsigned char msg_h[n];
+  unsigned char hash_key[3*n];
+
+  unsigned char pub_seed[n];
+  memcpy(pub_seed, pk+n, n);
+
+  // Init addresses
+  uint32_t ots_addr[8] = {0, 0, 0, 0, 0, 0, 0, 0};
+  uint32_t ltree_addr[8] = {0, 0, 0, 0, 0, 0, 0, 0};
+  uint32_t node_addr[8] = {0, 0, 0, 0, 0, 0, 0, 0};
+
+  setType(ots_addr, 0);
+  setType(ltree_addr, 1);
+  setType(node_addr, 2);
+
+  // Extract index
+  idx = ((unsigned long)sig_msg[0] << 24) | ((unsigned long)sig_msg[1] << 16) | ((unsigned long)sig_msg[2] << 8) | sig_msg[3];
+  printf("verify:: idx = %lu\n", idx);
+  
+  // Generate hash key (R || root || idx)
+  memcpy(hash_key, sig_msg+4,n);
+  memcpy(hash_key+n, pk, n);
+  to_byte(hash_key+2*n, idx, n);
+  
+  sig_msg += (n+4);
+  sig_msg_len -= (n+4);
+
+  // hash message 
+  unsigned long long tmp_sig_len = paramsfast.wots_par.keysize+paramsfast.h*n;
+  m_len = sig_msg_len - tmp_sig_len;
+  h_msg(msg_h, sig_msg, m_len, hash_key, 3*n, n);
+
+  //-----------------------
+  // Verify signature
+  //-----------------------
+
+  // Prepare Address
+  setOTSADRS(ots_addr, idx);
+  // Check WOTS signature
+  wots_pkFromSig(wots_pk, sig_msg, msg_h, &(paramsfast.wots_par), pub_seed, ots_addr);
+
+  sig_msg += paramsfast.wots_par.keysize;
+  sig_msg_len -= paramsfast.wots_par.keysize;
+
+  // Compute Ltree
+  setLtreeADRS(ltree_addr, idx);
+  l_tree(pkhash, wots_pk, &paramsfast, pub_seed, ltree_addr);
+
+  // Compute root
+  validate_authpath(root, pkhash, idx, sig_msg, &paramsfast, pub_seed, node_addr);
+
+  sig_msg += paramsfast.h*n;
+  sig_msg_len -= paramsfast.h*n;
+
+  for (i = 0; i < n; i++)
+    if (root[i] != pk[i])
+      goto fail;
+
+  msglen = sig_msg_len;
+  for (i = 0; i < msglen; i++)
+    msg[i] = sig_msg[i];
+
+  return 0;
+
+
+ fail:
+  msglen = sig_msg_len;
+  for (i = 0; i < msglen; i++)
+    msg[i] = 0;
+  msglen = -1;
+  return -1;
 }
