@@ -304,9 +304,8 @@ int xmss_updateSK(unsigned char *sk, unsigned long k) {
     }
 }
 
-int xmss_Signmsg(unsigned char *sk, unsigned char *sig_msg, unsigned char *msg, unsigned int h) {
+int xmss_Signmsg(unsigned char *sk, unsigned char *sig_msg, unsigned char *msg, const size_t msglen, unsigned int h) {
     unsigned long long sig_msg_len;
-    unsigned long long msglen = 32;
     xmss_set_params(&params, 32, h, 16);
     uint16_t n = params.n;
     uint16_t i = 0;
@@ -407,12 +406,12 @@ int xmss_Signmsg(unsigned char *sk, unsigned char *sig_msg, unsigned char *msg, 
  * Verifies a given message signature pair under a given public key.
  */
 int xmss_Verifysig(unsigned char *msg,
+                   const size_t msglen,
                    unsigned char *sig_msg,
                    const unsigned char *pk,
                    unsigned char h) {
 
     xmss_set_params(&params, 32, h, 16);
-    unsigned long long msglen = 32;
     unsigned long long sig_msg_len = static_cast<unsigned long long int>(4 + 32 + 67 * 32 + h * 32);
     uint16_t n = params.n;
 
@@ -483,16 +482,13 @@ int xmss_Verifysig(unsigned char *msg,
         if (root[i] != pk[i])
             goto fail;
 
-    msglen = sig_msg_len;
-    for (i = 0; i < msglen; i++)
+    for (i = 0; i < sig_msg_len; i++)
         msg[i] = sig_msg[i];
 
     return 0;
 
     fail:
-    msglen = sig_msg_len;
-    for (i = 0; i < msglen; i++)
+    for (i = 0; i < sig_msg_len; i++)
         msg[i] = 0;
-    msglen = -1;
     return -1;
 }

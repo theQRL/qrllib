@@ -38,11 +38,11 @@ TSIGNATURE Xmss::sign(const TMESSAGE &message)
 {
     // TODO: Fix constness in library
     auto signature = TSIGNATURE(getSignatureSize(), 0);
-    auto tmp = static_cast<TMESSAGE>(message);
 
     xmss_Signmsg(_sk.data(),
                  signature.data(),
-                 tmp.data(),
+                 static_cast<TMESSAGE>(message).data(),
+                 message.size(),
                  _height);
 
     return signature;
@@ -56,6 +56,7 @@ bool Xmss::verify(const TMESSAGE &message,
     // TODO: Fix constness in library
     auto tmp = static_cast<TSIGNATURE>(signature);
     return xmss_Verifysig(static_cast<TMESSAGE>(message).data(),
+                          message.size(),
                           tmp.data(),
                           _pk.data(),
                           height) == 0;
