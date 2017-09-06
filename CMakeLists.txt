@@ -41,6 +41,7 @@ file(GLOB_RECURSE LIBTEST_SRC
         "${CMAKE_CURRENT_SOURCE_DIR}/src/tests/*.cpp")
 
 set(LIBXMSSALT_SRC
+        ${CMAKE_CURRENT_SOURCE_DIR}/xmss-alt/algsxmss_fast.c
         ${CMAKE_CURRENT_SOURCE_DIR}/xmss-alt/algsxmss.c
         ${CMAKE_CURRENT_SOURCE_DIR}/xmss-alt/hash.c
         ${CMAKE_CURRENT_SOURCE_DIR}/xmss-alt/hash_address.c
