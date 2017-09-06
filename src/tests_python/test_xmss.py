@@ -34,7 +34,6 @@ class TestHash(TestCase):
         print("Msg ", len(message))
         print(pyqrlfast.vec2hexstr(message, 32))
 
-        # TODO: At the moment, sign is hardcoded for message length 32
         # Sign message
         signature = bytearray(xmss.sign(message))
 
@@ -50,27 +49,27 @@ class TestHash(TestCase):
                                         xmss.getPK(),
                                         xmss.getHeight()))
         end = time()
-        print(end-start)
+        print(end - start)
 
         # Touch the signature
-        signature[100]+=1
+        signature[100] += 1
         self.assertFalse(xmss.verify(message,
                                      signature,
                                      xmss.getPK(),
                                      xmss.getHeight()))
-        signature[100]-=1
+        signature[100] -= 1
         self.assertTrue(xmss.verify(message,
                                     signature,
                                     xmss.getPK(),
                                     xmss.getHeight()))
 
         # Touch the message
-        message[2]+=1
+        message[2] += 1
         self.assertFalse(xmss.verify(message,
                                      signature,
                                      xmss.getPK(),
                                      xmss.getHeight()))
-        message[2]-=1
+        message[2] -= 1
         self.assertTrue(xmss.verify(message,
                                     signature,
                                     xmss.getPK(),

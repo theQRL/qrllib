@@ -103,7 +103,7 @@ namespace {
 
         EXPECT_TRUE(xmss.verify(data, signature, pk, XMSS_HEIGHT));
 
-//        signature[1] += 1;
-//        EXPECT_FALSE(xmss.verify(data, signature, xmss.getPK(), XMSS_HEIGHT));
+        signature[1] += 1;
+        EXPECT_FALSE(xmss.verify(data, signature, xmss.getPK(), XMSS_HEIGHT));
     }
 }
