@@ -8,12 +8,6 @@ Public domain.
 #include "wots.h"
 
 typedef struct{
-  unsigned int level;
-  unsigned long long subtree;
-  unsigned int subleaf;
-} leafaddr;
-
-typedef struct{
   wots_params wots_par;
   unsigned int n;
   unsigned int h;
