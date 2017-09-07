@@ -14,17 +14,14 @@
 #define TSEED std::vector<unsigned char>
 #define TKEY std::vector<unsigned char>
 
+// TODO: Add a namespace
+
 class Xmss {
 public:
     // TODO: Fix constness / passing by copy, this requires changes in the underlying lib
     Xmss(const TSEED &seed, unsigned char height);
 
     TSIGNATURE sign(const TMESSAGE &message);
-
-    bool verify(const TMESSAGE &message,
-                const TSIGNATURE &signature,
-                const TKEY &pk,
-                unsigned char height);
 
     int getHeight() {  return _height; }
     TKEY getPK() {  return _pk; }
@@ -40,5 +37,10 @@ private:
     TKEY _sk;
     TSEED _seed;
 };
+
+bool verify(const TMESSAGE &message,
+            const TSIGNATURE &signature,
+            const TKEY &pk,
+            unsigned char height);
 
 #endif //QRLFAST_XMSS_H

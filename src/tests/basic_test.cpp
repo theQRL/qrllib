@@ -1,3 +1,5 @@
+// Distributed under the MIT software license, see the accompanying
+// file LICENSE or http://www.opensource.org/licenses/mit-license.php.
 #include <algsxmss.h>
 #include <xmss.h>
 #include <vector>
@@ -101,9 +103,9 @@ namespace {
         std::cout << "data       :" << data.size() << " bytes\n" << vec2hexstr(data, 64) << std::endl;
         std::cout << "signature  :" << signature.size() << " bytes\n" << vec2hexstr(signature, 64) << std::endl;
 
-        EXPECT_TRUE(xmss.verify(data, signature, pk, XMSS_HEIGHT));
+        EXPECT_TRUE(verify(data, signature, pk, XMSS_HEIGHT));
 
         signature[1] += 1;
-        EXPECT_FALSE(xmss.verify(data, signature, xmss.getPK(), XMSS_HEIGHT));
+        EXPECT_FALSE(verify(data, signature, xmss.getPK(), XMSS_HEIGHT));
     }
 }

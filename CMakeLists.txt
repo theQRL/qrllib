@@ -1,8 +1,12 @@
+# Distributed under the MIT software license, see the accompanying
+# file LICENSE or http://www.opensource.org/licenses/mit-license.php.
+
 cmake_minimum_required(VERSION 2.8)
 project(qrlfast)
 
 set(CMAKE_CXX_STANDARD 14)
 #set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -Wall -Wextra -pedantic")
+set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS} -std=c++11 -O3")
 set(CMAKE_VERBOSE_MAKEFILE ON)
 
 set(BUILD_GO OFF CACHE BOOL "Enables go wrapper")
