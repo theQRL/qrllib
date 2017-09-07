@@ -7,7 +7,7 @@
 %include "std_vector.i"
 %include "std_string.i"
 
-%module pyqrlfast
+%module pyqrllib
 %{
     #include "api.h"
     #include "xmss.h"

@@ -5,7 +5,7 @@ from __future__ import print_function
 from time import sleep, time
 from unittest import TestCase
 
-from pyqrlfast import pyqrlfast
+from pyqrllib import pyqrllib
 
 
 class TestHash(TestCase):
@@ -15,30 +15,30 @@ class TestHash(TestCase):
     def test_xmss(self):
         HEIGHT = 6
 
-        seed = pyqrlfast.ucharVector(32, 0)
-        xmss = pyqrlfast.Xmss(seed=seed, height=HEIGHT)
+        seed = pyqrllib.ucharVector(32, 0)
+        xmss = pyqrllib.Xmss(seed=seed, height=HEIGHT)
 
         print("Seed", len(seed))
-        print(pyqrlfast.vec2hexstr(seed, 32))
+        print(pyqrllib.vec2hexstr(seed, 32))
 
         print("PK  ", len(xmss.getPK()))
-        print(pyqrlfast.vec2hexstr(xmss.getPK(), 32))
+        print(pyqrllib.vec2hexstr(xmss.getPK(), 32))
 
         print("SK  ", len(xmss.getSK()))
-        print(pyqrlfast.vec2hexstr(xmss.getSK(), 32))
+        print(pyqrllib.vec2hexstr(xmss.getSK(), 32))
 
         self.assertIsNotNone(xmss)
         self.assertEqual(xmss.getHeight(), HEIGHT)
 
-        message = pyqrlfast.ucharVector([i for i in range(32)])
+        message = pyqrllib.ucharVector([i for i in range(32)])
         print("Msg ", len(message))
-        print(pyqrlfast.vec2hexstr(message, 32))
+        print(pyqrllib.vec2hexstr(message, 32))
 
         # Sign message
         signature = bytearray(xmss.sign(message))
 
         print("Sig ", len(signature))
-        print(pyqrlfast.vec2hexstr(signature, 128))
+        print(pyqrllib.vec2hexstr(signature, 128))
 
         print('----------------------------------------------------------------------')
         # Verify signature

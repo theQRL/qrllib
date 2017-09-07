@@ -128,10 +128,10 @@ if (BUILD_PYTHON)
     find_package(PythonLibs 2.7 REQUIRED)
     include_directories(${PYTHON_INCLUDE_PATH})
     set(SWIG_LANG_LIBRARIES ${PYTHON_LIBRARIES})
-    set(CMAKE_SWIG_OUTDIR ${CMAKE_CURRENT_SOURCE_DIR}/pyqrlfast)
+    set(CMAKE_SWIG_OUTDIR ${CMAKE_CURRENT_SOURCE_DIR}/pyqrllib)
     set_source_files_properties(${SWIG_INTERFACE} PROPERTIES CPLUSPLUS ON)
     set_property(SOURCE ${SWIG_INTERFACE} PROPERTY SWIG_FLAGS "-includeall" "-ignoremissing")
-    SWIG_ADD_LIBRARY(pyqrlfast
+    SWIG_ADD_LIBRARY(pyqrllib
             LANGUAGE "${language}"
             ${SWIG_LANG_TYPE}
             SOURCES ${SWIG_INTERFACE}
@@ -140,13 +140,13 @@ if (BUILD_PYTHON)
             ${LIBXMSSALT_SRC}
             #        ${LIBXMSSREF_SRC}
             )
-    SWIG_LINK_LIBRARIES(pyqrlfast ${SWIG_LANG_LIBRARIES} ${OPENSSL_LIBRARIES})
-    add_dependencies(${SWIG_MODULE_pyqrlfast_REAL_NAME} prepareXMSSParams)
-    add_custom_command(TARGET ${SWIG_MODULE_pyqrlfast_REAL_NAME}
+    SWIG_LINK_LIBRARIES(pyqrllib ${SWIG_LANG_LIBRARIES} ${OPENSSL_LIBRARIES})
+    add_dependencies(${SWIG_MODULE_pyqrllib_REAL_NAME} prepareXMSSParams)
+    add_custom_command(TARGET ${SWIG_MODULE_pyqrllib_REAL_NAME}
             POST_BUILD
-            COMMAND ${CMAKE_COMMAND} -E cmake_echo_color --cyan $<TARGET_FILE:${SWIG_MODULE_pyqrlfast_REAL_NAME}>
+            COMMAND ${CMAKE_COMMAND} -E cmake_echo_color --cyan $<TARGET_FILE:${SWIG_MODULE_pyqrllib_REAL_NAME}>
             COMMENT "Moving SWIG files to output dir"
-            COMMAND ${CMAKE_COMMAND} -E copy_if_different $<TARGET_FILE:${SWIG_MODULE_pyqrlfast_REAL_NAME}> ${CMAKE_CURRENT_SOURCE_DIR}/pyqrlfast
+            COMMAND ${CMAKE_COMMAND} -E copy_if_different $<TARGET_FILE:${SWIG_MODULE_pyqrllib_REAL_NAME}> ${CMAKE_CURRENT_SOURCE_DIR}/pyqrllib
             )
     # Get python packages destination
     #execute_process(COMMAND python -c "from distutils.sysconfig import get_python_lib; print get_python_lib()"
