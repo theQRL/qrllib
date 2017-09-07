@@ -1,4 +1,7 @@
-//Summary of all xmss functions
+// Distributed under the MIT software license, see the accompanying
+// file LICENSE or http://www.opensource.org/licenses/mit-license.php.
+// Based on the public domain XMSS reference implementation
+// by Andreas Hülsing and Joost Rijneveld
 
 #include "algsxmss.h"
 #include <stdlib.h>
@@ -10,7 +13,6 @@
 #include "randombytes.h"
 #include "wots.h"
 #include "hash.h"
-//#include "prg.h"                                                                                 
 #include "xmss_commons.h"
 #include "hash_address.h"
 #include <stdio.h>

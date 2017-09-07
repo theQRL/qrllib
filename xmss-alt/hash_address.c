@@ -1,9 +1,8 @@
+
 /*
-hash_address.c version 20160722
-Andreas Hülsing
-Joost Rijneveld
-Public domain.
+This code was taken from the XMSS reference implementation by Andreas Hülsing and Joost Rijneveld and is public domain.
 */
+
 #include <stdint.h>
 
 void setLayerADRS(uint32_t adrs[8], uint32_t layer){

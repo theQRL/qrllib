@@ -1,8 +1,5 @@
 /*
-hash.h version 20160722
-Andreas Hülsing
-Joost Rijneveld
-Public domain.
+This code was taken from the XMSS reference implementation by Andreas Hülsing and Joost Rijneveld and is public domain.
 */
 
 #ifndef HASH_H
