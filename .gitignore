@@ -21,9 +21,9 @@ pyqrllib/pyqrllib\.py
 pyqrllib/pyqrllib\.pyc
 
 
-goqrlfast/apiGO_wrap\.cxx
-goqrlfast/goqrlfast\.so
-goqrlfast/pyqrllib_gc\.c
-goqrlfast/pyqrllib\.go
+goqrllib/apiGO_wrap\.cxx
+goqrllib/goqrllib\.so
+goqrllib/pyqrllib_gc\.c
+goqrllib/pyqrllib\.go
 
 

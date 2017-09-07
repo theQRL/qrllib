@@ -1,7 +1,7 @@
 // Distributed under the MIT software license, see the accompanying
 // file LICENSE or http://www.opensource.org/licenses/mit-license.php.
-#ifndef QRLFAST_XMSS_H
-#define QRLFAST_XMSS_H
+#ifndef QRLLIB_XMSS_H
+#define QRLLIB_XMSS_H
 
 #include<vector>
 
@@ -43,4 +43,4 @@ bool verify(const TMESSAGE &message,
             const TKEY &pk,
             unsigned char height);
 
-#endif //QRLFAST_XMSS_H
+#endif //QRLLIB_XMSS_H
