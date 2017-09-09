@@ -69,4 +69,4 @@ int xmssfast_Signmsg(unsigned char *sk, bds_state *state, unsigned char *sig_msg
  * Note: msg and msglen are pure outputs which carry the message in case verification succeeds. The (input) message is assumed to be within sig_msg which has the form (sig||msg). 
  */
 int xmssfast_Verifysig(unsigned char *msg,unsigned long long msglen, unsigned char *sig_msg,const unsigned char *pk, unsigned char h);
-
+int xmssfast_update(unsigned char *sk, bds_state *state, unsigned long h, unsigned long new_idx);

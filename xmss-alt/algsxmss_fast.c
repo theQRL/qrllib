@@ -519,6 +519,59 @@ int xmssfast_Genkeypair(unsigned char *pk, unsigned char *sk, bds_state *state, 
   return 0;
 }
 
+int xmssfast_update(unsigned char *sk, bds_state *state, unsigned long h, unsigned long new_idx) {
+  //unsigned long idxkey=0;
+  xmssfast_set_params(&paramsfast, 32, h, 16, 2);
+  unsigned long k = 2;
+  //idxkey = ((unsigned long)sig_msg[0] << 24) | ((unsigned long)sig_msg[1] << 16) | ((unsigned long)sig_msg[2] << 8) | sig_msg[3];
+  uint32_t idxkey =
+          ((unsigned long) sk[0] << 24) | ((unsigned long) sk[1] << 16) | ((unsigned long) sk[2] << 8) | sk[3];
+  if (idxkey >= new_idx) {
+    return -1;
+    //the secret key is updated more than the blockchain, so all fine
+  } else{
+    uint32_t idx = new_idx;
+    //update secret key index
+    sk[0] = ((idx) >> 24) & 255;
+    sk[1] = ((idx) >> 16) & 255;
+    sk[2] = ((idx) >> 8) & 255;
+    sk[3] = (idx) & 255;
+
+    unsigned char sk_seed[32];
+    memcpy(sk_seed, sk+4, 32);
+
+    unsigned char pub_seed[32];
+    memcpy(pub_seed, sk+4+2*32, 32);
+
+    uint32_t ots_addr[8] = {0, 0, 0, 0, 0, 0, 0, 0};
+    setType(ots_addr, 0);
+    setOTSADRS(ots_addr, idx);
+
+    setChainADRS(ots_addr,0);
+    setHashADRS(ots_addr,0);
+    setKeyAndMask(ots_addr,0);
+    setChainADRS(ots_addr, paramsfast.wots_par.len-1);
+    setHashADRS(ots_addr,10);
+    setKeyAndMask(ots_addr, 1);
+    printf("\n");
+    for(int j = 0; j < 8; j++){
+      printf("%d, ", ots_addr[j]);
+
+    }
+    printf("\n");
+
+
+    for(int j = idxkey; j < new_idx ; j++){
+      if (j < (1U << h) - 1) {
+        bds_round(state, j, sk_seed, &paramsfast, pub_seed, ots_addr);
+        bds_treehash_update(state, (h - k) >> 1, sk_seed, &paramsfast, pub_seed, ots_addr);
+      }
+    }
+
+    return 0;
+  }
+}
+
 
 int xmssfast_Signmsg(unsigned char *sk, bds_state *state, unsigned char *sig_msg, unsigned char *msg, unsigned long long msglen, unsigned char h)
 {
@@ -602,7 +655,12 @@ int xmssfast_Signmsg(unsigned char *sk, bds_state *state, unsigned char *sig_msg
 
   // Compute WOTS signature
   wots_sign(sig_msg, msg_h, ots_seed, &(paramsfast.wots_par), pub_seed, ots_addr);
-  
+  printf("\n");
+  for(int j = 0; j < 8; j++){
+    printf("%d, ", ots_addr[j]);
+
+  }
+  printf("\n");
   sig_msg += paramsfast.wots_par.keysize;
   sig_msg_len += paramsfast.wots_par.keysize;
 
@@ -613,6 +671,13 @@ int xmssfast_Signmsg(unsigned char *sk, bds_state *state, unsigned char *sig_msg
     bds_round(state, idx, sk_seed, &paramsfast, pub_seed, ots_addr);
     bds_treehash_update(state, (h - k) >> 1, sk_seed, &paramsfast, pub_seed, ots_addr);
   }
+
+  printf("\n");
+  for(int j = 0; j < 8; j++){
+    printf("%d, ", ots_addr[j]);
+
+  }
+  printf("\n");
 
   sig_msg += paramsfast.h*n;
   sig_msg_len += paramsfast.h*n;
@@ -632,8 +697,6 @@ int xmssfast_Verifysig(unsigned char *msg, unsigned long long msglen, unsigned c
   unsigned int n = paramsfast.n;
 
   unsigned long long sig_msg_len = 4 + 32 + 67 * 32 + h * 32;
-  printf("%llu",sig_msg_len);
-  sig_msg_len = 2436;
   unsigned long long i, m_len;
   unsigned long idx=0;
   unsigned char wots_pk[paramsfast.wots_par.keysize];

@@ -15,7 +15,7 @@ namespace {
         unsigned char sk[4+4*32];
         bds_state s;
         unsigned char seed[32];
-        unsigned char h = 8;
+        unsigned char h = 4;
             unsigned int k = 2;
         unsigned int n = 32;
         printf("before keygen");
@@ -35,31 +35,26 @@ namespace {
 
         xmssfast_Genkeypair(pk, sk, state,seed, h);
 
-        for (int i = 0; i < n; i++) {
-            printf("%d", pk[i]);
-            //if (pk[n+i] != sk[4+2*n+i]) printf("pk.pub_seed != sk.pub_seed %llu",i);
-            //if (pk[i] != sk[4+3*n+i]) printf("pk.root != sk.root %llu",i);
-        }
-
         unsigned char msg[32] = {0};
-        unsigned long long siglen = 4 + 32 + 67 * 32 + h * 32 + 32;
-        unsigned char sign[10000] = {0};
-        siglen = 0;
+        unsigned long long siglen = 4 + 32 + 67 * 32 + h * 32;
+        unsigned char sign[10000];
         int x;
-        x = xmssfast_Signmsg(sk, state, sign, msg,32, h);
-        for(int i = 0 ; i < 10; i++){
-            printf("%d",sign[i]);
-        }
-        printf("\n %llu \n",siglen);
-        printf("\n%d\n",x);
+            int y = xmssfast_update(sk, state, h, 10);
 
-        for (int i = 0; i < n; i++) {
-            printf("%d", sign[i]);
-            //if (pk[n+i] != sk[4+2*n+i]) printf("pk.pub_seed != sk.pub_seed %llu",i);
-            //if (pk[i] != sk[4+3*n+i]) printf("pk.root != sk.root %llu",i);
-        }
-        unsigned long long m = 32;
-        x = xmssfast_Verifysig(msg,32, sign,pk, h);
+        x = xmssfast_Signmsg(sk, state, sign, msg,32, h);
+            x = xmssfast_Verifysig(msg,32, sign,pk, h);
         printf("\n%d\n",x);
+        unsigned long long m = 32;
+            x = xmssfast_Signmsg(sk, state, sign, msg,32, h);
+        msg[10] ^= 1;
+            x = xmssfast_Verifysig(msg,32, sign,pk, h);
+        printf("\n%d\n",x);
+            msg[0]^=1;
+            x = xmssfast_Verifysig(msg,32, sign,pk, h);
+            printf("\n%d\n",x);
+            msg[0]^=1;
+            sign[5*32]^=1;
+            x = xmssfast_Verifysig(msg,32, sign,pk, h);
+            printf("\n%d\n",x);
     }
 }
