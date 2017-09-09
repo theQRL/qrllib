@@ -4,7 +4,7 @@ from __future__ import print_function
 from unittest import TestCase
 import binascii
 
-from pyqrlfast import pyqrlfast
+from pyqrllib import pyqrllib
 
 
 class TestHash(TestCase):
@@ -24,15 +24,15 @@ class TestHash(TestCase):
         tmp += b'\x1C\x2D\x3E\x4F'
 
         # Create array and move bytes into it
-        addr_in = pyqrlfast.uint32CArray(8)
-        pyqrlfast.memmove(addr_in, tmp)
+        addr_in = pyqrllib.uint32CArray(8)
+        pyqrllib.memmove(addr_in, tmp)
 
         # Prepare buffer to receive data
-        bytes_out = pyqrlfast.ucharCArray(32)
+        bytes_out = pyqrllib.ucharCArray(32)
 
         # Run function
-        pyqrlfast.addr_to_byte(bytes_out, addr_in.cast())
+        pyqrllib.addr_to_byte(bytes_out, addr_in.cast())
 
         # Check results
-        hex_out = binascii.hexlify(pyqrlfast.cdata(bytes_out, 32))
+        hex_out = binascii.hexlify(pyqrllib.cdata(bytes_out, 32))
         self.assertEqual(hex_out, '3322110077665544bbaa9988ffeeddcc43322110473625144b3a29184f3e2d1c')

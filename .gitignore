@@ -5,31 +5,25 @@ Makefile
 cmake_install.cmake
 install_manifest.txt
 cmake-build-debug/
-
-\.idea/workspace\.xml
-
-pyqrlfast/__init__\.pyc
-pyqrlfast/_pyqrl\.so
-pyqrlfast/apiPYTHON_wrap\.cxx
-pyqrlfast/pyqrl\.py
-pyqrlfast/pyqrl\.pyc
-pyqrlfast/_pyqrlfast\.so
-pyqrlfast/pyqrlfast\.py
-pyqrlfast/pyqrlfast\.pyc
-
+cmake-build-release/
 
 *.pyc
 
-goqrlfast/apiGO_wrap\.cxx
-
-goqrlfast/goqrlfast\.so
-
-goqrlfast/pyqrlfast_gc\.c
-
-goqrlfast/pyqrlfast\.go
-
+\.idea/workspace\.xml
 \.idea/dictionaries/
-
 \.idea/fileTemplates/internal/
 
-cmake-build-release/
+pyqrllib/__init__\.pyc
+pyqrllib/_pyqrl\.so
+pyqrllib/apiPYTHON_wrap\.cxx
+pyqrllib/_pyqrllib\.so
+pyqrllib/pyqrllib\.py
+pyqrllib/pyqrllib\.pyc
+
+
+goqrllib/apiGO_wrap\.cxx
+goqrllib/goqrllib\.so
+goqrllib/pyqrllib_gc\.c
+goqrllib/pyqrllib\.go
+
+

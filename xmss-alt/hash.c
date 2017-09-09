@@ -1,8 +1,7 @@
+// Distributed under the MIT software license, see the accompanying
+// file LICENSE or http://www.opensource.org/licenses/mit-license.php.
 /*
-hash.c version 20160722
-Andreas Hülsing
-Joost Rijneveld
-Public domain.
+This code was taken from the XMSS reference implementation by Andreas Hülsing and Joost Rijneveld and is public domain.
 */
 
 #include "hash_address.h"

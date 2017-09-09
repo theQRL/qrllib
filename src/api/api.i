@@ -1,10 +1,13 @@
+// Distributed under the MIT software license, see the accompanying
+// file LICENSE or http://www.opensource.org/licenses/mit-license.php.
+
 %include "stdint.i"
 %include "carrays.i"
 %include "cdata.i"
 %include "std_vector.i"
 %include "std_string.i"
 
-%module pyqrlfast
+%module pyqrllib
 %{
     #include "api.h"
     #include "xmss.h"

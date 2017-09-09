@@ -1,3 +1,5 @@
+// Distributed under the MIT software license, see the accompanying
+// file LICENSE or http://www.opensource.org/licenses/mit-license.php.
 /* Based on the public domain implementation in
  * crypto_hash/keccakc512/simple/ from http://bench.cr.yp.to/supercop.html
  * by Ronny Van Keer 
@@ -5,7 +7,7 @@
  * from https://twitter.com/tweetfips202
  * by Gilles Van Assche, Daniel J. Bernstein, and Peter Schwabe */
 
-#include <stdint.h>
+#include <cstdint>
 #include <assert.h>
 #include "fips202.h"
 

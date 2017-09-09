@@ -4,7 +4,7 @@ from __future__ import print_function
 from unittest import TestCase
 import binascii
 
-from pyqrlfast import pyqrlfast
+from pyqrllib import pyqrllib
 
 
 class TestShake128(TestCase):
@@ -20,18 +20,18 @@ class TestShake128(TestCase):
     def verify(self, data_text, expected):
         size_in = len(data_text)
         size_out = 32
-        data_in = pyqrlfast.ucharCArray(size_in)
-        data_out = pyqrlfast.ucharCArray(size_out)
+        data_in = pyqrllib.ucharCArray(size_in)
+        data_out = pyqrllib.ucharCArray(size_out)
 
         # Move data into array
-        pyqrlfast.memmove(data_in, data_text)
-        hex_in_before = binascii.hexlify(pyqrlfast.cdata(data_in, size_in))
+        pyqrllib.memmove(data_in, data_text)
+        hex_in_before = binascii.hexlify(pyqrllib.cdata(data_in, size_in))
 
-        pyqrlfast.shake128(data_out, size_out, data_in, size_in)
+        pyqrllib.shake128(data_out, size_out, data_in, size_in)
 
         # This is just to keep as an example. Things could be compared without converting to hex
-        hex_in = binascii.hexlify(pyqrlfast.cdata(data_in, size_in))
-        hex_out = binascii.hexlify(pyqrlfast.cdata(data_out, size_out))
+        hex_in = binascii.hexlify(pyqrllib.cdata(data_in, size_in))
+        hex_out = binascii.hexlify(pyqrllib.cdata(data_out, size_out))
 
         self.assertEqual(hex_in, hex_in_before)
         self.assertEqual(hex_out, expected)
@@ -61,18 +61,18 @@ class TestShake256(TestCase):
     def verify(self, data_text, expected):
         size_in = len(data_text)
         size_out = 64
-        data_in = pyqrlfast.ucharCArray(size_in)
-        data_out = pyqrlfast.ucharCArray(size_out)
+        data_in = pyqrllib.ucharCArray(size_in)
+        data_out = pyqrllib.ucharCArray(size_out)
 
         # Move data into array
-        pyqrlfast.memmove(data_in, data_text)
-        hex_in_before = binascii.hexlify(pyqrlfast.cdata(data_in, size_in))
+        pyqrllib.memmove(data_in, data_text)
+        hex_in_before = binascii.hexlify(pyqrllib.cdata(data_in, size_in))
 
-        pyqrlfast.shake256(data_out, size_out, data_in, size_in)
+        pyqrllib.shake256(data_out, size_out, data_in, size_in)
 
         # This is just to keep as an example. Things could be compared without converting to hex
-        hex_in = binascii.hexlify(pyqrlfast.cdata(data_in, size_in))
-        hex_out = binascii.hexlify(pyqrlfast.cdata(data_out, size_out))
+        hex_in = binascii.hexlify(pyqrllib.cdata(data_in, size_in))
+        hex_out = binascii.hexlify(pyqrllib.cdata(data_out, size_out))
 
         self.assertEqual(hex_in, hex_in_before)
         self.assertEqual(hex_out, expected)

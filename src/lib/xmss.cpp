@@ -1,3 +1,5 @@
+// Distributed under the MIT software license, see the accompanying
+// file LICENSE or http://www.opensource.org/licenses/mit-license.php.
 #include <iostream>
 #include "xmss.h"
 #include "algsxmss.h"
@@ -48,16 +50,16 @@ TSIGNATURE Xmss::sign(const TMESSAGE &message)
     return signature;
 }
 
-bool Xmss::verify(const TMESSAGE &message,
-                  const TSIGNATURE &signature,
-                  const TKEY &pk,
-                  unsigned char height)
+bool verify(const TMESSAGE &message,
+            const TSIGNATURE &signature,
+            const TKEY &pk,
+            unsigned char height)
 {
     // TODO: Fix constness in library
     auto tmp = static_cast<TSIGNATURE>(signature);
     return xmss_Verifysig(static_cast<TMESSAGE>(message).data(),
                           message.size(),
                           tmp.data(),
-                          _pk.data(),
+                          pk.data(),
                           height) == 0;
 }
