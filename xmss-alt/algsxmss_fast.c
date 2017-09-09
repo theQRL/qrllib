@@ -494,17 +494,6 @@ int xmssfast_Genkeypair(unsigned char *pk, unsigned char *sk, bds_state *state, 
   xmssfast_set_params(&paramsfast, 32, h, 16, 2);
   unsigned int k = paramsfast.k;
   unsigned int n = paramsfast.n;
-  unsigned char stack[(h+1)*n];
-  unsigned int stackoffset = 0;
-  unsigned char stacklevels[h+1];
-  unsigned char auth[(h)*n];
-  unsigned char keep[(h >> 1)*n];
-  treehash_inst treehash[h-k];
-  unsigned char th_nodes[(h-k)*n];
-  unsigned char retain[((1 << k) - k - 1)*n];
-  for (int i = 0; i < h-k; i++)
-    treehash[i].node = &th_nodes[n*i];
-  xmss_set_bds_state(state, stack, stackoffset, stacklevels, auth, keep, treehash, retain, 0);
 
   // Set idx = 0
   sk[0] = 0;
@@ -633,7 +622,7 @@ int xmssfast_Signmsg(unsigned char *sk, bds_state *state, unsigned char *sig_msg
 
   //  memcpy(sig_msg, msg, msglen);
   //*sig_msg_len += msglen;
-
+  printf("%d",sig_msg_len);
   return 0;
 }
 
@@ -643,7 +632,8 @@ int xmssfast_Verifysig(unsigned char *msg, unsigned long long msglen, unsigned c
   unsigned int n = paramsfast.n;
 
   unsigned long long sig_msg_len = 4 + 32 + 67 * 32 + h * 32;
-
+  printf("%llu",sig_msg_len);
+  sig_msg_len = 2436;
   unsigned long long i, m_len;
   unsigned long idx=0;
   unsigned char wots_pk[paramsfast.wots_par.keysize];
@@ -679,7 +669,7 @@ int xmssfast_Verifysig(unsigned char *msg, unsigned long long msglen, unsigned c
   // hash message 
   unsigned long long tmp_sig_len = paramsfast.wots_par.keysize+paramsfast.h*n;
   m_len = sig_msg_len - tmp_sig_len;
-  h_msg(msg_h, sig_msg, m_len, hash_key, 3*n, n);
+  h_msg(msg_h, msg, msglen, hash_key, 3*n, n);
 
   //-----------------------
   // Verify signature
