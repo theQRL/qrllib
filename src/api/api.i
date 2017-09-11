@@ -24,6 +24,7 @@ namespace std {
   %template(intVector) vector<int>;
   %template(uintVector) vector<unsigned int>;
   %template(ucharVector) vector<unsigned char>;
+  %template(charVector) vector<char>;
   %template(doubleVector) vector<double>;
 }
 

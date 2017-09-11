@@ -7,6 +7,7 @@
 #include<string>
 #include<vector>
 
-std::string vec2hexstr(const std::vector<unsigned char> &vec, int wrap);
+std::string vec2hexstr(const std::vector<unsigned char> &vec, int wrap = 0);
+std::string vec2hexstr(const std::vector<char> &vec, int wrap = 0);
 
 #endif //QRLLIB_MISC_H
