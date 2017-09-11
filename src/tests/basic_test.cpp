@@ -19,7 +19,7 @@ namespace {
         EXPECT_EQ(1, 1);
     }
 
-#define XMSS_HEIGHT 4
+#define XMSS_HEIGHT 8
 
     TEST(XMSS, vec2hex) {
         std::vector<unsigned char> data;

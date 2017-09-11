@@ -20,18 +20,18 @@ namespace {
         unsigned int n = 32;
         printf("before keygen");
 
-            unsigned char stack[(h+1)*n];
-            unsigned int stackoffset = 0;
-            unsigned char stacklevels[h+1];
-            unsigned char auth[(h)*n];
-            unsigned char keep[(h >> 1)*n];
-            treehash_inst treehash[h-k];
-            unsigned char th_nodes[(h-k)*n];
-            unsigned char retain[((1 << k) - k - 1)*n];
-            bds_state *state = &s;
-            for (int i = 0; i < h-k; i++)
-                    treehash[i].node = &th_nodes[n*i];
-            xmss_set_bds_state(state, stack, stackoffset, stacklevels, auth, keep, treehash, retain, 0);
+        unsigned char stack[(h+1)*n];
+        unsigned int stackoffset = 0;
+        unsigned char stacklevels[h+1];
+        unsigned char auth[(h)*n];
+        unsigned char keep[(h >> 1)*n];
+        treehash_inst treehash[h-k];
+        unsigned char th_nodes[(h-k)*n];
+        unsigned char retain[((1 << k) - k - 1)*n];
+        bds_state *state = &s;
+        for (int i = 0; i < h-k; i++)
+                treehash[i].node = &th_nodes[n*i];
+        xmss_set_bds_state(state, stack, stackoffset, stacklevels, auth, keep, treehash, retain, 0);
 
         xmssfast_Genkeypair(pk, sk, state,seed, h);
 
