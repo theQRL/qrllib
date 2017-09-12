@@ -31,9 +31,39 @@ uint32_t Xmss::getSignatureSize()
     return static_cast<uint32_t>(4 + 32 + 67 * 32 + _height * 32);
 }
 
+uint32_t Xmss::getPublicKeySize()
+{
+    return 64;
+}
+
 uint32_t Xmss::getSecretKeySize()
 {
     return 132;
+}
+
+TKEY Xmss::getRoot()
+{
+    return TKEY(_pk.begin(), _pk.begin()+32);
+}
+
+TKEY Xmss::getPKSeed()
+{
+    return TKEY(_pk.begin()+32, _pk.end());
+}
+
+TKEY Xmss::getIndex()
+{
+    return TKEY(_sk.begin(), _sk.begin()+4);
+}
+
+TKEY Xmss::getSKSeed()
+{
+    return TKEY(_sk.begin()+4, _sk.begin()+4+32);
+}
+
+TKEY Xmss::getSKPRF()
+{
+    return TKEY(_sk.begin()+4+32, _sk.begin()+4+32+32);
 }
 
 TSIGNATURE Xmss::sign(const TMESSAGE &message)

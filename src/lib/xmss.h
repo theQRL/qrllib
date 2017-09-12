@@ -24,13 +24,23 @@ public:
     TSIGNATURE sign(const TMESSAGE &message);
 
     int getHeight() {  return _height; }
+
     TKEY getPK() {  return _pk; }
     TKEY getSK() {  return _sk; }
     TSEED getSeed() {  return _seed; }
+
+    // TODO: Maybe improve this using a union down into the original code?
+    TKEY getRoot();
+    TKEY getIndex();
+    TKEY getPKSeed();
+    TKEY getSKSeed();
+    TKEY getSKPRF();
+
     uint32_t getSignatureSize();
     uint32_t getSecretKeySize();
-private:
+    uint32_t getPublicKeySize();
 
+private:
     unsigned char _height;
 
     TKEY _pk;
