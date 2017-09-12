@@ -44,33 +44,33 @@ class TestHash(TestCase):
         # Verify signature
         start = time()
         for i in range(1000):
-            self.assertTrue(xmss.verify(message,
-                                        signature,
-                                        xmss.getPK(),
-                                        xmss.getHeight()))
+            self.assertTrue(pyqrllib.verify(message,
+                                            signature,
+                                            xmss.getPK(),
+                                            xmss.getHeight()))
         end = time()
         print(end - start)
 
         # Touch the signature
         signature[100] += 1
-        self.assertFalse(xmss.verify(message,
-                                     signature,
-                                     xmss.getPK(),
-                                     xmss.getHeight()))
+        self.assertFalse(pyqrllib.verify(message,
+                                         signature,
+                                         xmss.getPK(),
+                                         xmss.getHeight()))
         signature[100] -= 1
-        self.assertTrue(xmss.verify(message,
-                                    signature,
-                                    xmss.getPK(),
-                                    xmss.getHeight()))
+        self.assertTrue(pyqrllib.verify(message,
+                                        signature,
+                                        xmss.getPK(),
+                                        xmss.getHeight()))
 
         # Touch the message
         message[2] += 1
-        self.assertFalse(xmss.verify(message,
-                                     signature,
-                                     xmss.getPK(),
-                                     xmss.getHeight()))
+        self.assertFalse(pyqrllib.verify(message,
+                                         signature,
+                                         xmss.getPK(),
+                                         xmss.getHeight()))
         message[2] -= 1
-        self.assertTrue(xmss.verify(message,
-                                    signature,
-                                    xmss.getPK(),
-                                    xmss.getHeight()))
+        self.assertTrue(pyqrllib.verify(message,
+                                        signature,
+                                        xmss.getPK(),
+                                        xmss.getHeight()))

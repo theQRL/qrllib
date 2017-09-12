@@ -21,6 +21,8 @@ Xmss::Xmss(const TSEED &seed, unsigned char height): _height(height)
 
     _sk = TKEY(132, 0);
     _pk = TKEY(64, 0);
+
+    // FIXME: At the moment, the lib takes 32 bytes from the seed vector
     _seed = seed;
 
     xmss_Genkeypair(_pk.data(), _sk.data(), _seed.data(), height);
@@ -51,9 +53,10 @@ TKEY Xmss::getPKSeed()
     return TKEY(_pk.begin()+32, _pk.end());
 }
 
-TKEY Xmss::getIndex()
+uint32_t Xmss::getIndex()
 {
-    return TKEY(_sk.begin(), _sk.begin()+4);
+    // TODO: Review this according to IETF
+    return _sk[0] << 24 + _sk[1] << 16 + _sk[2] << 8 + _sk[0];
 }
 
 TKEY Xmss::getSKSeed()
@@ -83,7 +86,7 @@ TSIGNATURE Xmss::sign(const TMESSAGE &message)
 bool verify(const TMESSAGE &message,
             const TSIGNATURE &signature,
             const TKEY &pk,
-            unsigned char height)
+            int height)
 {
     // TODO: Fix constness in library
     auto tmp = static_cast<TSIGNATURE>(signature);
@@ -93,3 +96,4 @@ bool verify(const TMESSAGE &message,
                           pk.data(),
                           height) == 0;
 }
+

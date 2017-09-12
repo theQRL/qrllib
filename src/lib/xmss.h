@@ -31,7 +31,7 @@ public:
 
     // TODO: Maybe improve this using a union down into the original code?
     TKEY getRoot();
-    TKEY getIndex();
+    uint32_t getIndex();
     TKEY getPKSeed();
     TKEY getSKSeed();
     TKEY getSKPRF();
@@ -51,6 +51,6 @@ private:
 bool verify(const TMESSAGE &message,
             const TSIGNATURE &signature,
             const TKEY &pk,
-            unsigned char height);
+            int height);
 
 #endif //QRLLIB_XMSS_H

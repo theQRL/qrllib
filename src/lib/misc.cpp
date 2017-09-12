@@ -4,6 +4,7 @@
 #include <sstream>
 #include <iomanip>
 #include <fips202.h>
+#include <randombytes.h>
 
 std::string vec2hexstr(const std::vector<unsigned char> &vec, int wrap)
 {
@@ -51,12 +52,16 @@ std::string vec2hexstr(const std::vector<char> &vec, int wrap)
 
 std::string getAddress(const std::string &prefix, Xmss xmss)
 {
-    auto pk = xmss.getPK();
+    std::vector<unsigned char> key = xmss.getPK();
+    return getAddress(prefix, key);
+}
 
+std::string getAddress(const std::string &prefix, std::vector<unsigned char> key)
+{
     TKEY hashed_key(ADDRESS_HASH_SIZE, 0);
     TKEY hashed_key2(ADDRESS_HASH_SIZE, 0);
 
-    shake256(hashed_key.data(), ADDRESS_HASH_SIZE, pk.data(), pk.size());
+    shake256(hashed_key.data(), ADDRESS_HASH_SIZE, key.data(), key.size());
     shake256(hashed_key2.data(), ADDRESS_HASH_SIZE, hashed_key.data(), ADDRESS_HASH_SIZE);
 
     std::stringstream ss;
@@ -65,4 +70,18 @@ std::string getAddress(const std::string &prefix, Xmss xmss)
     ss << vec2hexstr(TKEY(hashed_key2.end()-4, hashed_key2.end()) );        // FIXME: Move to GSL
 
     return ss.str();
+}
+
+std::vector<unsigned char> tobin(const std::string &s)
+{
+    // FIXME: Avoid the copy
+    std::vector<unsigned char> v(s.begin(), s.end());
+    return v;
+}
+
+std::vector<unsigned char> getRandomSeed(uint32_t seed_size)
+{
+    std::vector<unsigned char> tmp(seed_size, 0);
+    randombytes(tmp.data(), seed_size);
+    return tmp;
 }
