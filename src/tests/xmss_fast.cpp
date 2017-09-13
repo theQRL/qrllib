@@ -17,8 +17,8 @@ namespace {
         unsigned char sk[4+4*32];
         bds_state s;
         unsigned char seed[32];
-        unsigned char h = 4;
-            unsigned int k = 2;
+        unsigned char h = 8;
+        unsigned int k = 2;
         unsigned int n = 32;
         printf("before keygen");
 
@@ -41,7 +41,7 @@ namespace {
         unsigned long long siglen = 4 + 32 + 67 * 32 + h * 32;
         unsigned char sign[10000];
         int x;
-            int y = xmssfast_update(sk, state, h, 10);
+            int y = xmssfast_update(sk, state, h, 32);
 
         x = xmssfast_Signmsg(sk, state, sign, msg,32, h);
             x = xmssfast_Verifysig(msg,32, sign,pk, h);

@@ -495,6 +495,10 @@ static void bds_round(bds_state *state, const unsigned long leaf_idx, const unsi
  */
 int xmssfast_Genkeypair(unsigned char *pk, unsigned char *sk, bds_state *state, unsigned char *seed, unsigned char h)
 {
+  if(h & 1){
+    printf("Not a valid h, only even numbers supported! Try again with an even number");
+    return -1;
+  }
   xmssfast_set_params(&paramsfast, 32, h, 16, 2);
   unsigned int k = paramsfast.k;
   unsigned int n = paramsfast.n;
@@ -548,27 +552,13 @@ int xmssfast_update(unsigned char *sk, bds_state *state, unsigned long h, unsign
     memcpy(pub_seed, sk+4+2*32, 32);
 
     uint32_t ots_addr[8] = {0, 0, 0, 0, 0, 0, 0, 0};
-    setType(ots_addr, 0);
-    setOTSADRS(ots_addr, idx);
-
-    setChainADRS(ots_addr,0);
-    setHashADRS(ots_addr,0);
-    setKeyAndMask(ots_addr,0);
-    setChainADRS(ots_addr, paramsfast.wots_par.len-1);
-    setHashADRS(ots_addr,10);
-    setKeyAndMask(ots_addr, 1);
-    printf("\n");
-    for(int j = 0; j < 8; j++){
-      printf("%d, ", ots_addr[j]);
-
-    }
-    printf("\n");
-
 
     for(int j = idxkey; j < new_idx ; j++){
       if (j < (1U << h) - 1) {
         bds_round(state, j, sk_seed, &paramsfast, pub_seed, ots_addr);
         bds_treehash_update(state, (h - k) >> 1, sk_seed, &paramsfast, pub_seed, ots_addr);
+      }else{
+
       }
     }
 
@@ -659,12 +649,6 @@ int xmssfast_Signmsg(unsigned char *sk, bds_state *state, unsigned char *sig_msg
 
   // Compute WOTS signature
   wots_sign(sig_msg, msg_h, ots_seed, &(paramsfast.wots_par), pub_seed, ots_addr);
-  printf("\n");
-  for(int j = 0; j < 8; j++){
-    printf("%d, ", ots_addr[j]);
-
-  }
-  printf("\n");
   sig_msg += paramsfast.wots_par.keysize;
   sig_msg_len += paramsfast.wots_par.keysize;
 
@@ -676,13 +660,6 @@ int xmssfast_Signmsg(unsigned char *sk, bds_state *state, unsigned char *sig_msg
     bds_treehash_update(state, (h - k) >> 1, sk_seed, &paramsfast, pub_seed, ots_addr);
   }
 
-  printf("\n");
-  for(int j = 0; j < 8; j++){
-    printf("%d, ", ots_addr[j]);
-
-  }
-  printf("\n");
-
   sig_msg += paramsfast.h*n;
   sig_msg_len += paramsfast.h*n;
 
@@ -691,7 +668,7 @@ int xmssfast_Signmsg(unsigned char *sk, bds_state *state, unsigned char *sig_msg
 
   //  memcpy(sig_msg, msg, msglen);
   //*sig_msg_len += msglen;
-  printf("%d",sig_msg_len);
+  //printf("%d",sig_msg_len);
   return 0;
 }
 
