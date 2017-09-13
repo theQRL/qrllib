@@ -4,6 +4,7 @@
 #include <sstream>
 #include <iomanip>
 #include <fips202.h>
+#include <picosha2.h>
 #include <randombytes.h>
 #include <iostream>
 #include <unordered_map>
@@ -144,8 +145,8 @@ std::string getAddress(const std::string &prefix, std::vector<unsigned char> &ke
     TKEY hashed_key(ADDRESS_HASH_SIZE, 0);
     TKEY hashed_key2(ADDRESS_HASH_SIZE, 0);
 
-    shake256(hashed_key.data(), ADDRESS_HASH_SIZE, key.data(), key.size());
-    shake256(hashed_key2.data(), ADDRESS_HASH_SIZE, hashed_key.data(), ADDRESS_HASH_SIZE);
+    picosha2::hash256( key.begin(), key.end(), hashed_key.begin(), hashed_key.end() );
+    picosha2::hash256( hashed_key.begin(), hashed_key.end(), hashed_key2.begin(), hashed_key2.end() );
 
     std::stringstream ss;
     ss << prefix;
@@ -164,4 +165,34 @@ std::vector<unsigned char> getRandomSeed(uint32_t seed_size, const std::string &
     randombytes(tmp.data(), seed_size);
 
     return shake256(seed_size, tmp);
+}
+
+std::vector<std::vector<unsigned char>> getHashChainSeed(const std::vector<unsigned char> &seed,
+                                                         uint32_t seed_shift,
+                                                         uint32_t count)
+{
+    std::vector<std::vector<unsigned char>> result;
+    std::vector<unsigned char> tmp_seed(seed);
+    tmp_seed.resize(seed.size() + sizeof(uint32_t) * 2, 0);
+
+    auto p = seed.size();
+    for(int j=0; j<sizeof(uint32_t); j++)
+    {
+        tmp_seed[p+j]= static_cast<unsigned char>((seed_shift >> (8*j)) & 0xFF);
+    }
+
+    p+=sizeof(uint32_t);
+    for(uint32_t i=0; i<count; i++)
+    {
+        // Apply i to the seed
+        for(int j=0; j<sizeof(uint32_t); j++)
+        {
+            tmp_seed[p+j]= static_cast<unsigned char>((i >> (8*j)) & 0xFF);
+        }
+
+        // shake and add to result
+        result.push_back(shake256(32, tmp_seed));
+    }
+
+    return result;
 }

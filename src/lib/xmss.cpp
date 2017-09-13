@@ -22,8 +22,13 @@ Xmss::Xmss(const TSEED &seed, unsigned char height): _height(height)
     _sk = TKEY(132, 0);
     _pk = TKEY(64, 0);
 
-    // FIXME: At the moment, the lib takes 32 bytes from the seed vector
     _seed = seed;
+
+    // FIXME: At the moment, the lib takes 48 bytes from the seed vector
+    if (seed.size() != 48)
+    {
+        throw std::invalid_argument("Seed should be 48 bytes. Other values are not currently supported");
+    }
 
     xmss_Genkeypair(_pk.data(), _sk.data(), _seed.data(), height);
 }

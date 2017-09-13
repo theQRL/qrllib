@@ -27,6 +27,7 @@ namespace std {
   %template(charVector) vector<char>;
   %template(doubleVector) vector<double>;
   %template(_string_list) vector<string>;
+  %template(_string_list_list) vector<vector<unsigned char>>;
 }
 
 #%array_functions(uint32_t, uint32ArrayRaw)
