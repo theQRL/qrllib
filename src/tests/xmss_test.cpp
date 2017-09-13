@@ -11,7 +11,7 @@ namespace {
 #define XMSS_HEIGHT 5
 
     TEST(XMSS, Instantiation) {
-        std::vector<unsigned char> seed(32, 0);
+        std::vector<unsigned char> seed(48, 0);
 
         Xmss xmss(seed, XMSS_HEIGHT);
 
@@ -20,15 +20,15 @@ namespace {
 
         std::cout << std::endl;
         std::cout << std::endl;
-        std::cout << "seed:" << seed.size() << " bytes\n" << bin2hstr(seed, 32) << std::endl;
-        std::cout << "pk  :" << pk.size() << " bytes\n" << bin2hstr(pk, 32) << std::endl;
-        std::cout << "sk  :" << sk.size() << " bytes\n" << bin2hstr(sk, 32) << std::endl;
+        std::cout << "seed:" << seed.size() << " bytes\n" << bin2hstr(seed, 48) << std::endl;
+        std::cout << "pk  :" << pk.size() << " bytes\n" << bin2hstr(pk, 48) << std::endl;
+        std::cout << "sk  :" << sk.size() << " bytes\n" << bin2hstr(sk, 48) << std::endl;
 
         EXPECT_EQ(seed, xmss.getSeed());
     }
 
     TEST(XMSS, SignatureLen) {
-        std::vector<unsigned char> seed(32, 0);
+        std::vector<unsigned char> seed(48, 0);
 
         Xmss xmss4(seed, 4);
         EXPECT_EQ(2308, xmss4.getSignatureSize());
@@ -38,7 +38,7 @@ namespace {
     }
 
     TEST(XMSS, Sign) {
-        std::vector<unsigned char> seed(32, 0);
+        std::vector<unsigned char> seed(48, 0);
 
         Xmss xmss(seed, XMSS_HEIGHT);
 
@@ -55,7 +55,7 @@ namespace {
 
 
     TEST(XMSS, Verify) {
-        std::vector<unsigned char> seed(32, 0);
+        std::vector<unsigned char> seed(48, 0);
 
         Xmss xmss(seed, XMSS_HEIGHT);
 

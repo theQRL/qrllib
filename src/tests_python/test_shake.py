@@ -17,30 +17,22 @@ class TestShake128(TestCase):
     def __init__(self, *args, **kwargs):
         super(TestShake128, self).__init__(*args, **kwargs)
 
-    def verify(self, data_text, expected):
-        size_in = len(data_text)
+    def check_shake_result(self, data_text, expected):
         size_out = 32
-        data_in = pyqrllib.ucharCArray(size_in)
-        data_out = pyqrllib.ucharCArray(size_out)
 
-        # Move data into array
-        pyqrllib.memmove(data_in, data_text)
-        hex_in_before = binascii.hexlify(pyqrllib.cdata(data_in, size_in))
-
-        pyqrllib.shake128(data_out, size_out, data_in, size_in)
+        hex_in_before = pyqrllib.bin2hstr(pyqrllib.str2bin(data_text))
+        data_out = pyqrllib.shake128(32, pyqrllib.str2bin(data_text))
 
         # This is just to keep as an example. Things could be compared without converting to hex
-        hex_in = binascii.hexlify(pyqrllib.cdata(data_in, size_in))
-        hex_out = binascii.hexlify(pyqrllib.cdata(data_out, size_out))
+        hex_in = pyqrllib.bin2hstr(pyqrllib.str2bin(data_text))
+        hex_out = pyqrllib.bin2hstr(data_out)
 
         self.assertEqual(hex_in, hex_in_before)
         self.assertEqual(hex_out, expected)
 
     def test_check_shake128(self):
-        self.verify(self.shake128_input1,
-                    self.shake128_expected_result1)
-        self.verify(self.shake128_input2,
-                    self.shake128_expected_result2)
+        self.check_shake_result(self.shake128_input1, self.shake128_expected_result1)
+        self.check_shake_result(self.shake128_input2, self.shake128_expected_result2)
 
 
 class TestShake256(TestCase):
@@ -58,27 +50,20 @@ class TestShake256(TestCase):
     def __init__(self, *args, **kwargs):
         super(TestShake256, self).__init__(*args, **kwargs)
 
-    def verify(self, data_text, expected):
-        size_in = len(data_text)
-        size_out = 64
-        data_in = pyqrllib.ucharCArray(size_in)
-        data_out = pyqrllib.ucharCArray(size_out)
-
+    def check_shake_result(self, data_text, expected):
         # Move data into array
-        pyqrllib.memmove(data_in, data_text)
-        hex_in_before = binascii.hexlify(pyqrllib.cdata(data_in, size_in))
-
-        pyqrllib.shake256(data_out, size_out, data_in, size_in)
+        hex_in_before = pyqrllib.bin2hstr(pyqrllib.str2bin(data_text))
+        data_out = pyqrllib.shake256(64, pyqrllib.str2bin(data_text))
 
         # This is just to keep as an example. Things could be compared without converting to hex
-        hex_in = binascii.hexlify(pyqrllib.cdata(data_in, size_in))
-        hex_out = binascii.hexlify(pyqrllib.cdata(data_out, size_out))
+        hex_in = pyqrllib.bin2hstr(pyqrllib.str2bin(data_text))
+        hex_out = pyqrllib.bin2hstr(data_out)
 
         self.assertEqual(hex_in, hex_in_before)
         self.assertEqual(hex_out, expected)
 
     def test_check_shake256(self):
-        self.verify(self.shake256_input1,
-                    self.shake256_expected_result1)
-        self.verify(self.shake256_input2,
-                    self.shake256_expected_result2)
+        self.check_shake_result(self.shake256_input1,
+                                self.shake256_expected_result1)
+        self.check_shake_result(self.shake256_input2,
+                                self.shake256_expected_result2)

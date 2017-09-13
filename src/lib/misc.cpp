@@ -140,6 +140,13 @@ std::vector<unsigned char> shake256(size_t hash_size, std::vector<unsigned char>
     return hashed_output;
 }
 
+std::vector<unsigned char> sha2_256(size_t hash_size, std::vector<unsigned char> input)
+{
+    std::vector<unsigned char> hashed_output(32, 0);
+    picosha2::hash256( input.begin(), input.end(), hashed_output.begin(), hashed_output.end() );
+    return hashed_output;
+}
+
 std::string getAddress(const std::string &prefix, std::vector<unsigned char> &key)
 {
     TKEY hashed_key(ADDRESS_HASH_SIZE, 0);

@@ -11,9 +11,9 @@ class TestHash(TestCase):
         super(TestHash, self).__init__(*args, **kwargs)
 
     def test_data_to_hex1(self):
-        hexstring = pyqrllib.vec2hexstr(b'\x00\x11\x22\x33', 0)
+        hexstring = pyqrllib.bin2hstr(b'\x00\x11\x22\x33', 0)
         self.assertEqual(hexstring, '00112233')
 
     def test_data_to_hex2(self):
-        hexstring = pyqrllib.vec2hexstr('test', 0)
+        hexstring = pyqrllib.bin2hstr('test', 0)
         self.assertEqual(hexstring, '74657374')
