@@ -12,7 +12,7 @@
 
 // FIXME: Move this to templates
 std::string bin2hstr(const std::vector<unsigned char> &vec, int wrap = 0);
-std::string bin2hstr(const std::vector<char> &vec, int wrap = 0);
+std::string bin2hstr(const std::string &vec, int wrap = 0);
 std::vector<unsigned char> str2bin(const std::string &s);
 std::vector<unsigned char> hstr2bin(const std::string &s);
 

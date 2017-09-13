@@ -6,6 +6,8 @@
 %include "cdata.i"
 %include "std_vector.i"
 %include "std_string.i"
+%include "stl.i"
+%include "std_except.i"
 
 %module pyqrllib
 %{
@@ -24,6 +26,7 @@ namespace std {
   %template(ucharVector) vector<unsigned char>;
   %template(charVector) vector<char>;
   %template(doubleVector) vector<double>;
+  %template(_string_list) vector<string>;
 }
 
 #%array_functions(uint32_t, uint32ArrayRaw)

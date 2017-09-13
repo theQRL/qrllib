@@ -79,6 +79,14 @@ namespace {
         EXPECT_EQ(mnemonic, "basin eighth khaki bag");
     }
 
+    TEST(MISC, bin2mnemonic_simple3b) {
+        // FIXME: This could be a problem
+        std::vector<unsigned char> input = {0x12, 0x34, 0x56, 0x78, 0x01, 0x00};
+
+        auto mnemonic = bin2mnemonic(input, wordList);
+        EXPECT_EQ(mnemonic, "basin eighth khaki bag");
+    }
+
     TEST(MISC, bin2mnemonic_simple4) {
         std::vector<unsigned char> input = {0x00};
 
@@ -96,14 +104,25 @@ namespace {
     TEST(MISC, mnemonic2bin_simple1) {
         std::string input = "basin eighth khaki aback";
         auto data = mnemonic2bin(input, wordList);
-        EXPECT_EQ(data, std::vector<unsigned char>({0x12, 0x34, 0x56, 0x78, 0x00}));
+        EXPECT_EQ(bin2hstr(data), "123456780000");
     }
 
     TEST(MISC, mnemonic2bin_simple2) {
         std::string input = "basin eighth khaki bag";
         auto data = mnemonic2bin(input, wordList);
 
-        EXPECT_EQ(data, std::vector<unsigned char>({0x12, 0x34, 0x56, 0x78, 0x01}));
+        EXPECT_EQ(bin2hstr(data), "123456780100");
+    }
+
+    TEST(MISC, mnemonic2bin_long) {
+        std::string input = "law bruise screen lunar than loft but franc strike asleep dwarf tavern dragon alarm "
+                            "snack queen meadow thing far cotton add emblem strive probe zurich edge peer alight "
+                            "libel won corn medal";
+
+        auto data = mnemonic2bin(input, wordList);
+
+        EXPECT_EQ( bin2hstr(data),
+                   "7bf1e7c1c84be2c820211572d990c0430e09401053ce2af489ee3e4d030c027464d9cac1fff449a2405b7f3fc63018a4");
     }
 
     TEST(MISC, mnemonic2bin_wrongword) {

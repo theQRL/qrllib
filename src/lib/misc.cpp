@@ -117,6 +117,11 @@ std::vector<unsigned char> mnemonic2bin(const std::string &mnemonic, const std::
         }
     }
 
+    if (buffering>0)
+    {
+        result.push_back( (unsigned char) (current&0xFF));
+    }
+
     return result;
 }
 
