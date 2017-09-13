@@ -272,7 +272,7 @@ int xmss_Genkeypair(unsigned char *pk, unsigned char *sk, unsigned char *seed, u
 
     //Construct SK_SEED (n byte), SK_PRF (n byte), and PUB_SEED (n byte) from n-byte seed
     unsigned char randombits[3 * n];
-    shake256(randombits, 3 * n, seed, n);
+    shake256(randombits, 3 * n, seed, 48);
 
     // Copy PUB_SEED to public key
     memcpy(sk + 4, randombits, 3 * n);
