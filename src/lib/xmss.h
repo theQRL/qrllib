@@ -3,7 +3,8 @@
 #ifndef QRLLIB_XMSS_H
 #define QRLLIB_XMSS_H
 
-#include<vector>
+#include <vector>
+#include <string>
 
 // This is unfortunately not fully supported by SWIG
 // using TSIGNATURE = std::vector<unsigned char>;
@@ -40,6 +41,7 @@ public:
     TKEY getPKSeed();
     TKEY getSKSeed();
     TKEY getSKPRF();
+    std::string getAddress(const std::string &prefix);
 
     uint32_t getSignatureSize();
     uint32_t getSecretKeySize();

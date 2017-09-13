@@ -5,8 +5,10 @@
 #include <iomanip>
 #include <fips202.h>
 #include <randombytes.h>
+#include <iostream>
+#include <unordered_map>
 
-std::string vec2hexstr(const std::vector<unsigned char> &vec, int wrap)
+std::string bin2hstr(const std::vector<unsigned char> &vec, int wrap)
 {
     std::stringstream ss;
 
@@ -28,26 +30,94 @@ std::string vec2hexstr(const std::vector<unsigned char> &vec, int wrap)
     return ss.str();
 }
 
-std::string vec2hexstr(const std::vector<char> &vec, int wrap)
+std::string bin2hstr(const std::string &s, int wrap)
 {
-    std::stringstream ss;
+    return bin2hstr(str2bin(s), wrap);
+}
 
-    int count = 0;
-    for(auto val : vec)
+std::vector<unsigned char> str2bin(const std::string &s)
+{
+    // FIXME: Avoid the copy
+    return std::vector<unsigned char>(s.begin(), s.end());
+}
+
+std::vector<unsigned char> hstr2bin(const std::string &s)
+{
+    // FIXME: This is not working
+    return std::vector<unsigned char>(s.begin(), s.end());
+}
+
+std::string bin2mnemonic(const std::vector<unsigned char> &vec, const std::vector<std::string> &word_list)
+{
+    size_t num_words = word_list.size();
+    if (num_words != 4096)
     {
-        if (wrap>0)
-        {
-            count++;
-            if (count>wrap)
-            {
-                ss << "\n";
-                count = 1;
-            }
-        }
-        ss << std::setfill('0') << std::setw(2) << std::hex << (int)val;
+        throw std::invalid_argument("word list should contain 4096 words");
+    }
+
+    std::stringstream ss;
+    std::string separator;
+    for(int nibble = 0; nibble < vec.size()*2; nibble+=3)
+    {
+        int p = nibble >> 1;
+        int b1 = vec[p];
+        int b2 = p+1<vec.size() ? vec[p+1] : 0;
+        int idx = nibble%2==0 ? (b1 << 4) + (b2 >> 4) : ((b1 & 0x0F) << 8) + b2;
+        //std::cout << nibble << " " << p << " " << std::hex <<  idx << std::endl;
+        ss << separator << word_list[idx];
+        separator = " ";
     }
 
     return ss.str();
+}
+
+std::vector<unsigned char> mnemonic2bin(const std::string &mnemonic, const std::vector<std::string> &word_list)
+{
+    size_t num_words = word_list.size();
+    if (num_words != 4096)
+    {
+        throw std::invalid_argument("word list should contain 4096 words");
+    }
+
+    // Prepare lookup
+    std::unordered_map<std::string, int> word_lookup;
+    int count = 0;
+    for (auto &w: word_list)
+    {
+        word_lookup[w]=count++;
+    }
+
+    std::stringstream ss(mnemonic);
+    std::string word;
+
+    std::vector<unsigned char> result;
+
+    int current = 0;
+    int buffering = 0;
+
+    while(ss >> word)
+    {
+        auto it = word_lookup.find(word);
+        if (it==word_lookup.end())
+        {
+            throw std::invalid_argument("invalid word in mnemonic");
+        }
+
+        buffering += 3;
+        current = (current<<12)+ it->second;
+
+        while(buffering>2)
+        {
+            const int shift = 4*(buffering-2);
+            const int mask = (1 << shift)-1;
+            int tmp = current >> shift;
+            buffering-=2;
+            current &= mask;
+            result.push_back( (unsigned char)tmp);
+        }
+    }
+
+    return result;
 }
 
 std::vector<unsigned char> shake128(size_t hash_size, std::vector<unsigned char> input)
@@ -64,13 +134,7 @@ std::vector<unsigned char> shake256(size_t hash_size, std::vector<unsigned char>
     return hashed_output;
 }
 
-std::string getAddress(const std::string &prefix, Xmss xmss)
-{
-    std::vector<unsigned char> key = xmss.getPK();
-    return getAddress(prefix, key);
-}
-
-std::string getAddress(const std::string &prefix, std::vector<unsigned char> key)
+std::string getAddress(const std::string &prefix, std::vector<unsigned char> &key)
 {
     TKEY hashed_key(ADDRESS_HASH_SIZE, 0);
     TKEY hashed_key2(ADDRESS_HASH_SIZE, 0);
@@ -80,16 +144,10 @@ std::string getAddress(const std::string &prefix, std::vector<unsigned char> key
 
     std::stringstream ss;
     ss << prefix;
-    ss << vec2hexstr(hashed_key);
-    ss << vec2hexstr(TKEY(hashed_key2.end()-4, hashed_key2.end()) );        // FIXME: Move to GSL
+    ss << bin2hstr(hashed_key);
+    ss << bin2hstr(TKEY(hashed_key2.end() - 4, hashed_key2.end()));        // FIXME: Move to GSL
 
     return ss.str();
-}
-
-std::vector<unsigned char> str2bin(const std::string &s)
-{
-    // FIXME: Avoid the copy
-    return std::vector<unsigned char>(s.begin(), s.end());
 }
 
 std::vector<unsigned char> getRandomSeed(uint32_t seed_size, const std::string &entropy)

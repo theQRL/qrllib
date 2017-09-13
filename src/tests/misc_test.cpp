@@ -1,11 +1,9 @@
 // Distributed under the MIT software license, see the accompanying
 // file LICENSE or http://www.opensource.org/licenses/mit-license.php.
-#include <algsxmss.h>
-#include <xmss.h>
-#include <vector>
-#include <iostream>
 #include "gtest/gtest.h"
+
 #include <misc.h>
+#include "word_list.h"
 
 namespace {
 #define XMSS_HEIGHT 8
@@ -17,12 +15,12 @@ namespace {
         data.push_back(2);
 
         EXPECT_EQ(data.size(), 2);
-        EXPECT_EQ(vec2hexstr(data, 4), "0102");
+        EXPECT_EQ(bin2hstr(data, 4), "0102");
 
         auto data_long = std::vector<unsigned char>({0, 1, 2, 3, 4, 6, 7, 8});
         EXPECT_EQ(data_long.size(), 8);
-        EXPECT_EQ(vec2hexstr(data_long, 4), "00010203\n04060708");
-        EXPECT_EQ(vec2hexstr(data_long, 8), "0001020304060708");
+        EXPECT_EQ(bin2hstr(data_long, 4), "00010203\n04060708");
+        EXPECT_EQ(bin2hstr(data_long, 8), "0001020304060708");
     }
 
     TEST(MISC, shake128) {
@@ -35,8 +33,8 @@ namespace {
         EXPECT_EQ(input_bin.size(), 16);
         EXPECT_EQ(output_hashed.size(), 32);
 
-        EXPECT_EQ(vec2hexstr(input_bin), "54686973206973206120746573742058");
-        EXPECT_EQ(vec2hexstr(output_hashed), "02c7654fd239753b787067b1b75523d9bd2c39daa384e4b0d4f91eb78d2a5492");
+        EXPECT_EQ(bin2hstr(input_bin), "54686973206973206120746573742058");
+        EXPECT_EQ(bin2hstr(output_hashed), "02c7654fd239753b787067b1b75523d9bd2c39daa384e4b0d4f91eb78d2a5492");
     }
 
     TEST(MISC, shake256) {
@@ -49,10 +47,71 @@ namespace {
         EXPECT_EQ(input_bin.size(), 16);
         EXPECT_EQ(output_hashed.size(), 32);
 
-        EXPECT_EQ(vec2hexstr(input_bin), "54686973206973206120746573742058");
-        EXPECT_EQ(vec2hexstr(output_hashed), "b3453cb0cbd37d726a842eb750e6091b15a92efd2695e3191a96d8d07413db04");
+        EXPECT_EQ(bin2hstr(input_bin), "54686973206973206120746573742058");
+        EXPECT_EQ(bin2hstr(output_hashed), "b3453cb0cbd37d726a842eb750e6091b15a92efd2695e3191a96d8d07413db04");
     }
 
+    TEST(MISC, bin2mnemonic_empty) {
+        std::vector<unsigned char> input = {};
 
+        auto mnemonic = bin2mnemonic(input, wordList);
+        EXPECT_EQ(mnemonic, "");
+    }
+
+    TEST(MISC, bin2mnemonic_simple1) {
+        std::vector<unsigned char> input = {0x12, 0x34, 0x56, 0x78};
+
+        auto mnemonic = bin2mnemonic(input, wordList);
+        EXPECT_EQ(mnemonic, "basin eighth khaki");
+    }
+
+    TEST(MISC, bin2mnemonic_simple2) {
+        std::vector<unsigned char> input = {0x12, 0x34, 0x56, 0x78, 0x00};
+
+        auto mnemonic = bin2mnemonic(input, wordList);
+        EXPECT_EQ(mnemonic, "basin eighth khaki aback");
+    }
+
+    TEST(MISC, bin2mnemonic_simple3) {
+        std::vector<unsigned char> input = {0x12, 0x34, 0x56, 0x78, 0x01};
+
+        auto mnemonic = bin2mnemonic(input, wordList);
+        EXPECT_EQ(mnemonic, "basin eighth khaki bag");
+    }
+
+    TEST(MISC, bin2mnemonic_simple4) {
+        std::vector<unsigned char> input = {0x00};
+
+        auto mnemonic = bin2mnemonic(input, wordList);
+        EXPECT_EQ(mnemonic, "aback");
+    }
+
+    TEST(MISC, bin2mnemonic_simple5) {
+        std::vector<unsigned char> input = {0x01};
+
+        auto mnemonic = bin2mnemonic(input, wordList);
+        EXPECT_EQ(mnemonic, "absurd");
+    }
+
+    TEST(MISC, mnemonic2bin_simple1) {
+        std::string input = "basin eighth khaki aback";
+        auto data = mnemonic2bin(input, wordList);
+        EXPECT_EQ(data, std::vector<unsigned char>({0x12, 0x34, 0x56, 0x78, 0x00}));
+    }
+
+    TEST(MISC, mnemonic2bin_simple2) {
+        std::string input = "basin eighth khaki bag";
+        auto data = mnemonic2bin(input, wordList);
+
+        EXPECT_EQ(data, std::vector<unsigned char>({0x12, 0x34, 0x56, 0x78, 0x01}));
+    }
+
+    TEST(MISC, mnemonic2bin_wrongword) {
+        EXPECT_THROW({
+                         std::string input = "basin xxWRONGxx";
+                         auto data = mnemonic2bin(input, wordList);
+                     },
+                     std::invalid_argument);
+    }
 
 }

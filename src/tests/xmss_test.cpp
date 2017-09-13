@@ -20,9 +20,9 @@ namespace {
 
         std::cout << std::endl;
         std::cout << std::endl;
-        std::cout << "seed:" << seed.size() << " bytes\n" << vec2hexstr(seed, 32) << std::endl;
-        std::cout << "pk  :" << pk.size() << " bytes\n" << vec2hexstr(pk, 32) << std::endl;
-        std::cout << "sk  :" << sk.size() << " bytes\n" << vec2hexstr(sk, 32) << std::endl;
+        std::cout << "seed:" << seed.size() << " bytes\n" << bin2hstr(seed, 32) << std::endl;
+        std::cout << "pk  :" << pk.size() << " bytes\n" << bin2hstr(pk, 32) << std::endl;
+        std::cout << "sk  :" << sk.size() << " bytes\n" << bin2hstr(sk, 32) << std::endl;
 
         EXPECT_EQ(seed, xmss.getSeed());
     }
@@ -49,8 +49,8 @@ namespace {
 
         std::cout << std::endl;
         std::cout << std::endl;
-        std::cout << "data       :" << data.size() << " bytes\n" << vec2hexstr(data, 64) << std::endl;
-        std::cout << "signature  :" << signature.size() << " bytes\n" << vec2hexstr(signature, 64) << std::endl;
+        std::cout << "data       :" << data.size() << " bytes\n" << bin2hstr(data, 64) << std::endl;
+        std::cout << "signature  :" << signature.size() << " bytes\n" << bin2hstr(signature, 64) << std::endl;
     }
 
 
@@ -66,9 +66,9 @@ namespace {
         auto pk = xmss.getPK();
         auto sk = xmss.getSK();
         std::cout << std::endl;
-        std::cout << "seed:" << seed.size() << " bytes\n" << vec2hexstr(seed, 32) << std::endl;
-        std::cout << "pk  :" << pk.size() << " bytes\n" << vec2hexstr(pk, 32) << std::endl;
-        std::cout << "sk  :" << sk.size() << " bytes\n" << vec2hexstr(sk, 32) << std::endl;
+        std::cout << "seed:" << seed.size() << " bytes\n" << bin2hstr(seed, 32) << std::endl;
+        std::cout << "pk  :" << pk.size() << " bytes\n" << bin2hstr(pk, 32) << std::endl;
+        std::cout << "sk  :" << sk.size() << " bytes\n" << bin2hstr(sk, 32) << std::endl;
 
         auto signature = xmss.sign(data);
 
@@ -76,8 +76,8 @@ namespace {
 
         std::cout << std::endl;
         std::cout << std::endl;
-        std::cout << "data       :" << data.size() << " bytes\n" << vec2hexstr(data, 64) << std::endl;
-        std::cout << "signature  :" << signature.size() << " bytes\n" << vec2hexstr(signature, 64) << std::endl;
+        std::cout << "data       :" << data.size() << " bytes\n" << bin2hstr(data, 64) << std::endl;
+        std::cout << "signature  :" << signature.size() << " bytes\n" << bin2hstr(signature, 64) << std::endl;
 
         EXPECT_TRUE(Xmss::verify(data, signature, pk, XMSS_HEIGHT));
 

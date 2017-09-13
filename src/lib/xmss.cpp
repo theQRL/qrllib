@@ -69,6 +69,12 @@ TKEY Xmss::getSKPRF()
     return TKEY(_sk.begin()+4+32, _sk.begin()+4+32+32);
 }
 
+std::string Xmss::getAddress(const std::string &prefix)
+{
+    std::vector<unsigned char> key = getPK();
+    return ::getAddress(prefix, key);
+}
+
 TSIGNATURE Xmss::sign(const TMESSAGE &message)
 {
     // TODO: Fix constness in library
