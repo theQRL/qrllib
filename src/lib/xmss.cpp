@@ -83,10 +83,10 @@ TSIGNATURE Xmss::sign(const TMESSAGE &message)
     return signature;
 }
 
-bool verify(const TMESSAGE &message,
+bool Xmss::verify(const TMESSAGE &message,
             const TSIGNATURE &signature,
             const TKEY &pk,
-            int height)
+            unsigned char height)
 {
     // TODO: Fix constness in library
     auto tmp = static_cast<TSIGNATURE>(signature);

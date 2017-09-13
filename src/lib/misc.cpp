@@ -50,6 +50,20 @@ std::string vec2hexstr(const std::vector<char> &vec, int wrap)
     return ss.str();
 }
 
+std::vector<unsigned char> shake128(size_t hash_size, std::vector<unsigned char> input)
+{
+    std::vector<unsigned char> hashed_output(hash_size, 0);
+    shake128(hashed_output.data(), hash_size, input.data(), input.size() );
+    return hashed_output;
+}
+
+std::vector<unsigned char> shake256(size_t hash_size, std::vector<unsigned char> input)
+{
+    std::vector<unsigned char> hashed_output(hash_size, 0);
+    shake256(hashed_output.data(), hash_size, input.data(), input.size() );
+    return hashed_output;
+}
+
 std::string getAddress(const std::string &prefix, Xmss xmss)
 {
     std::vector<unsigned char> key = xmss.getPK();
@@ -72,16 +86,19 @@ std::string getAddress(const std::string &prefix, std::vector<unsigned char> key
     return ss.str();
 }
 
-std::vector<unsigned char> tobin(const std::string &s)
+std::vector<unsigned char> str2bin(const std::string &s)
 {
     // FIXME: Avoid the copy
-    std::vector<unsigned char> v(s.begin(), s.end());
-    return v;
+    return std::vector<unsigned char>(s.begin(), s.end());
 }
 
-std::vector<unsigned char> getRandomSeed(uint32_t seed_size)
+std::vector<unsigned char> getRandomSeed(uint32_t seed_size, const std::string &entropy)
 {
+    auto tmpbytes = str2bin(entropy);
     std::vector<unsigned char> tmp(seed_size, 0);
+
+    tmp.insert( tmp.end(), tmpbytes.begin(), tmpbytes.end());
     randombytes(tmp.data(), seed_size);
-    return tmp;
+
+    return shake256(seed_size, tmp);
 }

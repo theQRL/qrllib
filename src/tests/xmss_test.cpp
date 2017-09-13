@@ -7,32 +7,8 @@
 #include "gtest/gtest.h"
 #include <misc.h>
 
-// Direct access to XMSS-Reference
-#include "randombytes.h"
-
 namespace {
-    TEST(XMSS_Reference, Correct_Linking) {
-        unsigned char tmp[100];
-
-        randombytes(tmp, 100);
-
-        EXPECT_EQ(1, 1);
-    }
-
-#define XMSS_HEIGHT 8
-
-    TEST(XMSS, vec2hex) {
-        std::vector<unsigned char> data;
-
-        std::cout << std::endl;
-
-        data.push_back(1);
-        data.push_back(2);
-        std::cout << "data:\n" << vec2hexstr(data, 4) << std::endl;
-
-        auto data_long = std::vector<unsigned char>({0, 1, 2, 3, 4, 6, 7, 8});
-        std::cout << "data_long:\n" << vec2hexstr(data_long, 4) << std::endl;
-    }
+#define XMSS_HEIGHT 5
 
     TEST(XMSS, Instantiation) {
         std::vector<unsigned char> seed(32, 0);
@@ -103,9 +79,9 @@ namespace {
         std::cout << "data       :" << data.size() << " bytes\n" << vec2hexstr(data, 64) << std::endl;
         std::cout << "signature  :" << signature.size() << " bytes\n" << vec2hexstr(signature, 64) << std::endl;
 
-        EXPECT_TRUE(verify(data, signature, pk, XMSS_HEIGHT));
+        EXPECT_TRUE(Xmss::verify(data, signature, pk, XMSS_HEIGHT));
 
         signature[1] += 1;
-        EXPECT_FALSE(verify(data, signature, xmss.getPK(), XMSS_HEIGHT));
+        EXPECT_FALSE(Xmss::verify(data, signature, xmss.getPK(), XMSS_HEIGHT));
     }
 }

@@ -23,6 +23,11 @@ public:
 
     TSIGNATURE sign(const TMESSAGE &message);
 
+    static bool verify(const TMESSAGE &message,
+                       const TSIGNATURE &signature,
+                       const TKEY &pk,
+                       unsigned char height);
+
     int getHeight() {  return _height; }
 
     TKEY getPK() {  return _pk; }
@@ -47,10 +52,5 @@ private:
     TKEY _sk;
     TSEED _seed;
 };
-
-bool verify(const TMESSAGE &message,
-            const TSIGNATURE &signature,
-            const TKEY &pk,
-            int height);
 
 #endif //QRLLIB_XMSS_H

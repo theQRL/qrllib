@@ -12,8 +12,6 @@
     #include "api.h"
     #include "xmss.h"
     #include "misc.h"
-    #include "fips202.h"
-    #include "hash.h"
 %}
 
 %array_class(unsigned char, ucharCArray)
@@ -33,5 +31,3 @@ namespace std {
 %include "api.h"
 %include "xmss.h"
 %include "misc.h"
-%include "fips202.h"
-%include "hash.h"
