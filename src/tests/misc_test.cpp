@@ -8,7 +8,7 @@
 namespace {
 #define XMSS_HEIGHT 8
 
-    TEST(MISC, vec2hex) {
+    TEST(MISC, bin2hstr) {
         std::vector<unsigned char> data;
 
         data.push_back(1);
@@ -22,6 +22,12 @@ namespace {
         EXPECT_EQ(bin2hstr(data_long, 4), "00010203\n04060708");
         EXPECT_EQ(bin2hstr(data_long, 8), "0001020304060708");
     }
+
+    TEST(MISC, hstr2bin) {
+        EXPECT_EQ( hstr2bin("10"), std::vector<unsigned char>({0x10}));
+        EXPECT_EQ( hstr2bin("102aAB"), std::vector<unsigned char>({0x10, 0x2a, 0xab}));
+    }
+
 
     TEST(MISC, shake128) {
         const std::string input = "This is a test X";

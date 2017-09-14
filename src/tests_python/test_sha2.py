@@ -8,7 +8,6 @@ from pyqrllib import pyqrllib
 
 
 class TestSha2_256(TestCase):
-    # https://emn178.github.io/online-tools/shake_128.html
     sha2_input1 = 'hello'
     sha2_expected_result1 = '2cf24dba5fb0a30e26e83b2ac5b9e29e1b161e5c1fa7425e73043362938b9824'
     sha2_input2 = 'hello-qrl'

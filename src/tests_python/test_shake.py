@@ -2,13 +2,11 @@
 # file LICENSE or http://www.opensource.org/licenses/mit-license.php.
 from __future__ import print_function
 from unittest import TestCase
-import binascii
 
 from pyqrllib import pyqrllib
 
-
 class TestShake128(TestCase):
-    # https://emn178.github.io/online-tools/shake_128.html
+    # Values obtained from https://emn178.github.io/online-tools/shake_128.html
     shake128_input1 = 'hello'
     shake128_expected_result1 = '8eb4b6a932f280335ee1a279f8c208a349e7bc65daf831d3021c213825292463'
     shake128_input2 = 'hello-qrl'

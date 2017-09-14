@@ -42,10 +42,36 @@ std::vector<unsigned char> str2bin(const std::string &s)
     return std::vector<unsigned char>(s.begin(), s.end());
 }
 
+unsigned char getHexValue(char c)
+{
+    auto tmp = std::tolower(c);
+    if (std::isdigit(tmp))
+    {
+        return (unsigned char)(tmp-'0');
+    }
+    return (unsigned char)(tmp-'a'+10);
+}
+
 std::vector<unsigned char> hstr2bin(const std::string &s)
 {
-    // FIXME: This is not working
-    return std::vector<unsigned char>(s.begin(), s.end());
+    if (s.size()%2!=0)
+    {
+        throw std::invalid_argument("hex string is expected to have an even number of characters");
+    }
+
+    std::vector<unsigned char> result;
+    for(int i=0; i<s.size(); i+=2)
+    {
+        if ( !std::isxdigit(s[i]) || !std::isxdigit(s[i+1]) )
+        {
+            throw std::invalid_argument("invalid hex digits in the string");
+        }
+
+        auto v = (getHexValue(s[i])<<4) + getHexValue(s[i+1]);
+        result.push_back(v);
+    }
+
+    return result;
 }
 
 std::string bin2mnemonic(const std::vector<unsigned char> &vec, const std::vector<std::string> &word_list)
@@ -140,7 +166,7 @@ std::vector<unsigned char> shake256(size_t hash_size, std::vector<unsigned char>
     return hashed_output;
 }
 
-std::vector<unsigned char> sha2_256(size_t hash_size, std::vector<unsigned char> input)
+std::vector<unsigned char> sha2_256(std::vector<unsigned char> input)
 {
     std::vector<unsigned char> hashed_output(32, 0);
     picosha2::hash256( input.begin(), input.end(), hashed_output.begin(), hashed_output.end() );

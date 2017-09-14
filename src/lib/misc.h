@@ -19,7 +19,7 @@ std::vector<unsigned char> hstr2bin(const std::string &s);
 std::string bin2mnemonic(const std::vector<unsigned char> &vec, const std::vector<std::string> &word_list);
 std::vector<unsigned char> mnemonic2bin(const std::string &mnemonic, const std::vector<std::string> &word_list);
 
-std::vector<unsigned char> sha2_256(size_t hash_size, std::vector<unsigned char> input);
+std::vector<unsigned char> sha2_256(std::vector<unsigned char> input);
 std::vector<unsigned char> shake128(size_t hash_size, std::vector<unsigned char> input);
 std::vector<unsigned char> shake256(size_t hash_size, std::vector<unsigned char> data);
 
