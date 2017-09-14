@@ -21,9 +21,9 @@ install:
     apt-get install -y software-properties-common python-software-properties;
     add-apt-repository -y ppa:ubuntu-toolchain-r/test;
     apt-get update;
-    apt-get install -y cmake build-essential;
-    apt-get install -y python-pip swig3.0 openssl python3.5-dev;
-    pip install cmake;
+    apt-get install -y python3-pip python3-dev cmake build-essential;
+    pip3 install --upgrade cmake;
+    apt-get install -y swig3.0 openssl python3.5-dev;
     apt-get install -y gcc-$CC_VER g++-$CC_VER"
 
 script:

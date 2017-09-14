@@ -64,6 +64,11 @@ uint32_t Xmss::getIndex()
     return _sk[0] << 24 + _sk[1] << 16 + _sk[2] << 8 + _sk[0];
 }
 
+uint32_t  Xmss::setIndex(uint32_t new_index)
+{
+    // FIXME: Missing Implementation
+}
+
 TKEY Xmss::getSKSeed()
 {
     return TKEY(_sk.begin()+4, _sk.begin()+4+32);

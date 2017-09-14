@@ -37,11 +37,13 @@ public:
 
     // TODO: Maybe improve this using a union down into the original code?
     TKEY getRoot();
-    uint32_t getIndex();
     TKEY getPKSeed();
     TKEY getSKSeed();
     TKEY getSKPRF();
     std::string getAddress(const std::string &prefix);
+
+    uint32_t getIndex();
+    uint32_t setIndex(uint32_t new_index);
 
     uint32_t getSignatureSize();
     uint32_t getSecretKeySize();
