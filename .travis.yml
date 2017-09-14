@@ -1,0 +1,37 @@
+# Travis configuration file using the build matrix feature
+# Read more under http://docs.travis-ci.com/user/build-configuration/
+sudo: required
+dist: trusty
+
+services:
+  docker
+
+language: cpp
+
+env:
+  matrix:
+    - CC_VER: "5"
+
+before_install:
+  - docker run -d --name ubuntu-test -v $(pwd):/travis ubuntu:latest tail -f /dev/null
+  - docker ps
+
+install:
+  - docker exec -t ubuntu-test bash -c "apt-get update;
+    apt-get install -y software-properties-common python-software-properties;
+    add-apt-repository -y ppa:ubuntu-toolchain-r/test;
+    apt-get update;
+    apt-get install -y cmake build-essential;
+    apt-get install -y python-pip swig3.0 openssl python3.5-dev;
+    pip install cmake;
+    apt-get install -y gcc-$CC_VER g++-$CC_VER"
+
+script:
+  - docker exec -t ubuntu-test bash -c "cd /travis;
+    cmake -DCMAKE_C_COMPILER=gcc-$CC_VER -DCMAKE_CXX_COMPILER=g++-$CC_VER . &&
+    make &&
+    chmod +x travis &&
+    ./travis"
+
+notifications:
+    email: false

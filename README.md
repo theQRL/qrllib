@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.org/jleni/qrllib.svg?branch=master)](https://travis-ci.org/jleni/qrllib)
+
 # QRL Core Library
 
 *WARNING: This is work in progress, changes might not be backward compatible.*
