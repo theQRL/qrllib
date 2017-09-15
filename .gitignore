@@ -29,3 +29,5 @@ benchmark/verify\.png
 benchmark/speedup_sign\.png
 benchmark/speedup_create\.png
 benchmark/speedup_verify\.png
+
+\.idea/workspace\.xml
