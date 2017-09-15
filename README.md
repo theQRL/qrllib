@@ -1,3 +1,4 @@
+[![Codacy Badge](https://api.codacy.com/project/badge/Grade/4b34f51616d94362b3447bb2f4df765a)](https://www.codacy.com/app/jleni/qrllib_QRL?utm_source=github.com&utm_medium=referral&utm_content=theQRL/qrllib&utm_campaign=badger)
 [![Build Status](https://travis-ci.org/jleni/qrllib.svg?branch=master)](https://travis-ci.org/jleni/qrllib)
 
 # QRL Core Library
