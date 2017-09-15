@@ -444,7 +444,7 @@ int xmss_sign_open(unsigned char *msg, unsigned long long *msglen, const unsigne
   
   // Extract index
   idx = ((unsigned long)sig_msg[0] << 24) | ((unsigned long)sig_msg[1] << 16) | ((unsigned long)sig_msg[2] << 8) | sig_msg[3];
-  printf("verify:: idx = %lu\n", idx);
+  //printf("verify:: idx = %lu\n", idx);
   
   // Generate hash key (R || root || idx)
   memcpy(hash_key, sig_msg+4,n);
@@ -701,7 +701,7 @@ int xmssmt_sign_open(unsigned char *msg, unsigned long long *msglen, const unsig
   for (i = 0; i < idx_len; i++) {
     idx |= ((unsigned long long)sig_msg[i]) << (8*(idx_len - 1 - i));
   }
-  printf("verify:: idx = %llu\n", idx);
+  //printf("verify:: idx = %llu\n", idx);
   sig_msg += idx_len;
   sig_msg_len -= idx_len;
 

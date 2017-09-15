@@ -9,27 +9,23 @@ cmake-build-release/
 
 *.pyc
 
-\.idea/workspace\.xml
-\.idea/dictionaries/
-\.idea/fileTemplates/internal/
-
-pyqrllib/__init__\.pyc
 pyqrllib/_pyqrl\.so
 pyqrllib/apiPYTHON_wrap\.cxx
 pyqrllib/_pyqrllib\.so
 pyqrllib/pyqrllib\.py
-pyqrllib/pyqrllib\.pyc
-
+pyqrllib/_pyqrllibd\.so
 
 goqrllib/apiGO_wrap\.cxx
 goqrllib/goqrllib\.so
 goqrllib/pyqrllib_gc\.c
 goqrllib/pyqrllib\.go
 
-
-
 \.cache/v/cache/lastfailed
-
 src/tests_python/\.cache/v/cache/lastfailed
 
-pyqrllib/_pyqrllibd\.so
+benchmark/keygen\.png
+benchmark/sign\.png
+benchmark/verify\.png
+benchmark/speedup_sign\.png
+benchmark/speedup_create\.png
+benchmark/speedup_verify\.png

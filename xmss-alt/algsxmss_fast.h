@@ -50,7 +50,7 @@ void xmss_set_bds_state(bds_state *state, unsigned char *stack, unsigned int sta
  * Initializes parameter set.
  * Needed, for any of the other methods.
  */
-int xmss_set_params(xmssfast_params *params, int n, int h, int w, int k);
+int xmssfast_set_params(xmssfast_params *params, int n, int h, int w, int k);
 /**
  * Initialize xmssmt_params struct
  * parameter names are the same as in the draft

@@ -696,7 +696,7 @@ int xmssfast_Verifysig(unsigned char *msg, unsigned long long msglen, unsigned c
 
   // Extract index
   idx = ((unsigned long)sig_msg[0] << 24) | ((unsigned long)sig_msg[1] << 16) | ((unsigned long)sig_msg[2] << 8) | sig_msg[3];
-  printf("verify:: idx = %lu\n", idx);
+  //printf("verify:: idx = %lu\n", idx);
   
   // Generate hash key (R || root || idx)
   memcpy(hash_key, sig_msg+4,n);
