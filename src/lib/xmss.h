@@ -5,56 +5,25 @@
 
 #include <vector>
 #include <string>
+#include "xmssBase.h"
 
 // This is unfortunately not fully supported by SWIG
 // using TSIGNATURE = std::vector<unsigned char>;
 // using TMESSAGE = std::vector<unsigned char>;
 
-#define TSIGNATURE std::vector<unsigned char>
-#define TMESSAGE std::vector<unsigned char>
-#define TSEED std::vector<unsigned char>
-#define TKEY std::vector<unsigned char>
-
 // TODO: Add a namespace
 
-class Xmss {
+class Xmss : public ::XmssBase {
 public:
     // TODO: Fix constness / passing by copy, this requires changes in the underlying lib
     Xmss(const TSEED &seed, unsigned char height);
 
-    TSIGNATURE sign(const TMESSAGE &message);
+    TSIGNATURE sign(const TMESSAGE &message) override;
 
     static bool verify(const TMESSAGE &message,
                        const TSIGNATURE &signature,
                        const TKEY &pk,
                        unsigned char height);
-
-    int getHeight() {  return _height; }
-
-    TKEY getPK() {  return _pk; }
-    TKEY getSK() {  return _sk; }
-    TSEED getSeed() {  return _seed; }
-
-    // TODO: Maybe improve this using a union down into the original code?
-    TKEY getRoot();
-    TKEY getPKSeed();
-    TKEY getSKSeed();
-    TKEY getSKPRF();
-    std::string getAddress(const std::string &prefix);
-
-    uint32_t getIndex();
-    uint32_t setIndex(uint32_t new_index);
-
-    uint32_t getSignatureSize();
-    uint32_t getSecretKeySize();
-    uint32_t getPublicKeySize();
-
-private:
-    unsigned char _height;
-
-    TKEY _pk;
-    TKEY _sk;
-    TSEED _seed;
 };
 
 #endif //QRLLIB_XMSS_H

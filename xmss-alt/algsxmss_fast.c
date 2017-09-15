@@ -67,7 +67,7 @@ int xmssfast_set_params(xmssfast_params *params, int n, int h, int w, int k)
  * Initialize BDS state struct
  * parameter names are the same as used in the description of the BDS traversal
  */
-void xmss_set_bds_state(bds_state *state, unsigned char *stack, int stackoffset, unsigned char *stacklevels, unsigned char *auth, unsigned char *keep, treehash_inst *treehash, unsigned char *retain, int next_leaf)
+void xmss_set_bds_state(bds_state *state, unsigned char *stack, unsigned int stackoffset, unsigned char *stacklevels, unsigned char *auth, unsigned char *keep, treehash_inst *treehash, unsigned char *retain, unsigned int next_leaf)
 {
   state->stack = stack;
   state->stackoffset = stackoffset;
@@ -691,7 +691,7 @@ int xmssfast_Signmsg(unsigned char *sk, bds_state *state, unsigned char *sig_msg
 
   //  memcpy(sig_msg, msg, msglen);
   //*sig_msg_len += msglen;
-  printf("%d",sig_msg_len);
+  printf("%lld",sig_msg_len);
   return 0;
 }
 

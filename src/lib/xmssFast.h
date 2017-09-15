@@ -1,0 +1,40 @@
+// Distributed under the MIT software license, see the accompanying
+// file LICENSE or http://www.opensource.org/licenses/mit-license.php.
+// Distributed under the MIT software license, see the accompanying
+// file LICENSE or http://www.opensource.org/licenses/mit-license.php.
+#ifndef QRLLIB_XMSS_FAST_H
+#define QRLLIB_XMSS_FAST_H
+
+#include <vector>
+#include <string>
+#include <algsxmss_fast.h>
+#include "xmssBase.h"
+
+class XmssFast : public XmssBase {
+public:
+    // TODO: Fix constness / passing by copy, this requires changes in the underlying lib
+    XmssFast(const TSEED &seed, unsigned char height);
+
+    TSIGNATURE sign(const TMESSAGE &message) override;
+
+    static bool verify(const TMESSAGE &message,
+                       const TSIGNATURE &signature,
+                       const TKEY &pk,
+                       unsigned char height);
+
+protected:
+    // FIXME: This needs refactoring (encapsulate)
+    bds_state _state;
+    const unsigned int _k = 2;
+    unsigned int _stackoffset = 0;
+    std::vector<unsigned char> _stack;
+    std::vector<unsigned char> _stacklevels;
+    std::vector<unsigned char> _auth;
+
+    std::vector<unsigned char> _keep;
+    std::vector<treehash_inst> _treehash;
+    std::vector<unsigned char> _th_nodes;
+    std::vector<unsigned char> _retain;
+};
+
+#endif //QRLLIB_XMSS_FAST_H

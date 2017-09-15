@@ -3,9 +3,8 @@
 #include <iostream>
 #include "xmss.h"
 #include "algsxmss.h"
-#include "misc.h"
 
-Xmss::Xmss(const TSEED &seed, unsigned char height): _height(height)
+Xmss::Xmss(const TSEED &seed, unsigned char height): XmssBase(seed, height)
 {
 //    PK format
 //    32 root address
@@ -22,8 +21,6 @@ Xmss::Xmss(const TSEED &seed, unsigned char height): _height(height)
     _sk = TKEY(132, 0);
     _pk = TKEY(64, 0);
 
-    _seed = seed;
-
     // FIXME: At the moment, the lib takes 48 bytes from the seed vector
     if (seed.size() != 48)
     {
@@ -33,57 +30,6 @@ Xmss::Xmss(const TSEED &seed, unsigned char height): _height(height)
     xmss_Genkeypair(_pk.data(), _sk.data(), _seed.data(), height);
 }
 
-uint32_t Xmss::getSignatureSize()
-{
-    return static_cast<uint32_t>(4 + 32 + 67 * 32 + _height * 32);
-}
-
-uint32_t Xmss::getPublicKeySize()
-{
-    return 64;
-}
-
-uint32_t Xmss::getSecretKeySize()
-{
-    return 132;
-}
-
-TKEY Xmss::getRoot()
-{
-    return TKEY(_pk.begin(), _pk.begin()+32);
-}
-
-TKEY Xmss::getPKSeed()
-{
-    return TKEY(_pk.begin()+32, _pk.end());
-}
-
-uint32_t Xmss::getIndex()
-{
-    // TODO: Review this according to IETF
-    return _sk[0] << 24 + _sk[1] << 16 + _sk[2] << 8 + _sk[0];
-}
-
-uint32_t  Xmss::setIndex(uint32_t new_index)
-{
-    // FIXME: Missing Implementation
-}
-
-TKEY Xmss::getSKSeed()
-{
-    return TKEY(_sk.begin()+4, _sk.begin()+4+32);
-}
-
-TKEY Xmss::getSKPRF()
-{
-    return TKEY(_sk.begin()+4+32, _sk.begin()+4+32+32);
-}
-
-std::string Xmss::getAddress(const std::string &prefix)
-{
-    std::vector<unsigned char> key = getPK();
-    return ::getAddress(prefix, key);
-}
 
 TSIGNATURE Xmss::sign(const TMESSAGE &message)
 {

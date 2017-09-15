@@ -9,6 +9,9 @@ Joost Rijneveld
 Public domain.
 */
 
+#ifndef XMSSALT_XMSS_FAST_H
+#define XMSSALT_XMSS_FAST_H
+
 #include "wots.h"
 
 typedef struct{
@@ -41,7 +44,7 @@ typedef struct {
  * Initialize BDS state struct
  * parameter names are the same as used in the description of the BDS traversal
  */
-void xmss_set_bds_state(bds_state *state, unsigned char *stack, int stackoffset, unsigned char *stacklevels, unsigned char *auth, unsigned char *keep, treehash_inst *treehash, unsigned char *retain, int next_leaf);
+void xmss_set_bds_state(bds_state *state, unsigned char *stack, unsigned int stackoffset, unsigned char *stacklevels, unsigned char *auth, unsigned char *keep, treehash_inst *treehash, unsigned char *retain, unsigned int next_leaf);
 /**
  * Initializes parameter set.
  * Needed, for any of the other methods.
@@ -74,3 +77,5 @@ int xmssfast_Signmsg(unsigned char *sk, bds_state *state, unsigned char *sig_msg
  */
 int xmssfast_Verifysig(unsigned char *msg,unsigned long long msglen, unsigned char *sig_msg,const unsigned char *pk, unsigned char h);
 int xmssfast_update(unsigned char *sk, bds_state *state, unsigned long h, unsigned long new_idx);
+
+#endif // XMSSALT_XMSS_FAST_H
