@@ -10,18 +10,14 @@ Public domain.
 */
 
 #include "algsxmss_fast.h"
-#include <stdlib.h>
-#include <string.h>
-#include <stdint.h>
-
-#include <math.h>
+#include <cstdlib>
+#include <cstring>
+#include <cmath>
 #include "fips202.h"
-#include "randombytes.h"
-#include "wots.h"
 #include "hash.h"
 #include "xmss_commons.h"
 #include "hash_address.h"
-#include <stdio.h>
+#include <cstdio>
 
 xmssfast_params paramsfast;
 

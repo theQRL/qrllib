@@ -6,7 +6,6 @@
 
 #include<string>
 #include<vector>
-#include "xmss.h"
 
 #define ADDRESS_HASH_SIZE 32
 

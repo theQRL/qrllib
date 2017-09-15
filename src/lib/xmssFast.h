@@ -5,10 +5,8 @@
 #ifndef QRLLIB_XMSS_FAST_H
 #define QRLLIB_XMSS_FAST_H
 
-#include <vector>
-#include <string>
-#include <algsxmss_fast.h>
 #include "xmssBase.h"
+#include <algsxmss_fast.h>
 
 class XmssFast : public XmssBase {
 public:
@@ -24,8 +22,9 @@ public:
 
 protected:
     // FIXME: This needs refactoring (encapsulate)
-    bds_state _state;
     const unsigned int _k = 2;
+
+    bds_state _state;
     unsigned int _stackoffset = 0;
     std::vector<unsigned char> _stack;
     std::vector<unsigned char> _stacklevels;

@@ -12,7 +12,7 @@ Public domain.
 #ifndef WOTS_H
 #define WOTS_H
 
-#include "stdint.h"
+#include <cstdint>
 
 /**
  * WOTS parameter set

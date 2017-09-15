@@ -14,6 +14,7 @@
     #include "api.h"
     #include "xmss.h"
     #include "misc.h"
+    #include "xmssFast.h"
 %}
 
 %array_class(unsigned char, ucharCArray)
@@ -33,5 +34,6 @@ namespace std {
 #%array_functions(uint32_t, uint32ArrayRaw)
 
 %include "api.h"
-%include "xmss.h"
 %include "misc.h"
+%include "xmss.h"
+%include "xmssFast.h"

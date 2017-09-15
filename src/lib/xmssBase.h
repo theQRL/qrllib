@@ -2,6 +2,7 @@
 #define QRLLIB_XMSSBASE_H
 
 #include <string>
+#include <vector>
 
 #define TSIGNATURE std::vector<unsigned char>
 #define TMESSAGE std::vector<unsigned char>

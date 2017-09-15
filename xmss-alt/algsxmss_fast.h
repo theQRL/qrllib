@@ -12,6 +12,7 @@ Public domain.
 #ifndef XMSSALT_XMSS_FAST_H
 #define XMSSALT_XMSS_FAST_H
 
+#include <cstddef>
 #include "wots.h"
 
 typedef struct{

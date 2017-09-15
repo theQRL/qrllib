@@ -31,3 +31,5 @@ goqrllib/pyqrllib\.go
 \.cache/v/cache/lastfailed
 
 src/tests_python/\.cache/v/cache/lastfailed
+
+pyqrllib/_pyqrllibd\.so
