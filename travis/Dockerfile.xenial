@@ -11,7 +11,7 @@ RUN apt-get -y install python-pip
 RUN apt-get -y install git
 RUN pip install --upgrade pip
 RUN pip install --upgrade cmake
-RUN apt-get -y install swig3.0 libssl-dev python3.5-dev
+RUN apt-get -y install swig3.0 python3.5-dev
 
 
 # ENV - Define environment variables

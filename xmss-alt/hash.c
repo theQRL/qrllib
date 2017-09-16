@@ -9,13 +9,7 @@ This code was taken from the XMSS reference implementation by Andreas Hülsing a
 #include "hash.h"
 #include "fips202.h"
 
-#include <stddef.h>
-#include <stdint.h>
-#include <stdio.h>
-#include <string.h>
-#include <openssl/sha.h>
-#include <openssl/hmac.h>
-#include <openssl/evp.h>
+#include <cstdio>
 
 unsigned char* addr_to_byte(unsigned char *bytes, const uint32_t addr[8]){
 #if IS_LITTLE_ENDIAN==1 
