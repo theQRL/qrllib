@@ -13,12 +13,10 @@ env:
     - CC_VER="5" PLATFORM='xenial'
 
 before_install:
-  - docker build --file travis/Dockerfile.${PLATFORM} -t builder-${PLATFORM} .
-  - docker run -d --name builder -v $(pwd):/travis builder-${PLATFORM} tail -f /dev/null
-  - docker ps
+  - ./travis/before_install.sh
 
 script:
-  - docker exec -t -e CC_VER=${CC_VER} builder /root/build.sh
+  - ./travis/build.sh
 
 notifications:
     email: false

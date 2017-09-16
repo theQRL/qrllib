@@ -3,28 +3,27 @@ FROM ubuntu:16.04
 RUN apt-get update
 RUN apt-get -y install software-properties-common python-software-properties
 RUN apt-get -y install ca-certificates curl
-RUN apt-get -y install cmake build-essential
+RUN apt-get -y install build-essential
 
-# Prepare pip
-RUN apt-get -y install python3-pip python3-dev
-RUN apt-get -y install python-pip
+# Prepare python
+RUN apt-get -y install python3-pip python3.5-dev
 RUN apt-get -y install git
-RUN pip install --upgrade pip
-RUN pip install --upgrade cmake
-RUN apt-get -y install swig3.0 python3.5-dev
+RUN pip3 install --upgrade pip
+RUN pip3 install --upgrade cmake
+RUN apt-get -y install swig3.0
 
 
 # ENV - Define environment variables
 # TODO: define any required environment variables
 
 # COPY - Copy configuration/scripts
-COPY travis/xenial/build.sh /root/build.sh
+COPY travis/xenial/build.sh /build.sh
 
 # VOLUME - link directories to host
 
 # TODO: Map to host directory to keep wallets outside
 
-# START SCRIPT
+# START SCRIPT - The script is started from travis with the appropriate environment variables
 #CMD ["/root/start.sh"]
 
 # EXPOSE PORTS
