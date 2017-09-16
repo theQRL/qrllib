@@ -1,6 +1,9 @@
 #!/bin/sh
+
+BUILD_DIR="cmake-build-${PLATFORM}"
+
 cd /travis
-mkdir build
-cd build
-cmake -DCMAKE_C_COMPILER=gcc-$CC_VER -DCMAKE_CXX_COMPILER=g++-$CC_VER ../
+mkdir -p ${BUILD_DIR}
+cd ${BUILD_DIR}
+cmake -DCMAKE_C_COMPILER=gcc-${CC_VER} -DCMAKE_CXX_COMPILER=g++-${CC_VER} /travis
 make
