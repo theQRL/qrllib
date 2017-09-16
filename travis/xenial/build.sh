@@ -7,3 +7,6 @@ mkdir -p ${BUILD_DIR}
 cd ${BUILD_DIR}
 cmake -DCMAKE_C_COMPILER=gcc-${CC_VER} -DCMAKE_CXX_COMPILER=g++-${CC_VER} /travis
 make
+
+cd /travis
+python3 setup.py bdist_wheel

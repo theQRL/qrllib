@@ -1,22 +1,33 @@
-# Travis configuration file using the build matrix feature
-# Read more under http://docs.travis-ci.com/user/build-configuration/
 sudo: required
 dist: trusty
-
-services:
-  docker
-
+services: docker
 language: cpp
-
 env:
   matrix:
-    - CC_VER="5" PLATFORM='xenial'
-
+  - CC_VER="5" PLATFORM='xenial'
+cache:
+  timeout: 600
+virtualenv:
+  system_site_packages: true
+addons:
+  apt:
+    packages:
+    - git
+    - python-pip
 before_install:
-  - ./travis/before_install.sh
-
+- sudo pip install -U pip setuptools twine
+- "./travis/before_install.sh"
 script:
-  - ./travis/build.sh
-
+- "./travis/build.sh"
 notifications:
-    email: false
+  email: false
+deploy:
+  provider: pypi
+  server: https://test.pypi.org/legacy/
+  distributions: bdist_wheel
+  skip_cleanup: true
+  user: jleni
+  password:
+    secure: uytx1DJtpqdFPNffeIxOwXTI5r/uKj3LCHQtIakurdT11/2qbl99XYsCWNsvXS/AKZS+37U8hkLcQqf2vmjbqXEtj+QrqxZV5Mn95hirkFrvzvXP1jEYZH4v0ZsAQayni6u273+o8LEfBdQBLwLLLMThlNm7dMjJY7P2QzIuwa+fPn74R1+UKbp4XZWi9YHCWoCaIly5mCelKucW5FAvy8ac6sUZnJS2Ex/AdRy6YPZKveXqnPy3kLCL3sE6pXHKWhl50NJJK0SUEpqUkKpuXj6lHggGAF991ecYDJULhe2asVjSH5OG84h/ICF14dXKiqWTM/Pm6WpoU6SUqKlWn/qBGwcB+v+TpCKfsJLrds4L1PMjJlUsA5oD3j8g/ChXmdH/fKmzRO2G7Y4luR9cjxhMlx9GMJFLqxSZ8NC2bi2+wl0RieA/FU7cbbHOWDcs1rk+P6e5Xori6zA/7YjW91J4zTcGUBeqh1+VcNMPFX5Avh+p0qdtdGhHyYLEbnxaZDOnLgKVU7mz/F9jitBxbzdiGhQEFOLlJXyRRXyMEE39LxhwI5FU7rbofPYE6JjQKHGpJS1fYAPcHYBrhEFEqAS3XqIuaK8punZRUCU27Zo2bewAObJXJStELs6Y//Gc1tltAG7rdO6Y/yDa5lfhUSKm7y3NnEQOMCwmnKlch5Q=
+  on:
+    all_branches: true
