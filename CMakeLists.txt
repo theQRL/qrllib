@@ -5,7 +5,7 @@ cmake_minimum_required(VERSION 2.8)
 project(qrllib)
 
 set(CMAKE_CXX_STANDARD 14)
-#set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -Wall -Wextra -pedantic")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++14 -Wall -Wextra -pedantic")
 set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS} -std=c++14 -O3")
 set(CMAKE_VERBOSE_MAKEFILE ON)
 
@@ -15,22 +15,15 @@ set(BUILD_PYTHON ON CACHE BOOL "Enables python wrapper")
 message(STATUS "GOLANG WRAPPER" ${BUILD_GO})
 message(STATUS "PYTHON WRAPPER" ${BUILD_PYTHON})
 
-# Work around for OSX/brew
-if (APPLE)
-    set(OPENSSL_ROOT_DIR /usr/local/opt/openssl)
-endif ()
-
 find_package(SWIG REQUIRED)
 INCLUDE(${SWIG_USE_FILE})
 unset(SWIG_LANG_TYPE)
-find_package(OpenSSL REQUIRED)
 
 include_directories(
         ${CMAKE_CURRENT_SOURCE_DIR}/src/api
         ${CMAKE_CURRENT_SOURCE_DIR}/src/lib
         ${CMAKE_CURRENT_SOURCE_DIR}/xmss-alt
         ${CMAKE_CURRENT_SOURCE_DIR}/PicoSHA2
-        ${OPENSSL_INCLUDE_DIR}
         #        ${CMAKE_CURRENT_SOURCE_DIR}/xmss-reference
 )
 
@@ -142,7 +135,7 @@ if (BUILD_PYTHON)
             ${LIBXMSSALT_SRC}
             #        ${LIBXMSSREF_SRC}
             )
-    SWIG_LINK_LIBRARIES(pyqrllib ${SWIG_LANG_LIBRARIES} ${OPENSSL_LIBRARIES})
+    SWIG_LINK_LIBRARIES(pyqrllib ${SWIG_LANG_LIBRARIES})
     add_dependencies(${SWIG_MODULE_pyqrllib_REAL_NAME} prepareXMSSParams)
     add_custom_command(TARGET ${SWIG_MODULE_pyqrllib_REAL_NAME}
             POST_BUILD
@@ -177,7 +170,7 @@ if (BUILD_GO)
             ${LIBXMSSALT_SRC}
             #${LIBXMSSREF_SRC}
             )
-    SWIG_LINK_LIBRARIES(goqrllib ${SWIG_LANG_LIBRARIES} ${OPENSSL_LIBRARIES})
+    SWIG_LINK_LIBRARIES(goqrllib ${SWIG_LANG_LIBRARIES})
     add_dependencies(${SWIG_MODULE_goqrllib_REAL_NAME} prepareXMSSParams)
     add_custom_command(TARGET ${SWIG_MODULE_goqrllib_REAL_NAME}
             POST_BUILD
