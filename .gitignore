@@ -31,3 +31,13 @@ benchmark/speedup_create\.png
 benchmark/speedup_verify\.png
 
 \.idea/workspace\.xml
+
+googletest-src/
+googletest-download/
+googletest-build/
+gtest_main\.pc
+_pyqrllib\.so
+gmock_main\.pc
+gmock\.pc
+gtest\.pc
+qrllib_test
