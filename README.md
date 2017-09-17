@@ -30,35 +30,40 @@ We are currently working on pip wheels for the supported platforms.
 
 Installing this library in python should be as simple as:
 
-```
-pip install qrllib
+```bash
+pip3 install qrllib
 ```
 
+But you need some dependencies first (at least for now).
 
-## Build dependencies
+## Dependencies
 *TODO: Update/complete this section*
 
-Ubuntu:
+#### Ubuntu
 ```
-pip install cmake
-sudo apt install swig3.0 
-sudo apt install openssl
-sudo apt install python3.5-dev
+pip3 install cmake
+sudo apt -y install swig3.0 python3.5-dev
 ````
 
-OSX:
-```
-pip install cmake
-brew install openssl
-brew install swig
+#### OSX
+
+If you dont have brew yet, you should:
+```bash
+/usr/bin/ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"
 ```
 
-Windows:
+Now install some dependencies
+
+```bash
+brew install cmake python3 swig
+```
+
+#### Windows
 ```
 TBD
 ```
 
-Raspbian:
+#### Raspbian
 
 *Support will be provided in the near future*
 

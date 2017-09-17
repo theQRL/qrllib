@@ -58,7 +58,7 @@ TKEY XmssBase::getSKPRF()
     return TKEY(_sk.begin()+4+32, _sk.begin()+4+32+32);
 }
 
-std::__cxx11::string XmssBase::getAddress(const std::__cxx11::string &prefix)
+std::string XmssBase::getAddress(const std::string &prefix)
 {
     std::vector<unsigned char> key = getPK();
     return ::getAddress(prefix, key);
