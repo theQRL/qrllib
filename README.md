@@ -31,7 +31,7 @@ This library currently exposes the following functionality:
 
 #### Ubuntu
 ```
-sudo apt -y install swig3.0 python3.5-dev
+sudo apt -y install swig3.0 python3-dev build-essential pkg-config
 pip3 install pyqrllib
 ````
 
@@ -59,7 +59,7 @@ TBD
 *Experimental. Feedback is welcomed*
 
 ```
-sudo apt -y install swig3.0 python3.5-dev
+sudo apt -y install swig3.0 python3-dev swig3.0 build-essential pkg-config
 pip3 install pyqrllib
 ```
 
