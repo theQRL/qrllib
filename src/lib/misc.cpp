@@ -53,7 +53,7 @@ unsigned char getHexValue(char c)
     return (unsigned char)(tmp-'a'+10);
 }
 
-std::vector<unsigned char> hstr2bin(const std::string &s)
+std::vector<unsigned char> hstr2bin(const std::string &s) throw(std::invalid_argument)
 {
     if (s.size()%2!=0)
     {
