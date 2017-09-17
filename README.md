@@ -31,7 +31,7 @@ This library currently exposes the following functionality:
 #### Ubuntu
 ```
 sudo apt -y install swig3.0 python3.5-dev
-pip3 install qrllib
+pip3 install pyqrllib
 ````
 
 #### OSX
@@ -45,7 +45,7 @@ Now install some dependencies
 
 ```bash
 brew install cmake python3 swig
-pip3 install qrllib
+pip3 install pyqrllib
 ```
 
 #### Windows
@@ -59,7 +59,7 @@ TBD
 
 ```
 sudo apt -y install swig3.0 python3.5-dev
-pip3 install qrllib
+pip3 install pyqrllib
 ```
 
 #### Miscellaneous
