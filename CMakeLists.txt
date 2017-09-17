@@ -12,7 +12,7 @@ set(CMAKE_VERBOSE_MAKEFILE ON)
 set(BUILD_TESTS OFF CACHE BOOL "Enables tests")
 set(BUILD_GO OFF CACHE BOOL "Enables go wrapper")
 set(BUILD_PYTHON ON CACHE BOOL "Enables python wrapper")
-set(BUILD_PYTHON_LOCALDEPLOY OFF CACHE BOOL "Deploys python locally")
+set(BUILD_PYTHON_LOCALDEPLOY ON CACHE BOOL "Deploys python locally")
 
 message(STATUS "GOLANG WRAPPER" ${BUILD_GO})
 message(STATUS "PYTHON WRAPPER" ${BUILD_PYTHON})

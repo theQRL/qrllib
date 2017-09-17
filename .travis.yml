@@ -2,6 +2,8 @@ sudo: required
 dist: trusty
 services: docker
 language: cpp
+python:
+  - "3.5"
 env:
   matrix:
   - CC_VER="5" PLATFORM='xenial'
@@ -13,9 +15,10 @@ addons:
   apt:
     packages:
     - git
-    - python-pip
+    - python3
+    - python3-pip
 before_install:
-- sudo pip install -U pip setuptools twine
+- sudo pip3 install -U pip setuptools twine
 - "./travis/before_install.sh"
 script:
 - "./travis/build.sh"
@@ -23,10 +26,12 @@ notifications:
   email: false
 deploy:
   provider: pypi
-  server: https://test.pypi.org/legacy/
+#  server: https://test.pypi.org/legacy/
   skip_cleanup: true
   user: jleni
   password:
-    secure: uytx1DJtpqdFPNffeIxOwXTI5r/uKj3LCHQtIakurdT11/2qbl99XYsCWNsvXS/AKZS+37U8hkLcQqf2vmjbqXEtj+QrqxZV5Mn95hirkFrvzvXP1jEYZH4v0ZsAQayni6u273+o8LEfBdQBLwLLLMThlNm7dMjJY7P2QzIuwa+fPn74R1+UKbp4XZWi9YHCWoCaIly5mCelKucW5FAvy8ac6sUZnJS2Ex/AdRy6YPZKveXqnPy3kLCL3sE6pXHKWhl50NJJK0SUEpqUkKpuXj6lHggGAF991ecYDJULhe2asVjSH5OG84h/ICF14dXKiqWTM/Pm6WpoU6SUqKlWn/qBGwcB+v+TpCKfsJLrds4L1PMjJlUsA5oD3j8g/ChXmdH/fKmzRO2G7Y4luR9cjxhMlx9GMJFLqxSZ8NC2bi2+wl0RieA/FU7cbbHOWDcs1rk+P6e5Xori6zA/7YjW91J4zTcGUBeqh1+VcNMPFX5Avh+p0qdtdGhHyYLEbnxaZDOnLgKVU7mz/F9jitBxbzdiGhQEFOLlJXyRRXyMEE39LxhwI5FU7rbofPYE6JjQKHGpJS1fYAPcHYBrhEFEqAS3XqIuaK8punZRUCU27Zo2bewAObJXJStELs6Y//Gc1tltAG7rdO6Y/yDa5lfhUSKm7y3NnEQOMCwmnKlch5Q=
+#   secure: uytx1DJtpqdFPNffeIxOwXTI5r/uKj3LCHQtIakurdT11/2qbl99XYsCWNsvXS/AKZS+37U8hkLcQqf2vmjbqXEtj+QrqxZV5Mn95hirkFrvzvXP1jEYZH4v0ZsAQayni6u273+o8LEfBdQBLwLLLMThlNm7dMjJY7P2QzIuwa+fPn74R1+UKbp4XZWi9YHCWoCaIly5mCelKucW5FAvy8ac6sUZnJS2Ex/AdRy6YPZKveXqnPy3kLCL3sE6pXHKWhl50NJJK0SUEpqUkKpuXj6lHggGAF991ecYDJULhe2asVjSH5OG84h/ICF14dXKiqWTM/Pm6WpoU6SUqKlWn/qBGwcB+v+TpCKfsJLrds4L1PMjJlUsA5oD3j8g/ChXmdH/fKmzRO2G7Y4luR9cjxhMlx9GMJFLqxSZ8NC2bi2+wl0RieA/FU7cbbHOWDcs1rk+P6e5Xori6zA/7YjW91J4zTcGUBeqh1+VcNMPFX5Avh+p0qdtdGhHyYLEbnxaZDOnLgKVU7mz/F9jitBxbzdiGhQEFOLlJXyRRXyMEE39LxhwI5FU7rbofPYE6JjQKHGpJS1fYAPcHYBrhEFEqAS3XqIuaK8punZRUCU27Zo2bewAObJXJStELs6Y//Gc1tltAG7rdO6Y/yDa5lfhUSKm7y3NnEQOMCwmnKlch5Q=
+    secure: nzjZ/6DiVgotjDBoWcNTCdCxVcD2+TG2HUJMVcJOM32eAmtWX0Iy5nbaw5fe2PjxcmcfIdtku+vje4s4Rp8n4lSqNVVrsnI371W0R/zcMgl9pSkFrTiLcs1QChK3jlfvWSletNHua2vNopGC7TLH8qcw+eHH3Onxb9ZkBkSpwCeu7miCyR0x6iIkydfsRdT5e2gPF9+fWT3y53DxsJVKfL+xPsNl6jy+2j0LBo2UaJtlKSjBisZMpk6/X0KRe6LrlaJfZekLVphAuT/AjosF5ib2J36PNX3cmDXLfXS2b6pPEO6eNgGVQINoV3toOboW5ERSFgy5chE1KLyYJuLQ4bU41Qf8Nn86W/zXiBGoGSzLODgHpmEYAK/hTjzAiYQNBqSFbyZmwQLuF0dSwmfX9regsHMVq6rGVnqO03maJz+At0FfBoh2uYgb1D0PTkNkNud8QLSdlZsWuibopzQLbfY+9CJi9gewVpzguAlciQOaSD7jAOjTGj0BGuU/k763eU3vjUe2peWwL0/fdv6RUE6PLqGNXO0tPm0hbtNL2cKb0VEU52Hl4ehFSwNO76t3ReXdj+QUKMUzLT1CqSGCrWASdN7oKnTh5RgiVkbgmbtt8qRGwsAhByCG3+gyHrEgSN5HkhYmjfrJxsHdyrA02bbf7f2u1vG7UTk88vSHIWg=
   on:
+    tags: true
     all_branches: true
