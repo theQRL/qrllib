@@ -16,33 +16,22 @@ This library currently exposes the following functionality:
 
 **Platform support**
 
-|           | Ubuntu<br>16.04 |     OSX<br>10.12     |  Windows<br>10 | Raspbian<br>? | Chrome<br>(Webassembly) |
+|           | Linux |     OSX<br>10.12     |  Windows<br>10 | Raspbian<br>? | Chrome<br>(Webassembly) |
 |-----------|:------------:|:-----------:|:--------:|:--------:|:-----------:|
-|Python 2.7 | No           |     No      |    -     |     -    |     -       |
-|Python 3.5 | pip package<br>missing  | pip package<br>missing |    -     |     -    |     -       |
-|Golang     | wrapper<br>only |     -       |    -     |     -    |     -       |
+|Python 2   | :x:           |    :x:      |    -     |     -    |     -       |
+|Python 3   | :white_check_mark: | :white_check_mark: |    :seedling:     |     :question:    |     :question:       |
+|Golang     | wrapper<br>generation only |     -       |    -     |     -    |     -       |
 |Java       |      -       |     -       |    -     |     -    |     -       |
 |Javascript |      -       |     -       |    -     |     -    |     -       |
 
 ## Installing
 
-We are currently working on pip wheels for the supported platforms. 
-
-Installing this library in python should be as simple as:
-
-```bash
-pip3 install qrllib
-```
-
-But you need some dependencies first (at least for now).
-
-## Dependencies
-*TODO: Update/complete this section*
+*TODO: Work in progress.*
 
 #### Ubuntu
 ```
-pip3 install cmake
 sudo apt -y install swig3.0 python3.5-dev
+pip3 install qrllib
 ````
 
 #### OSX
@@ -56,6 +45,7 @@ Now install some dependencies
 
 ```bash
 brew install cmake python3 swig
+pip3 install qrllib
 ```
 
 #### Windows
@@ -65,14 +55,14 @@ TBD
 
 #### Raspbian
 
-*Support will be provided in the near future*
+*Experimental. Feedback is welcomed*
 
 ```
-TBD
+sudo apt -y install swig3.0 python3.5-dev
+pip3 install qrllib
 ```
 
-
-**Some other dependencies:**
+#### Miscellaneous
 
 Golang and Java wrappers are currently experimental (By default they are disabled in cmake)
 
