@@ -11,12 +11,14 @@ cache:
   timeout: 600
 virtualenv:
   system_site_packages: true
+
 addons:
   apt:
     packages:
     - git
     - python3
     - python3-pip
+
 before_install:
 - sudo pip3 install -U pip setuptools twine
 - "./travis/before_install.sh"
@@ -24,6 +26,7 @@ script:
 - "./travis/build.sh"
 notifications:
   email: false
+
 deploy:
   provider: pypi
   skip_cleanup: true
