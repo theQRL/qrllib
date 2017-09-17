@@ -24,7 +24,6 @@ notifications:
 deploy:
   provider: pypi
   server: https://test.pypi.org/legacy/
-  distributions: bdist_wheel
   skip_cleanup: true
   user: jleni
   password:
