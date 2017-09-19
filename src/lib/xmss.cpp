@@ -16,7 +16,6 @@ Xmss::Xmss(const TSEED &seed, unsigned char height): XmssBase(seed, height)
 //    32 sk_prf
 //    32 pub_seed
 //    32 root
-// TODO: Use a union? to operated on partial fields
 
     _sk = TKEY(132, 0);
     _pk = TKEY(64, 0);
