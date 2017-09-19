@@ -2,7 +2,6 @@
 # file LICENSE or http://www.opensource.org/licenses/mit-license.php.
 from __future__ import print_function
 from unittest import TestCase
-import binascii
 
 from pyqrllib import pyqrllib
 
@@ -32,3 +31,4 @@ class TestSha2_256(TestCase):
     def test_check_sha2_256(self):
         self.check_sha_result(self.sha2_input1, self.sha2_expected_result1)
         self.check_sha_result(self.sha2_input2, self.sha2_expected_result2)
+
