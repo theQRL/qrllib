@@ -20,7 +20,7 @@ class TestSha2_256(TestCase):
         size_out = 32
 
         hex_in_before = pyqrllib.bin2hstr(pyqrllib.str2bin(data_text))
-        data_out = pyqrllib.sha2_256(32, pyqrllib.str2bin(data_text))
+        data_out = pyqrllib.sha2_256(pyqrllib.str2bin(data_text))
 
         # This is just to keep as an example. Things could be compared without converting to hex
         hex_in = pyqrllib.bin2hstr(pyqrllib.str2bin(data_text))

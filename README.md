@@ -56,12 +56,17 @@ TBD
 
 #### Raspbian
 
-*Experimental. Feedback is welcomed*
+A bug in one of the dependencies is affecting us. A workaround is provided for integration testing. Use at your own risk. 
 
-```
-sudo apt -y install swig3.0 python3-dev swig3.0 build-essential pkg-config
-pip3 install pyqrllib
-```
+Download the following script and execute as sudo. It will take a while to compile cmake.
+
+
+> **These are the original instructions but wont work until a bug in cmake is solved**
+>```
+>sudo apt -y install swig3.0 python3-dev build-essential cmake ninja
+>sudo pip3 install -U setuptools scikit-build
+>sudo pip3 install pyqrllib
+>```
 
 #### Miscellaneous
 

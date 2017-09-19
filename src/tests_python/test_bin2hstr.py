@@ -17,3 +17,18 @@ class TestHash(TestCase):
     def test_data_to_hex2(self):
         hexstring = pyqrllib.bin2hstr('test', 0)
         self.assertEqual(hexstring, '74657374')
+
+    def test_exception(self):
+        i =0
+        try:
+            x = pyqrllib.hstr2bin('Z')
+        except Exception as e:
+            i = 1
+        self.assertEqual(i, 1)
+
+        i =0
+        try:
+            x = pyqrllib.hstr2bin('Z0')
+        except Exception as e:
+            i = 1
+        self.assertEqual(i, 1)
