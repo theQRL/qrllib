@@ -3,7 +3,7 @@ dist: trusty
 services: docker
 language: cpp
 python:
-- '3.5'
+- '3.4'
 env:
   matrix:
   - CC_VER="5" PLATFORM='xenial'
