@@ -86,7 +86,6 @@ namespace {
     }
 
     TEST(MISC, bin2mnemonic_simple3b) {
-        // FIXME: This could be a problem
         std::vector<unsigned char> input = {0x12, 0x34, 0x56, 0x78, 0x01, 0x00};
 
         auto mnemonic = bin2mnemonic(input, wordList);
