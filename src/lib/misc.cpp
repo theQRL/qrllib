@@ -174,7 +174,7 @@ std::vector<unsigned char> sha2_256(std::vector<unsigned char> input)
     return hashed_output;
 }
 
-std::string getAddress(const std::string &prefix, std::vector<unsigned char> &key)
+std::string getAddress(const std::string &prefix, const std::vector<unsigned char> &key)
 {
     TKEY hashed_key(ADDRESS_HASH_SIZE, 0);
     TKEY hashed_key2(ADDRESS_HASH_SIZE, 0);

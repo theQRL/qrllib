@@ -25,7 +25,7 @@ std::vector<unsigned char> shake256(size_t hash_size, std::vector<unsigned char>
 
 std::vector<unsigned char> getRandomSeed(uint32_t seed_size, const std::string &entropy);
 
-std::string getAddress(const std::string &prefix, std::vector<unsigned char> &key);
+std::string getAddress(const std::string &prefix, const std::vector<unsigned char> &key);
 
 std::vector<std::vector<unsigned char>> getHashChainSeed(const std::vector<unsigned char> &seed, uint32_t seed_shift, uint32_t count);
 
