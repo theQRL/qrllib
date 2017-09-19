@@ -39,13 +39,21 @@ TKEY XmssBase::getPKSeed()
 
 uint32_t XmssBase::getIndex()
 {
+    // TODO: Check endianness issues
     // TODO: Review this according to IETF
-    return _sk[0] << 24 + _sk[1] << 16 + _sk[2] << 8 + _sk[0];
+    return _sk[0] << 24 + _sk[1] << 16 + _sk[2] << 8 + _sk[3];
 }
 
 uint32_t  XmssBase::setIndex(uint32_t new_index)
 {
-    // FIXME: Missing Implementation
+    // TODO: Check endianness issues
+    _sk[3] = static_cast<unsigned char>(new_index & 0xFF);
+    new_index >>= 8;
+    _sk[2] = static_cast<unsigned char>(new_index & 0xFF);
+    new_index >>= 8;
+    _sk[1] = static_cast<unsigned char>(new_index & 0xFF);
+    new_index >>= 8;
+    _sk[0] = static_cast<unsigned char>(new_index & 0xFF);
 }
 
 TKEY XmssBase::getSKSeed()
