@@ -9,6 +9,7 @@
 #include <randombytes.h>
 #include <iostream>
 #include <unordered_map>
+#include <stdexcept>
 
 std::string bin2hstr(const std::vector<unsigned char> &vec, int wrap)
 {
