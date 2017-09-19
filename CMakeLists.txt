@@ -1,7 +1,7 @@
 # Distributed under the MIT software license, see the accompanying
 # file LICENSE or http://www.opensource.org/licenses/mit-license.php.
 
-cmake_minimum_required(VERSION 2.8)
+cmake_minimum_required(VERSION 3.6)
 project(qrllib)
 
 set(CMAKE_CXX_STANDARD 14)
@@ -114,7 +114,7 @@ if (BUILD_TESTS)
             #        ${LIBXMSSREF_SRC}
             )
     target_link_libraries(qrllib_test gtest_main)
-    add_dependencies(qrllib_test prepareXMSSParams)
+#    add_dependencies(qrllib_test prepareXMSSParams)
 endif()
 
 ## SWIG + API - Python related stuff
@@ -127,15 +127,29 @@ if (BUILD_PYTHON)
     set(CMAKE_SWIG_OUTDIR ${CMAKE_CURRENT_SOURCE_DIR}/pyqrllib)
     set_source_files_properties(${SWIG_INTERFACE} PROPERTIES CPLUSPLUS ON)
     set_property(SOURCE ${SWIG_INTERFACE} PROPERTY SWIG_FLAGS "-includeall" "-ignoremissing")
-    SWIG_ADD_LIBRARY(pyqrllib
-            LANGUAGE "${language}"
+
+    # Intentionally use a deprecated version to provide support for the raspberry pi
+    SWIG_ADD_MODULE(pyqrllib
             ${SWIG_LANG_TYPE}
             SOURCES ${SWIG_INTERFACE}
             src/api/api.cxx
             ${LIB_SRC}
             ${LIBXMSSALT_SRC}
             #        ${LIBXMSSREF_SRC}
+            LANGUAGE "${language}"
             )
+
+    # TODO: Upgrade once the cmake pip package is fixed
+#    SWIG_ADD_LIBRARY(pyqrllib
+#            LANGUAGE "${language}"
+#            ${SWIG_LANG_TYPE}
+#            SOURCES ${SWIG_INTERFACE}
+#            src/api/api.cxx
+#            ${LIB_SRC}
+#            ${LIBXMSSALT_SRC}
+#            #        ${LIBXMSSREF_SRC}
+#            )
+
     SWIG_LINK_LIBRARIES(pyqrllib ${SWIG_LANG_LIBRARIES})
     #add_dependencies(${SWIG_MODULE_pyqrllib_REAL_NAME} prepareXMSSParams)
 

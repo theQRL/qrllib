@@ -3,6 +3,7 @@
 import sys
 import os
 import subprocess
+import platform
 
 from setuptools import setup, Extension
 from setuptools.command.build_ext import build_ext
@@ -37,7 +38,10 @@ class CMakeExtension(Extension):
 def setup_package():
     needs_sphinx = {'build_sphinx', 'upload_docs'}.intersection(sys.argv)
     sphinx = ['sphinx'] if needs_sphinx else []
-    setup(setup_requires=['six', 'pyscaffold>=2.5a0,<2.6a0'] + sphinx,
+
+    cmake = ['cmake'] if 'arm' not in platform.machine() else []
+
+    setup(setup_requires=['six', 'pyscaffold>=2.5a0,<2.6a0'] + sphinx + cmake,
           ext_modules=[CMakeExtension('pyqrllib')],
           cmdclass=dict(build_ext=CMakeBuild),
           use_pyscaffold=True)
