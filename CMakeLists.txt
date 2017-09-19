@@ -1,7 +1,7 @@
 # Distributed under the MIT software license, see the accompanying
 # file LICENSE or http://www.opensource.org/licenses/mit-license.php.
 
-cmake_minimum_required(VERSION 3.6)
+cmake_minimum_required(VERSION 3.5)
 project(qrllib)
 
 set(CMAKE_CXX_STANDARD 14)
@@ -129,14 +129,12 @@ if (BUILD_PYTHON)
     set_property(SOURCE ${SWIG_INTERFACE} PROPERTY SWIG_FLAGS "-includeall" "-ignoremissing")
 
     # Intentionally use a deprecated version to provide support for the raspberry pi
-    SWIG_ADD_MODULE(pyqrllib
-            ${SWIG_LANG_TYPE}
-            SOURCES ${SWIG_INTERFACE}
+    SWIG_ADD_MODULE( pyqrllib
+            ${language}
+            ${SWIG_INTERFACE}
             src/api/api.cxx
             ${LIB_SRC}
             ${LIBXMSSALT_SRC}
-            #        ${LIBXMSSREF_SRC}
-            LANGUAGE "${language}"
             )
 
     # TODO: Upgrade once the cmake pip package is fixed
@@ -179,15 +177,25 @@ if (BUILD_GO)
     set(CMAKE_SWIG_OUTDIR ${CMAKE_CURRENT_SOURCE_DIR}/goqrllib)
     set_source_files_properties(${SWIG_INTERFACE} PROPERTIES CPLUSPLUS ON)
     set_property(SOURCE ${SWIG_INTERFACE} PROPERTY SWIG_FLAGS "-includeall" "-ignoremissing" "-intgosize" "64")
-    SWIG_ADD_LIBRARY(goqrllib
-            LANGUAGE "${language}"
-            ${SWIG_LANG_TYPE}
-            SOURCES ${SWIG_INTERFACE}
+
+    SWIG_ADD_MODULE( goqrllib
+            ${language}
+            ${SWIG_INTERFACE}
             src/api/api.cxx
             ${LIB_SRC}
             ${LIBXMSSALT_SRC}
-            #${LIBXMSSREF_SRC}
             )
+
+
+#    SWIG_ADD_LIBRARY(goqrllib
+#            ${language}
+#            ${SWIG_LANG_TYPE}
+#            SOURCES ${SWIG_INTERFACE}
+#            src/api/api.cxx
+#            ${LIB_SRC}
+#            ${LIBXMSSALT_SRC}
+#            #${LIBXMSSREF_SRC}
+#            )
     SWIG_LINK_LIBRARIES(goqrllib ${SWIG_LANG_LIBRARIES})
     add_dependencies(${SWIG_MODULE_goqrllib_REAL_NAME} prepareXMSSParams)
     add_custom_command(TARGET ${SWIG_MODULE_goqrllib_REAL_NAME}
