@@ -12,7 +12,6 @@ set(CMAKE_VERBOSE_MAKEFILE ON)
 set(BUILD_TESTS OFF CACHE BOOL "Enables tests")
 set(BUILD_GO OFF CACHE BOOL "Enables go wrapper")
 set(BUILD_PYTHON ON CACHE BOOL "Enables python wrapper")
-set(BUILD_PYTHON_LOCALDEPLOY ON CACHE BOOL "Deploys python locally")
 
 message(STATUS "GOLANG WRAPPER" ${BUILD_GO})
 message(STATUS "PYTHON WRAPPER" ${BUILD_PYTHON})
@@ -128,6 +127,8 @@ if (BUILD_PYTHON)
     set_source_files_properties(${SWIG_INTERFACE} PROPERTIES CPLUSPLUS ON)
     set_property(SOURCE ${SWIG_INTERFACE} PROPERTY SWIG_FLAGS "-includeall" "-ignoremissing")
 
+    #set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/pyqrllib)
+
     # Intentionally use a deprecated version to provide support for the raspberry pi
     SWIG_ADD_MODULE( pyqrllib
             ${language}
@@ -151,20 +152,30 @@ if (BUILD_PYTHON)
     SWIG_LINK_LIBRARIES(pyqrllib ${SWIG_LANG_LIBRARIES})
     #add_dependencies(${SWIG_MODULE_pyqrllib_REAL_NAME} prepareXMSSParams)
 
-    if (BUILD_PYTHON_LOCALDEPLOY)
-        add_custom_command(TARGET ${SWIG_MODULE_pyqrllib_REAL_NAME}
-                POST_BUILD
-                COMMAND ${CMAKE_COMMAND} -E cmake_echo_color --cyan $<TARGET_FILE:${SWIG_MODULE_pyqrllib_REAL_NAME}>
-                COMMENT "Moving SWIG files to output dir"
-                COMMAND ${CMAKE_COMMAND} -E copy_if_different $<TARGET_FILE:${SWIG_MODULE_pyqrllib_REAL_NAME}> ${CMAKE_CURRENT_SOURCE_DIR}/pyqrllib
-                )
-        # Get python packages destination
-        #execute_process(COMMAND python -c "from distutils.sysconfig import get_python_lib; print get_python_lib()"
-        #                OUTPUT_VARIABLE PYTHON_SITE_PACKAGES OUTPUT_STRIP_TRAILING_WHITESPACE)
-        # Use CPack to create wheel packages
-        #install(TARGETS _target DESTINATION ${PYTHON_SITE_PACKAGES})
-        #install(FILES ${CMAKE_BINARY_DIR}/src/target.py DESTINATION ${PYTHON_SITE_PACKAGES})
-    endif()
+#    get_cmake_property(_variableNames VARIABLES)
+#    foreach (_variableName ${_variableNames})
+#        message(STATUS "${_variableName}=${${_variableName}}")
+#    endforeach()
+
+    add_custom_command(TARGET ${SWIG_MODULE_pyqrllib_REAL_NAME}
+            POST_BUILD
+            COMMENT "Moving SWIG files to output dir"
+            COMMAND ${CMAKE_COMMAND} -E copy_if_different $<TARGET_FILE:${SWIG_MODULE_pyqrllib_REAL_NAME}> ${CMAKE_CURRENT_SOURCE_DIR}/pyqrllib/$<TARGET_LINKER_FILE_NAME:${SWIG_MODULE_pyqrllib_REAL_NAME}>
+            )
+
+    add_custom_command(TARGET ${SWIG_MODULE_pyqrllib_REAL_NAME}
+            POST_BUILD
+            COMMENT ${swig_extra_generated_files}
+            COMMAND ${CMAKE_COMMAND} -E copy_if_different ${swig_extra_generated_files} ${CMAKE_CURRENT_SOURCE_DIR}/pyqrllib/pyqrllib.py
+            )
+
+
+    # Get python packages destination
+    #execute_process(COMMAND python -c "from distutils.sysconfig import get_python_lib; print get_python_lib()"
+    #                OUTPUT_VARIABLE PYTHON_SITE_PACKAGES OUTPUT_STRIP_TRAILING_WHITESPACE)
+    # Use CPack to create wheel packages
+    #install(TARGETS _target DESTINATION ${PYTHON_SITE_PACKAGES})
+    #install(FILES ${CMAKE_BINARY_DIR}/src/target.py DESTINATION ${PYTHON_SITE_PACKAGES})
 endif ()
 
 # SWIG + API - Golang related stuff

@@ -44,3 +44,8 @@ qrllib_test
 coverage\.xml
 
 \.idea/workspace\.xml
+.eggs/
+build/
+pyqrllib.egg-info/
+
+
