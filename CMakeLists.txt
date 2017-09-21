@@ -122,12 +122,14 @@ if (BUILD_PYTHON)
     set(language python)
     find_package(PythonLibs 3.4 REQUIRED)
     include_directories(${PYTHON_INCLUDE_PATH})
+
     set(SWIG_LANG_LIBRARIES ${PYTHON_LIBRARIES})
-    set(CMAKE_SWIG_OUTDIR ${CMAKE_CURRENT_SOURCE_DIR}/pyqrllib)
+    set(CMAKE_SWIG_OUTDIR ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/pyqrllib)
+#    set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/pyqrllib)
     set_source_files_properties(${SWIG_INTERFACE} PROPERTIES CPLUSPLUS ON)
     set_property(SOURCE ${SWIG_INTERFACE} PROPERTY SWIG_FLAGS "-includeall" "-ignoremissing")
 
-    #set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/pyqrllib)
+    set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/pyqrllib)
 
     # Intentionally use a deprecated version to provide support for the raspberry pi
     SWIG_ADD_MODULE( pyqrllib
@@ -152,10 +154,10 @@ if (BUILD_PYTHON)
     SWIG_LINK_LIBRARIES(pyqrllib ${SWIG_LANG_LIBRARIES})
     #add_dependencies(${SWIG_MODULE_pyqrllib_REAL_NAME} prepareXMSSParams)
 
-#    get_cmake_property(_variableNames VARIABLES)
-#    foreach (_variableName ${_variableNames})
-#        message(STATUS "${_variableName}=${${_variableName}}")
-#    endforeach()
+    get_cmake_property(_variableNames VARIABLES)
+    foreach (_variableName ${_variableNames})
+        message(STATUS "${_variableName}=${${_variableName}}")
+    endforeach()
 
     add_custom_command(TARGET ${SWIG_MODULE_pyqrllib_REAL_NAME}
             POST_BUILD
