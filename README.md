@@ -19,19 +19,16 @@ This library currently exposes the following functionality:
 
 |           | Linux |     OSX<br>10.12     |  Windows<br>10 | Raspbian<br>? | Chrome<br>(Webassembly) |
 |-----------|:------------:|:-----------:|:--------:|:--------:|:-----------:|
-|Python 2   | :x:           |    :x:      |    -     |     -    |     -       |
-|Python 3   | :white_check_mark: | :white_check_mark: |    :seedling:     |     :question:    |     :question:       |
+|Python 2   | :x:           |    :x:      |    :x:     |     :x:    |     :x:       |
+|Python 3   | :white_check_mark: | :white_check_mark: |    :seedling:     |     :white_check_mark:    |     :question:       |
 |Golang     | wrapper<br>generation only |     -       |    -     |     -    |     -       |
 |Java       |      -       |     -       |    -     |     -    |     -       |
-|Javascript |      -       |     -       |    -     |     -    |     -       |
 
 ## Installing
 
-*TODO: Work in progress.*
-
 #### Ubuntu
 ```
-sudo apt -y install swig3.0 python3-dev build-essential pkg-config
+sudo apt -y install swig3.0 python3-dev build-essential cmake pkg-config
 pip3 install pyqrllib
 ````
 
@@ -58,7 +55,7 @@ TBD
 
 ```
 sudo apt -y install swig3.0 python3-dev build-essential cmake ninja-build
-sudo pip3 install -U setuptools scikit-build
+sudo pip3 install -U setuptools
 sudo pip3 install -U pyqrllib
 ```
 
