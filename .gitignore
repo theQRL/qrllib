@@ -30,8 +30,6 @@ benchmark/speedup_sign\.png
 benchmark/speedup_create\.png
 benchmark/speedup_verify\.png
 
-\.idea/workspace\.xml
-
 googletest-src/
 googletest-download/
 googletest-build/
@@ -42,4 +40,7 @@ gmock\.pc
 gtest\.pc
 qrllib_test
 
-\.idea/cmaketest\.iml
+\.coverage
+coverage\.xml
+
+\.idea/workspace\.xml
