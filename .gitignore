@@ -41,3 +41,5 @@ gmock_main\.pc
 gmock\.pc
 gtest\.pc
 qrllib_test
+
+\.idea/cmaketest\.iml
