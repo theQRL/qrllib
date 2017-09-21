@@ -39,7 +39,11 @@ def setup_package():
     needs_sphinx = {'build_sphinx', 'upload_docs'}.intersection(sys.argv)
     sphinx = ['sphinx'] if needs_sphinx else []
 
-    cmake = ['cmake'] if 'arm' not in platform.machine() else []
+
+    cmake = ['cmake']
+    if 'arm' in platform.machine():
+        print("ARM platform detected. Skipping cmake")
+        cmake = []
 
     setup(setup_requires=['six', 'pyscaffold>=2.5a0,<2.6a0'] + sphinx + cmake,
           ext_modules=[CMakeExtension('pyqrllib')],
