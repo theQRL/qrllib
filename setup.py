@@ -45,7 +45,7 @@ def setup_package():
         print("ARM platform detected. Skipping cmake")
         cmake = []
 
-    setup(setup_requires=['six', 'pyscaffold>=2.5a0,<2.6a0', 'scikit-build'] + sphinx + cmake,
+    setup(setup_requires=['six', 'pyscaffold>=2.5a0,<2.6a0'] + sphinx + cmake,
           ext_modules=[CMakeExtension('pyqrllib')],
           cmdclass=dict(build_ext=CMakeBuild),
           use_pyscaffold=True)
