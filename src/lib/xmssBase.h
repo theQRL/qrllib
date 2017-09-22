@@ -30,7 +30,6 @@ public:
     TKEY getSKPRF();
 
     std::string getAddress(const std::string &prefix);
-    std::string getAddressFromSignature(const std::string &prefix, TSIGNATURE signature);
 
     unsigned int getIndex();
     unsigned int setIndex(unsigned int new_index);

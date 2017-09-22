@@ -14,6 +14,8 @@ XmssBase::XmssBase(const TSEED &seed, unsigned char height): _seed(seed), _heigh
 
 uint32_t XmssBase::getSignatureSize()
 {
+    // 4 + n + (len + h) * n)
+    // FIXME: There could be consistency problems due to changes in N
     return static_cast<uint32_t>(4 + 32 + 67 * 32 + _height * 32);
 }
 
@@ -48,7 +50,10 @@ uint32_t XmssBase::getIndex()
 {
     // TODO: Check endianness issues
     // TODO: Review this according to IETF
-    return _sk[0] << 24 + _sk[1] << 16 + _sk[2] << 8 + _sk[3];
+    return  (_sk[0] << 24) +
+            (_sk[1] << 16) +
+            (_sk[2] << 8) +
+            _sk[3];
 }
 
 TKEY XmssBase::getSKSeed()
@@ -81,6 +86,8 @@ uint32_t  XmssBase::setIndex(uint32_t new_index)
     _sk[1] = static_cast<unsigned char>(new_index & 0xFF);
     new_index >>= 8;
     _sk[0] = static_cast<unsigned char>(new_index & 0xFF);
+
+    return getIndex();
 }
 
 TKEY XmssBase::getPK()
@@ -98,9 +105,4 @@ std::string XmssBase::getAddress(const std::string &prefix)
 {
     std::vector<unsigned char> key = getPK();
     return ::getAddress(prefix, key);
-}
-
-std::string getAddressFromSignature(const std::string &prefix, TSIGNATURE signature)
-{
-
 }
