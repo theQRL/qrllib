@@ -21,9 +21,6 @@ XmssFast::XmssFast(const TSEED &seed, unsigned char height): XmssBase(seed, heig
     const uint32_t n = 48;
     const uint32_t h = _height;
 
-    _sk = TKEY(132, 0);
-    _pk = TKEY(64, 0);
-
     // FIXME: This needs refactoring
     _stackoffset = 0;
     _stack = std::vector<unsigned char>((h+1)*n);
@@ -48,7 +45,9 @@ XmssFast::XmssFast(const TSEED &seed, unsigned char height): XmssBase(seed, heig
                        _retain.data(),
                        0);
 
-    xmssfast_Genkeypair(_pk.data(),
+    _sk = TKEY(132, 0);
+    auto tmp = TKEY(64, 0);
+    xmssfast_Genkeypair(tmp.data(),
                         _sk.data(),
                         &_state,
                         _seed.data(),
