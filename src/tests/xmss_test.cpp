@@ -44,6 +44,7 @@ namespace {
 
         std::string message = "This is a test message";
         std::vector<unsigned char> data(message.begin(), message.end());
+        EXPECT_EQ(xmss.getIndex(), 0);
 
         auto signature = xmss.sign(data);
 
@@ -51,6 +52,17 @@ namespace {
         std::cout << std::endl;
         std::cout << "data       :" << data.size() << " bytes\n" << bin2hstr(data, 64) << std::endl;
         std::cout << "signature  :" << signature.size() << " bytes\n" << bin2hstr(signature, 64) << std::endl;
+        EXPECT_EQ(xmss.getIndex(), 1);
+
+        auto signature2 = xmss.sign(data);
+
+        std::cout << std::endl;
+        std::cout << std::endl;
+        std::cout << "data       :" << data.size() << " bytes\n" << bin2hstr(data, 64) << std::endl;
+        std::cout << "signature  :" << signature.size() << " bytes\n" << bin2hstr(signature, 64) << std::endl;
+
+        EXPECT_NE(bin2hstr(signature), bin2hstr(signature2));
+        EXPECT_EQ(xmss.getIndex(), 2);
     }
 
 

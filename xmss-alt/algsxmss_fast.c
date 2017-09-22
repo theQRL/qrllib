@@ -508,7 +508,7 @@ int xmssfast_Genkeypair(unsigned char *pk, unsigned char *sk, bds_state *state, 
   //randombytes(sk+4, 3*n);
   // Copy PUB_SEED to public key
   unsigned char randombits[3 * n];
-  shake256(randombits, 3 * n, seed, n);
+  shake256(randombits, 3 * n, seed, 48);  // FIXME: seed size has been hardcoded to 48
   size_t rnd = 96;
   size_t pks = 32;
   memcpy(sk + 4, randombits, rnd);

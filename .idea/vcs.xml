@@ -3,7 +3,6 @@
   <component name="VcsDirectoryMappings">
     <mapping directory="$PROJECT_DIR$" vcs="Git" />
     <mapping directory="$PROJECT_DIR$/PicoSHA2" vcs="Git" />
-    <mapping directory="$PROJECT_DIR$/cmake-build-debug/googletest-src" vcs="Git" />
     <mapping directory="$PROJECT_DIR$/xmss-reference" vcs="Git" />
   </component>
 </project>
