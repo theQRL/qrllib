@@ -9,12 +9,22 @@
 #include <xmssFast.h>
 
 namespace {
-#define XMSS_HEIGHT 8
+    constexpr uint8_t XMSS_HEIGHT = 4;
 
-    TEST(XMSSFAST, Instantiation) {
+    template <typename T>
+    class XmssGenericTest : public ::testing::Test
+    {
+    public:
+        using TXMSS = T;
+    };
+
+    typedef ::testing::Types<Xmss, XmssFast> xmssTypes;
+    TYPED_TEST_CASE(XmssGenericTest, xmssTypes);
+
+    TYPED_TEST(XmssGenericTest, Instantiation) {
         std::vector<unsigned char> seed(48, 0);
 
-        XmssFast xmss(seed, XMSS_HEIGHT);
+        typename TestFixture::TXMSS xmss(seed, XMSS_HEIGHT);
 
         auto pk = xmss.getPK();
         auto sk = xmss.getSK();
@@ -28,24 +38,23 @@ namespace {
         EXPECT_EQ(seed, xmss.getSeed());
     }
 
-    TEST(XMSSFAST, SignatureLen) {
+    TYPED_TEST(XmssGenericTest, SignatureLen) {
         std::vector<unsigned char> seed(48, 0);
 
-        XmssFast xmss4(seed, 4);
+        typename TestFixture::TXMSS xmss4(seed, 4);
         EXPECT_EQ(2308, xmss4.getSignatureSize());
 
-        XmssFast xmss6(seed, 6);
+        typename TestFixture::TXMSS xmss6(seed, 6);
         EXPECT_EQ(2372, xmss6.getSignatureSize());
     }
 
-    TEST(XMSSFAST, Sign) {
+    TYPED_TEST(XmssGenericTest, Sign) {
         std::vector<unsigned char> seed(48, 0);
 
-        XmssFast xmss(seed, XMSS_HEIGHT);
+        typename TestFixture::TXMSS xmss(seed, XMSS_HEIGHT);
 
         std::string message = "This is a test message";
         std::vector<unsigned char> data(message.begin(), message.end());
-        EXPECT_EQ(xmss.getIndex(), 0);
 
         auto signature = xmss.sign(data);
 
@@ -53,24 +62,56 @@ namespace {
         std::cout << std::endl;
         std::cout << "data       :" << data.size() << " bytes\n" << bin2hstr(data, 64) << std::endl;
         std::cout << "signature  :" << signature.size() << " bytes\n" << bin2hstr(signature, 64) << std::endl;
-        EXPECT_EQ(xmss.getIndex(), 1);
-
-        auto signature2 = xmss.sign(data);
-
-        std::cout << std::endl;
-        std::cout << std::endl;
-        std::cout << "data       :" << data.size() << " bytes\n" << bin2hstr(data, 64) << std::endl;
-        std::cout << "signature  :" << signature.size() << " bytes\n" << bin2hstr(signature, 64) << std::endl;
-
-        EXPECT_NE(bin2hstr(signature), bin2hstr(signature2));
-        EXPECT_EQ(xmss.getIndex(), 2);
     }
 
-
-    TEST(XMSSFAST, Verify) {
+    TYPED_TEST(XmssGenericTest, SignManyTimesIndexMoves) {
         std::vector<unsigned char> seed(48, 0);
 
-        Xmss xmss(seed, XMSS_HEIGHT);
+        typename TestFixture::TXMSS xmss(seed, XMSS_HEIGHT);
+
+        std::string message = "This is a test message";
+        std::vector<unsigned char> data(message.begin(), message.end());
+
+        for(int i=0; i < 10; i++)
+        {
+            EXPECT_EQ(i, xmss.getIndex());
+            auto sk = xmss.getSK();
+            auto pk = xmss.getPK();
+            std::cout << "sk  :" << sk.size() << " bytes\n" << bin2hstr(sk, 32) << std::endl;
+            std::cout << "pk  :" << sk.size() << " bytes\n" << bin2hstr(pk, 32) << std::endl;
+            auto signature = xmss.sign(data);
+            std::cout << "sign:" << sk.size() << " bytes\n" << bin2hstr(signature, 32) << std::endl;
+
+            EXPECT_EQ(i+1, xmss.getIndex());
+        }
+    }
+
+    TYPED_TEST(XmssGenericTest, SignManyTimesSignatureChanges) {
+        std::vector<unsigned char> seed(48, 0);
+
+        typename TestFixture::TXMSS xmss(seed, XMSS_HEIGHT);
+
+        std::string message = "This is a test message";
+        std::vector<unsigned char> data(message.begin(), message.end());
+
+        for(int i=0; i < 10; i++)
+        {
+            EXPECT_EQ(i, xmss.getIndex());
+            auto sk = xmss.getSK();
+            auto pk = xmss.getPK();
+
+            std::cout << "sk  :" << sk.size() << " bytes\n" << bin2hstr(sk, 32) << std::endl;
+            std::cout << "pk  :" << sk.size() << " bytes\n" << bin2hstr(pk, 32) << std::endl;
+            auto signature = xmss.sign(data);
+
+            EXPECT_EQ(i+1, xmss.getIndex());
+        }
+    }
+
+    TYPED_TEST(XmssGenericTest, Verify) {
+        std::vector<unsigned char> seed(48, 0);
+
+        typename TestFixture::TXMSS xmss(seed, XMSS_HEIGHT);
 
         std::string message = "This is a test message";
         std::vector<unsigned char> data_ref(message.begin(), message.end());
@@ -97,4 +138,5 @@ namespace {
         signature[1] += 1;
         EXPECT_FALSE(Xmss::verify(data, signature, xmss.getPK(), XMSS_HEIGHT));
     }
+
 }

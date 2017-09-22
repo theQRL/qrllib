@@ -17,9 +17,10 @@ public:
 
     virtual TSIGNATURE sign(const TMESSAGE &message) = 0;
 
-    int getHeight() {  return _height; }
-    TKEY getPK() {  return _pk; }
+    // TODO: Differentiate between XMSS and WOTS+ keys
     TKEY getSK() {  return _sk; }
+    TKEY getPK();
+    int getHeight() {  return _height; }
     TSEED getSeed() {  return _seed; }
 
     // TODO: Maybe improve this using a union down into the original code?
@@ -39,7 +40,6 @@ public:
 
 protected:
     unsigned char _height;
-    TKEY _pk;
     TKEY _sk;
     TSEED _seed;
 };
