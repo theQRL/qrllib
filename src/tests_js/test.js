@@ -1,9 +1,28 @@
 var libqrl = require('./libjsqrl.js');
+const crypto = require('crypto');
 var assert = require('assert');
 
-console.log("\n========== CREATE SEED ========");
-seed_in = new libqrl.VectorUChar();
+
+console.log("\n========== CREATE RANDOM SEED ========");
+
+const seed_random = crypto.randomBytes(48);
+// TODO: Provide automatic conversion between Nodejs Buffer and libqrl.VectorUChar [ std::vector<unsigned char> ]
+seed_random2 = new libqrl.VectorUChar();
 for(var i =0; i<48; i++)
+{
+    // Put some data
+    seed_random2.push_back( seed_random[i] );
+}
+
+mnemonic_random = libqrl.bin2mnemonic(seed_random2);
+console.log("Seed    : ", libqrl.bin2hstr(seed_random2));
+console.log("Mnemonic: ", mnemonic_random);
+
+
+
+console.log("\n========== CREATE FIXED SEED ========");
+seed_in = new libqrl.VectorUChar();
+for(i =0; i<48; i++)
 {
     // Put some data
     seed_in.push_back(i);
