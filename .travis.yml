@@ -6,6 +6,7 @@ python:
 - '3.4'
 env:
   matrix:
+  - CC_VER="4" PLATFORM='xenial'
   - CC_VER="5" PLATFORM='xenial'
 cache:
   timeout: 600

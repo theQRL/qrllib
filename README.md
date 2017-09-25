@@ -17,21 +17,19 @@ This library currently exposes the following functionality:
 
 **Platform support**
 
-|           | Linux |     OSX<br>10.12     |  Windows<br>10 | Raspbian<br>? | Chrome<br>(Webassembly) |
-|-----------|:------------:|:-----------:|:--------:|:--------:|:-----------:|
-|Python 2   | :x:           |    :x:      |    -     |     -    |     -       |
-|Python 3   | :white_check_mark: | :white_check_mark: |    :seedling:     |     :question:    |     :question:       |
-|Golang     | wrapper<br>generation only |     -       |    -     |     -    |     -       |
-|Java       |      -       |     -       |    -     |     -    |     -       |
-|Javascript |      -       |     -       |    -     |     -    |     -       |
+|           | Linux |     OSX<br>10.12     |  Windows<br>10 | Raspbian<br>? | 
+|-----------|:------------:|:-----------:|:--------:|:--------:|
+|Python 2   | :x:           |    :x:      |    :x:     |     :x:    |
+|Python 3   | :white_check_mark: | :white_check_mark: |    :seedling:     |     :white_check_mark:    |
+|Webassembly (JS) |      :white_check_mark:       |     :seedling:       |    :white_check_mark:     |     :white_check_mark:    |
+|Golang     | wrapper<br>generation only |     -       |    -     |     -    |
+|Java       |      -       |     -       |    -     |     -    |
 
 ## Installing
 
-*TODO: Work in progress.*
-
 #### Ubuntu
 ```
-sudo apt -y install swig3.0 python3-dev build-essential pkg-config
+sudo apt -y install swig3.0 python3-dev build-essential cmake pkg-config
 pip3 install pyqrllib
 ````
 
@@ -56,17 +54,11 @@ TBD
 
 #### Raspbian
 
-A bug in one of the dependencies is affecting us. A workaround is provided for integration testing. Use at your own risk. 
-
-Download the following script and execute as sudo. It will take a while to compile cmake.
-
-
-> **These are the original instructions but wont work until a bug in cmake is solved**
->```
->sudo apt -y install swig3.0 python3-dev build-essential cmake ninja
->sudo pip3 install -U setuptools scikit-build
->sudo pip3 install pyqrllib
->```
+```
+sudo apt -y install swig3.0 python3-dev build-essential cmake ninja-build
+sudo pip3 install -U setuptools
+sudo pip3 install -U pyqrllib
+```
 
 #### Miscellaneous
 
