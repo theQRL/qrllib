@@ -3,7 +3,7 @@
 #include <iostream>
 #include <xmssFast.h>
 #include <misc.h>
-#include <xmss.h>
+#include <wordlist.h>
 
 namespace {
 
@@ -39,16 +39,26 @@ namespace {
         XmssFast _xmss;
     };
 
-    std::string EMSCRIPTEN_KEEPALIVE _bin2hstr(std::vector<unsigned char> input) {
+    std::string EMSCRIPTEN_KEEPALIVE _bin2hstr(const std::vector<unsigned char> &input) {
         return bin2hstr(input, 0);
     }
 
-    std::vector<unsigned char> EMSCRIPTEN_KEEPALIVE _hstr2bin(std::string input) {
+    std::vector<unsigned char> EMSCRIPTEN_KEEPALIVE _hstr2bin(const std::string &input) {
         return hstr2bin(input);
     }
 
-    std::vector<unsigned char> EMSCRIPTEN_KEEPALIVE _str2bin(std::string str) {
+    std::vector<unsigned char> EMSCRIPTEN_KEEPALIVE _str2bin(const std::string &str) {
         return str2bin(str);
+    }
+
+    std::vector<unsigned char> EMSCRIPTEN_KEEPALIVE _mnemonic2bin(const std::string &mnemonic)
+    {
+        return mnemonic2bin(mnemonic, wordlist);
+    }
+
+    std::string EMSCRIPTEN_KEEPALIVE _bin2mnemonic(const std::vector<unsigned char> &vec)
+    {
+        return bin2mnemonic(vec, wordlist);
     }
 
     using namespace emscripten;
@@ -58,6 +68,9 @@ namespace {
         function("bin2hstr", &_bin2hstr);
         function("hstr2bin", &_hstr2bin);
         function("str2bin", &_str2bin);
+
+        function("mnemonic2bin", &_mnemonic2bin);
+        function("bin2mnemonic", &_bin2mnemonic);
 
         class_<XmssWrapper>("Xmss")
                 .constructor<TSEED, unsigned char>()

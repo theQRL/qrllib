@@ -1,8 +1,12 @@
 #!/usr/bin/env bash
 mkdir -p ./build
 cd ./build
-emconfigure cmake -DBUILD_WEBASSEMBLY=ON -DBUILD_PYTHON=OFF ..
+echo "Running CMAKE..."
+emconfigure cmake -DBUILD_WEBASSEMBLY=ON -DBUILD_PYTHON=OFF -DCMAKE_BUILD_TYPE=Release ..
+echo "Building..."
 emmake make
+echo "Emscripten Binding/Optimizing..."
 emcc --bind libjsqrl.so -O3 -o libjsqrl.js
+echo "Running test"
 cp ../src/tests_js/test.js .
 node test.js

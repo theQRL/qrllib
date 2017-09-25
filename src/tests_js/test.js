@@ -9,20 +9,27 @@ for(var i =0; i<48; i++)
     seed_in.push_back(i);
 }
 
+mnemonic = libqrl.bin2mnemonic(seed_in);
+console.log("Seed    : ", libqrl.bin2hstr(seed_in));
+console.log("Mnemonic: ", mnemonic);
+seed_out = libqrl.mnemonic2bin(mnemonic);
+
+assert(libqrl.bin2hstr(seed_in) === libqrl.bin2hstr(seed_out), "Seeds after mnemonic conversion do not match");
+
 tree_height = 4;
 console.log("\n========== CREATE TREE ========");
 
 xmss = new libqrl.Xmss(seed_in, tree_height);
-console.log("PK     : ", libqrl.bin2hstr(xmss.getPK()));
-console.log("SK     : ", libqrl.bin2hstr(xmss.getSK()));
-console.log("Seed   : ", libqrl.bin2hstr(xmss.getSeed()));
-console.log("Height : ", xmss.getHeight());
-console.log("Index  : ", xmss.getIndex());
+console.log("PK      : ", libqrl.bin2hstr(xmss.getPK()));
+console.log("SK      : ", libqrl.bin2hstr(xmss.getSK()));
+console.log("Seed    : ", libqrl.bin2hstr(xmss.getSeed()));
+console.log("Height  : ", xmss.getHeight());
+console.log("Index   : ", xmss.getIndex());
 
-console.log("Root   : ", libqrl.bin2hstr(xmss.getRoot()));
-console.log("PKSeed : ", libqrl.bin2hstr(xmss.getPKSeed()));
-console.log("SKSeed : ", libqrl.bin2hstr(xmss.getSKSeed()));
-console.log("SKPRF  : ", libqrl.bin2hstr(xmss.getSKPRF()));
+console.log("Root    : ", libqrl.bin2hstr(xmss.getRoot()));
+console.log("PKSeed  : ", libqrl.bin2hstr(xmss.getPKSeed()));
+console.log("SKSeed  : ", libqrl.bin2hstr(xmss.getSKSeed()));
+console.log("SKPRF   : ", libqrl.bin2hstr(xmss.getSKPRF()));
 
 console.log("\n========== PREPARE MESSAGE ========");
 message_str = "This is a test message";
