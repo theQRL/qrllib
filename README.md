@@ -19,10 +19,9 @@ This library currently exposes the following functionality:
 
 |           | Linux |     OSX<br>10.12     |  Windows<br>10 | Raspbian<br>? | 
 |-----------|:------------:|:-----------:|:--------:|:--------:|
-|Python 2   | :x:           |    :x:      |    :x:     |     :x:    |
 |Python 3   | :white_check_mark: | :white_check_mark: |    :seedling:     |     :white_check_mark:    |
-|Webassembly (JS) |      :white_check_mark:       |     :seedling:       |    :white_check_mark:     |     :white_check_mark:    |
-|Golang     | wrapper<br>generation only |     -       |    -     |     -    |
+|Webassembly (JS) |      :white_check_mark:       |     :white_check_mark:       |    :white_check_mark:     |     :white_check_mark:    |
+|Golang     | :seedling: |     -       |    -     |     -    |
 |Java       |      -       |     -       |    -     |     -    |
 
 ## Installing
