@@ -17,6 +17,7 @@ Public domain.
 #include "hash.h"
 #include "xmss_commons.h"
 #include "hash_address.h"
+#include "wots.h"
 #include <cstdio>
 
 xmssfast_params paramsfast;
@@ -78,42 +79,38 @@ void xmss_set_bds_state(bds_state *state, unsigned char *stack, unsigned int sta
 /**
  * Computes a leaf from a WOTS public key using an L-tree.
  */
-static void l_tree(unsigned char *leaf, unsigned char *wots_pk, const xmssfast_params *params, const unsigned char *pub_seed, uint32_t addr[8])
+// TODO Remove xmssfast_params *params
+void l_tree(unsigned char *leaf, unsigned char *wots_pk,
+            const xmssfast_params *params,
+            const unsigned char *pub_seed, uint32_t addr[8])
 {
-  unsigned int l = params->wots_par.len;
-  unsigned int n = params->n;
-  uint32_t i = 0;
-  uint32_t height = 0;
-  uint32_t bound;
+    unsigned int l = params->wots_par.len;
+    unsigned int XMSS_N = params->n;
 
-  //ADRS.setTreeHeight(0);
-  setTreeHeight(addr, height);
-  
-  while (l > 1) {
-     bound = l >> 1; //floor(l / 2);
-     for (i = 0; i < bound; i++) {
-       //ADRS.setTreeIndex(i);
-       setTreeIndex(addr, i);
-       //wots_pk[i] = RAND_HASH(pk[2i], pk[2i + 1], SEED, ADRS);
-       hash_h(wots_pk+i*n, wots_pk+i*2*n, pub_seed, addr, n);
-     }
-     //if ( l % 2 == 1 ) {
-     if (l & 1) {
-       //pk[floor(l / 2) + 1] = pk[l];
-       memcpy(wots_pk+(l>>1)*n, wots_pk+(l-1)*n, n);
-       //l = ceil(l / 2);
-       l=(l>>1)+1;
-     }
-     else {
-       //l = ceil(l / 2);
-       l=(l>>1);
-     }
-     //ADRS.setTreeHeight(ADRS.getTreeHeight() + 1);
-     height++;
-     setTreeHeight(addr, height);
-   }
-   //return pk[0];
-   memcpy(leaf, wots_pk, n);
+    uint32_t i = 0;
+    uint32_t height = 0;
+    uint32_t bound;
+
+    setTreeHeight(addr, height);
+
+    while (l > 1) {
+        bound = l >> 1;
+
+        for (i = 0; i < bound; i++) {
+            setTreeIndex(addr, i);
+            hash_h(wots_pk + i*XMSS_N, wots_pk + i*2*XMSS_N, pub_seed, addr, XMSS_N);
+        }
+        if (l & 1) {
+            memcpy(wots_pk + (l >> 1)*XMSS_N, wots_pk + (l - 1)*XMSS_N, XMSS_N);
+            l = (l >> 1) + 1;
+        }
+        else {
+            l = l >> 1;
+        }
+        height++;
+        setTreeHeight(addr, height);
+    }
+    memcpy(leaf, wots_pk, XMSS_N);
 }
 
 /**

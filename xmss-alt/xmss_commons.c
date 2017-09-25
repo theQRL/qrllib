@@ -16,10 +16,9 @@ Public domain.
 
 void to_byte(unsigned char *out, unsigned long long in, uint32_t bytes)
 {
-  // TODO: How about endianness?? This will be affected
   int32_t i;
   for (i = bytes-1; i >= 0; i--) {
-    out[i] = in & 0xff;
+    out[i] = static_cast<unsigned char>(in & 0xff);
     in = in >> 8;
   }
 }

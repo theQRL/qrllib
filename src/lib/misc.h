@@ -11,8 +11,8 @@
 #define ADDRESS_HASH_SIZE 32
 
 // FIXME: Move this to templates
-std::string bin2hstr(const std::vector<unsigned char> &vec, int wrap = 0);
-std::string bin2hstr(const std::string &vec, int wrap = 0);
+std::string bin2hstr(const std::vector<unsigned char> &vec, uint32_t wrap = 0);
+std::string bin2hstr(const std::string &vec, uint32_t wrap = 0);
 std::vector<unsigned char> str2bin(const std::string &s);
 std::vector<unsigned char> hstr2bin(const std::string &s) throw(std::invalid_argument);
 

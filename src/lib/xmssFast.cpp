@@ -78,6 +78,7 @@ bool XmssFast::verify(const TMESSAGE &message,
     // TODO: Fix constness in library
     auto tmp_signature = static_cast<TSIGNATURE>(signature);
 
+    // TODO: xmssfast_Verifysig returns 0 when valid.. this is odd
     return xmssfast_Verifysig(static_cast<TMESSAGE>(message).data(),
                           message.size(),
                           tmp_signature.data(),

@@ -12,7 +12,7 @@
 class XmssBase {
 public:
     // TODO: Fix constness / passing by value, etc. This might require changes in the underlying lib
-    explicit XmssBase(const TSEED &seed, unsigned char height);
+    XmssBase(const TSEED &seed, unsigned char height);
     virtual ~XmssBase()=default;
 
     virtual TSIGNATURE sign(const TMESSAGE &message) = 0;

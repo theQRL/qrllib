@@ -10,7 +10,7 @@
 #include <iostream>
 #include <unordered_map>
 
-std::string bin2hstr(const std::vector<unsigned char> &vec, int wrap)
+std::string bin2hstr(const std::vector<unsigned char> &vec, uint32_t wrap)
 {
     std::stringstream ss;
 
@@ -32,7 +32,7 @@ std::string bin2hstr(const std::vector<unsigned char> &vec, int wrap)
     return ss.str();
 }
 
-std::string bin2hstr(const std::string &s, int wrap)
+std::string bin2hstr(const std::string &s, uint32_t wrap)
 {
     return bin2hstr(str2bin(s), wrap);
 }

@@ -8,7 +8,7 @@
 #include <misc.h>
 
 namespace {
-#define XMSS_HEIGHT 8
+#define XMSS_HEIGHT 4
 
     TEST(XMSS, Instantiation) {
         std::vector<unsigned char> seed(48, 0);
@@ -67,7 +67,9 @@ namespace {
 
 
     TEST(XMSS, Verify) {
-        std::vector<unsigned char> seed(48, 0);
+        std::vector<unsigned char> seed;
+        for(unsigned char i=0; i<48; i++)
+            seed.push_back(i);
 
         Xmss xmss(seed, XMSS_HEIGHT);
 
