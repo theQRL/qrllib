@@ -12,13 +12,18 @@ set(CMAKE_VERBOSE_MAKEFILE ON)
 set(BUILD_TESTS OFF CACHE BOOL "Enables tests")
 set(BUILD_GO OFF CACHE BOOL "Enables go wrapper")
 set(BUILD_PYTHON ON CACHE BOOL "Enables python wrapper")
+set(BUILD_WEBASSEMBLY OFF CACHE BOOL "Enables emscripten build")
+set(BUILD_PYTHON_LOCALDEPLOY ON CACHE BOOL "Deploys python locally")
 
-message(STATUS "GOLANG WRAPPER" ${BUILD_GO})
-message(STATUS "PYTHON WRAPPER" ${BUILD_PYTHON})
+message(STATUS "GOLANG WRAPPER " ${BUILD_GO})
+message(STATUS "PYTHON WRAPPER " ${BUILD_PYTHON})
+message(STATUS "WEBASSEMBLY " ${BUILD_WEBASSEMBLY})
 
-find_package(SWIG REQUIRED)
-INCLUDE(${SWIG_USE_FILE})
-unset(SWIG_LANG_TYPE)
+if (BUILD_PYTHON OR BUILD_GO)
+    find_package(SWIG REQUIRED)
+    INCLUDE(${SWIG_USE_FILE})
+    unset(SWIG_LANG_TYPE)
+endif()
 
 include_directories(
         ${CMAKE_CURRENT_SOURCE_DIR}/src/api
@@ -29,8 +34,14 @@ include_directories(
 
 set(SWIG_INTERFACE
         ${CMAKE_CURRENT_SOURCE_DIR}/src/api/api.i)
+
+set(JS_INTERFACE
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/jswrapper/jswrapper.cpp
+        )
+
 file(GLOB_RECURSE LIB_SRC
         "${CMAKE_CURRENT_SOURCE_DIR}/src/lib/*.cpp")
+
 file(GLOB_RECURSE LIBTEST_SRC
         "${CMAKE_CURRENT_SOURCE_DIR}/src/tests/*.cpp")
 
@@ -118,7 +129,7 @@ endif()
 
 ## SWIG + API - Python related stuff
 if (BUILD_PYTHON)
-    message(STATUS ¨Python wrapper enabled¨)
+    message(STATUS "Python wrapper enabled")
     set(language python)
     find_package(PythonLibs 3.4 REQUIRED)
     include_directories(${PYTHON_INCLUDE_PATH})
@@ -182,7 +193,7 @@ endif ()
 
 # SWIG + API - Golang related stuff
 if (BUILD_GO)
-    message(STATUS ¨golang wrapper enabled¨)
+    message(STATUS "golang wrapper enabled")
     set(language go)
     #find_package(go 1.5 REQUIRED)
     #include_directories(${PYTHON_INCLUDE_PATH})
@@ -198,7 +209,6 @@ if (BUILD_GO)
             ${LIB_SRC}
             ${LIBXMSSALT_SRC}
             )
-
 
 #    SWIG_ADD_LIBRARY(goqrllib
 #            ${language}
@@ -217,4 +227,14 @@ if (BUILD_GO)
             COMMENT "Moving SWIG files to output dir"
             COMMAND ${CMAKE_COMMAND} -E copy_if_different $<TARGET_FILE:${SWIG_MODULE_goqrllib_REAL_NAME}> ${CMAKE_CURRENT_SOURCE_DIR}/goqrllib
             )
+endif ()
+
+if (BUILD_WEBASSEMBLY)
+    message(STATUS "webassembly enabled")
+    add_library(jsqrl SHARED
+            ${JS_INTERFACE}
+            ${LIB_SRC}
+            ${LIBXMSSALT_SRC}
+    )
+
 endif ()

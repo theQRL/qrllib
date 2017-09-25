@@ -40,12 +40,10 @@ gmock\.pc
 gtest\.pc
 qrllib_test
 
+cmake-build-onlylib/
+build/
+\.idea/workspace\.xml
 \.coverage
 coverage\.xml
-
-\.idea/workspace\.xml
 .eggs/
-build/
 pyqrllib.egg-info/
-
-
