@@ -38,6 +38,8 @@ assert(libqrl.bin2hstr(seed_in) === libqrl.bin2hstr(seed_out), "Seeds after mnem
 tree_height = 4;
 console.log("\n========== CREATE TREE ========");
 
+known_address = "Q67b08ac802fc97ad513836296bdd4017d7c58352a36b517af02ec948ec326302753f2fc9";
+
 xmss = new libqrl.Xmss(seed_in, tree_height);
 console.log("Address : ", xmss.getAddress());
 console.log("PK      : ", libqrl.bin2hstr(xmss.getPK()));
@@ -50,6 +52,11 @@ console.log("Root    : ", libqrl.bin2hstr(xmss.getRoot()));
 console.log("PKSeed  : ", libqrl.bin2hstr(xmss.getPKSeed()));
 console.log("SKSeed  : ", libqrl.bin2hstr(xmss.getSKSeed()));
 console.log("SKPRF   : ", libqrl.bin2hstr(xmss.getSKPRF()));
+
+
+assert(xmss.getAddress() === known_address, "ADDRESS DOES NOT MATCH");
+
+
 
 console.log("\n========== PREPARE MESSAGE ========");
 message_str = "This is a test message";
