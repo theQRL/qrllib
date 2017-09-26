@@ -24,6 +24,8 @@ namespace {
         TKEY getSKSeed() {  return _xmss.getSKSeed(); }
         TKEY getSKPRF() {  return _xmss.getSKPRF(); }
 
+        std::string getAddress() {  return _xmss.getAddress("Q"); }
+
         unsigned int getIndex() {  return _xmss.getIndex(); }
         unsigned int setIndex(unsigned int new_index) {  return _xmss.setIndex(new_index); }
 
@@ -83,6 +85,8 @@ namespace {
                 .function("getPKSeed", &XmssWrapper::getPKSeed)
                 .function("getSKSeed", &XmssWrapper::getSKSeed)
                 .function("getSKPRF", &XmssWrapper::getSKPRF)
+
+                .function("getAddress", &XmssWrapper::getAddress)
 
                 .function("getIndex", &XmssWrapper::getIndex)
                 .function("sign", &XmssWrapper::sign)
