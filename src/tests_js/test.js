@@ -39,6 +39,7 @@ tree_height = 4;
 console.log("\n========== CREATE TREE ========");
 
 xmss = new libqrl.Xmss(seed_in, tree_height);
+console.log("Address : ", xmss.getAddress());
 console.log("PK      : ", libqrl.bin2hstr(xmss.getPK()));
 console.log("SK      : ", libqrl.bin2hstr(xmss.getSK()));
 console.log("Seed    : ", libqrl.bin2hstr(xmss.getSeed()));
