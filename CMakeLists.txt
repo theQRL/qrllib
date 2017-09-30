@@ -118,12 +118,12 @@ if (BUILD_PYTHON)
 
     set(SWIG_LANG_LIBRARIES ${PYTHON_LIBRARIES})
 
-    set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/pyqrllib)
-    set(CMAKE_SWIG_OUTDIR ${CMAKE_LIBRARY_OUTPUT_DIRECTORY})
+    set(CMAKE_SWIG_OUTDIR ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/pyqrllib)
 
     set_source_files_properties(${SWIG_INTERFACE} PROPERTIES CPLUSPLUS ON)
     set_property(SOURCE ${SWIG_INTERFACE} PROPERTY SWIG_FLAGS "-includeall" "-ignoremissing")
 
+    set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/pyqrllib)
 
     # Intentionally use a deprecated version to provide support for the raspberry pi
     SWIG_ADD_MODULE( pyqrllib
@@ -133,14 +133,6 @@ if (BUILD_PYTHON)
             )
 
     SWIG_LINK_LIBRARIES(pyqrllib qrllib ${SWIG_LANG_LIBRARIES} )
-
-#    message(STATUS "AAAAAAAAAAAAAAAAAA")
-#    message(STATUS ${CMAKE_LIBRARY_OUTPUT_DIRECTORY})
-#    message(STATUS ${CMAKE_SWIG_OUTDIR})
-#    get_cmake_property(_variableNames VARIABLES)
-#    foreach (_variableName ${_variableNames})
-#        message(STATUS "${_variableName}=${${_variableName}}")
-#    endforeach()
 
     add_custom_command(TARGET ${SWIG_MODULE_pyqrllib_REAL_NAME}
             POST_BUILD
