@@ -157,4 +157,25 @@ namespace {
         EXPECT_FALSE(TestFixture::TXMSS::verify(data, signature2, xmss.getPK(), XMSS_HEIGHT));
     }
 
+    TYPED_TEST(XmssGenericTest, SignVerifyIndexShift) {
+        std::vector<unsigned char> seed;
+        for(unsigned char i=0; i<48; i++)
+            seed.push_back(i);
+
+        typename TestFixture::TXMSS xmss(seed, XMSS_HEIGHT);
+        xmss.setIndex(1);
+
+        std::string message = "This is a test message";
+        std::vector<unsigned char> data_ref(message.begin(), message.end());
+        std::vector<unsigned char> data(message.begin(), message.end());
+
+        auto pk = xmss.getPK();
+
+        for (int i=0; i < 1; i++)
+        {
+            auto signature = xmss.sign(data);
+            std::cout << "signature  :" << signature.size() << " bytes\n" << bin2hstr(signature) << std::endl;
+            EXPECT_TRUE(TestFixture::TXMSS::verify(data, signature, pk, XMSS_HEIGHT));
+        }
+    }
 }

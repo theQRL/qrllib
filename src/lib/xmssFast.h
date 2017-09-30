@@ -20,6 +20,8 @@ public:
                        const TKEY &pk,
                        unsigned char height);
 
+    unsigned int setIndex(unsigned int new_index) override;
+
 protected:
     // FIXME: This needs refactoring (encapsulate)
     const unsigned int _k = 2;

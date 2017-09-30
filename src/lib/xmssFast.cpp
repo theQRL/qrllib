@@ -54,11 +54,20 @@ XmssFast::XmssFast(const TSEED &seed, unsigned char height): XmssBase(seed, heig
                         _height);
 }
 
+unsigned int XmssFast::setIndex(unsigned int new_index)
+{
+    auto index = XmssBase::setIndex(new_index);
+    xmssfast_update(_sk.data(), &_state, _height, index);
+    return index;
+}
 
 TSIGNATURE XmssFast::sign(const TMESSAGE &message)
 {
     // TODO: Fix constness in library
     auto signature = TSIGNATURE(getSignatureSize(), 0);
+
+    auto index = getIndex();
+    setIndex( index );
 
     xmssfast_Signmsg(_sk.data(),
                      &_state,
