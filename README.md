@@ -39,7 +39,7 @@ If you dont have brew yet, we think you should :) Install brew following the ins
 Now install some dependencies
 
 ```bash
-brew install cmake python3 swig
+brew install cmake python3 swig boost
 pip3 install pyqrllib
 ```
 
@@ -51,7 +51,7 @@ TBD
 #### Raspbian
 
 ```
-sudo apt -y install swig3.0 python3-dev build-essential cmake ninja-build
+sudo apt -y install swig3.0 python3-dev build-essential cmake ninja-build libboost-random-dev
 sudo pip3 install -U setuptools
 sudo pip3 install -U pyqrllib
 ```
