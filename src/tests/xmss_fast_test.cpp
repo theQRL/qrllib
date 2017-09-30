@@ -97,4 +97,27 @@ namespace {
         signature[1] += 1;
         EXPECT_FALSE(Xmss::verify(data, signature, xmss.getPK(), XMSS_HEIGHT));
     }
+
+    TEST(XMSSFAST, SignIndexShift) {
+        std::vector<unsigned char> seed(48, 0);
+
+        Xmss xmss1(seed, 4);
+        XmssFast xmss2(seed, 4);
+
+        std::string message = "This is a test message";
+        std::vector<unsigned char> data(message.begin(), message.end());
+
+        xmss1.setIndex(1);
+        xmss2.setIndex(1);
+
+        auto signature1 = xmss1.sign(data);
+        auto signature2 = xmss2.sign(data);
+
+        auto hstr_sig1 = bin2hstr(signature1);
+        auto hstr_sig2 = bin2hstr(signature2);
+
+        EXPECT_EQ(hstr_sig1, hstr_sig2);
+//    EXPECT_EQ(signature1, signature2);
+    }
+
 }

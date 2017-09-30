@@ -178,4 +178,5 @@ namespace {
             EXPECT_TRUE(TestFixture::TXMSS::verify(data, signature, pk, XMSS_HEIGHT));
         }
     }
+
 }

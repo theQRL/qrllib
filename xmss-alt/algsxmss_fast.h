@@ -14,43 +14,41 @@ Public domain.
 
 #include <cstddef>
 #include "wots.h"
+#include "xmss_common.h"
 
-typedef struct{
-  wots_params wots_par;
-  unsigned int n;
-  unsigned int h;
-  unsigned int k;
-} xmssfast_params;
-
-typedef struct{
-  unsigned int h;
-  unsigned int next_idx;
-  unsigned int stackusage;
-  unsigned char completed;
-  unsigned char *node;
+typedef struct {
+    unsigned int h;
+    unsigned int next_idx;
+    unsigned int stackusage;
+    unsigned char completed;
+    unsigned char *node;
 } treehash_inst;
 
 typedef struct {
-  unsigned char *stack;
-  unsigned int stackoffset;
-  unsigned char *stacklevels;
-  unsigned char *auth;
-  unsigned char *keep;
-  treehash_inst *treehash;
-  unsigned char *retain;
-  unsigned int next_leaf;
+    unsigned char *stack;
+    unsigned int stackoffset;
+    unsigned char *stacklevels;
+    unsigned char *auth;
+    unsigned char *keep;
+    treehash_inst *treehash;
+    unsigned char *retain;
+    unsigned int next_leaf;
 } bds_state;
 
 /**
  * Initialize BDS state struct
  * parameter names are the same as used in the description of the BDS traversal
  */
-void xmss_set_bds_state(bds_state *state, unsigned char *stack, unsigned int stackoffset, unsigned char *stacklevels, unsigned char *auth, unsigned char *keep, treehash_inst *treehash, unsigned char *retain, unsigned int next_leaf);
-/**
- * Initializes parameter set.
- * Needed, for any of the other methods.
- */
-int xmssfast_set_params(xmssfast_params *params, int n, int h, int w, int k);
+void xmss_set_bds_state(bds_state *state,
+                        unsigned char *stack,
+                        unsigned int stackoffset,
+                        unsigned char *stacklevels,
+                        unsigned char *auth,
+                        unsigned char *keep,
+                        treehash_inst *treehash,
+                        unsigned char *retain,
+                        unsigned int next_leaf);
+
 /**
  * Initialize xmssmt_params struct
  * parameter names are the same as in the draft
@@ -62,7 +60,12 @@ int xmssfast_set_params(xmssfast_params *params, int n, int h, int w, int k);
  * Format sk: [(32bit) idx || SK_SEED || SK_PRF || PUB_SEED || root]
  * Format pk: [root || PUB_SEED] omitting algo oid.
  */
-int xmssfast_Genkeypair(unsigned char *pk, unsigned char *sk, bds_state *state, unsigned char *seed, unsigned char h);
+int xmssfast_Genkeypair(unsigned char *pk,
+                        unsigned char *sk,
+                        bds_state *state,
+                        unsigned char *seed,
+                        unsigned char h);
+
 /**
  * Signs a message.
  * Returns 
@@ -70,13 +73,16 @@ int xmssfast_Genkeypair(unsigned char *pk, unsigned char *sk, bds_state *state, 
  * 2. an updated secret key!
  * 
  */
-int xmssfast_Signmsg(unsigned char *sk, bds_state *state, unsigned char *sig_msg,unsigned char *msg,unsigned long long msglen, unsigned char h);
-/**
- * Verifies a given message signature pair under a given public key.
- * 
- * Note: msg and msglen are pure outputs which carry the message in case verification succeeds. The (input) message is assumed to be within sig_msg which has the form (sig||msg). 
- */
-int xmssfast_Verifysig(unsigned char *msg,unsigned long long msglen, unsigned char *sig_msg,const unsigned char *pk, unsigned char h);
-int xmssfast_update(unsigned char *sk, bds_state *state, unsigned long h, unsigned long new_idx);
+int xmssfast_Signmsg(unsigned char *sk,
+                     bds_state *state,
+                     unsigned char *sig_msg,
+                     unsigned char *msg,
+                     unsigned long long msglen,
+                     unsigned char h);
+
+int xmssfast_update(unsigned char *sk,
+                    bds_state *state,
+                    unsigned long h,
+                    unsigned long new_idx);
 
 #endif // XMSSALT_XMSS_FAST_H

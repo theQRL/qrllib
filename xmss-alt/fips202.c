@@ -8,11 +8,10 @@
  * by Gilles Van Assche, Daniel J. Bernstein, and Peter Schwabe */
 
 #include <cstdint>
-#include <assert.h>
 #include "fips202.h"
 
 #define NROUNDS 24
-#define ROL(a, offset) ((a << offset) ^ (a >> (64-offset)))
+#define ROL(a, offset) (((a) << (offset)) ^ ((a) >> (64-(offset))))
 
 static uint64_t load64(const unsigned char *x)
 {
@@ -29,7 +28,7 @@ static void store64(uint8_t *x, uint64_t u)
     unsigned int i;
 
     for (i = 0; i < 8; ++i) {
-        x[i] = u;
+        x[i] = static_cast<uint8_t>(u);
         u >>= 8;
     }
 }
@@ -325,8 +324,6 @@ void KeccakF1600_StatePermute(uint64_t * state)
     state[23] = Aso;
     state[24] = Asu;
 }
-
-#include <string.h>
 
 static void keccak_absorb(uint64_t *s, unsigned int r,
                           const unsigned char *m, unsigned long long mlen,

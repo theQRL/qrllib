@@ -6,6 +6,7 @@ project(qrllib)
 
 set(CMAKE_CXX_STANDARD 14)
 #set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++14 -Wall -Wextra -pedantic")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIC")
 set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS} -std=c++14 -O3")
 set(CMAKE_VERBOSE_MAKEFILE ON)
 
@@ -46,7 +47,7 @@ set(LIBXMSSALT_SRC
         ${CMAKE_CURRENT_SOURCE_DIR}/xmss-alt/algsxmss.c
         ${CMAKE_CURRENT_SOURCE_DIR}/xmss-alt/hash.c
         ${CMAKE_CURRENT_SOURCE_DIR}/xmss-alt/hash_address.c
-        ${CMAKE_CURRENT_SOURCE_DIR}/xmss-alt/xmss_commons.c
+        ${CMAKE_CURRENT_SOURCE_DIR}/xmss-alt/xmss_common.c
         ${CMAKE_CURRENT_SOURCE_DIR}/xmss-alt/wots.c
         #${CMAKE_CURRENT_SOURCE_DIR}/xmss-alt/xmss_core.c
         ${CMAKE_CURRENT_SOURCE_DIR}/xmss-alt/fips202.c

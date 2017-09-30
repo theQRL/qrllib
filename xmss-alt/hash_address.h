@@ -9,7 +9,9 @@ Joost Rijneveld
 Public domain.
 */
 
-#include <stdint.h>
+#include <cstdint>
+
+// FIXME: Get rid of this. Use unions
 
 void setLayerADRS(uint32_t adrs[8], uint32_t layer);
 
