@@ -130,9 +130,11 @@ if (BUILD_PYTHON)
             ${language}
             ${SWIG_INTERFACE}
             src/api/api.cxx
+            ${LIB_SRC}
+            ${LIBXMSSALT_SRC}
             )
 
-    SWIG_LINK_LIBRARIES(pyqrllib qrllib ${SWIG_LANG_LIBRARIES} )
+    SWIG_LINK_LIBRARIES(pyqrllib ${SWIG_LANG_LIBRARIES} )
 
     add_custom_command(TARGET ${SWIG_MODULE_pyqrllib_REAL_NAME}
             POST_BUILD
