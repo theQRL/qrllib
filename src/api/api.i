@@ -35,5 +35,6 @@ namespace std {
 
 %include "api.h"
 %include "misc.h"
+%include "hashing.h"
 %include "xmss.h"
 %include "xmssFast.h"
