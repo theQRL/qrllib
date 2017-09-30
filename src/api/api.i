@@ -14,6 +14,7 @@
     #include "api.h"
     #include "xmss.h"
     #include "misc.h"
+    #include "hashing.h"
     #include "xmssFast.h"
 %}
 
