@@ -32,11 +32,16 @@ public:
     std::string getAddress(const std::string &prefix);
 
     unsigned int getIndex();
-    unsigned int setIndex(unsigned int new_index);
+    virtual unsigned int setIndex(unsigned int new_index);
 
     unsigned int getSignatureSize();
     unsigned int getSecretKeySize();
     unsigned int getPublicKeySize();
+
+    static bool verify(const TMESSAGE &message,
+                       const TSIGNATURE &signature,
+                       const TKEY &pk,
+                       unsigned char height);
 
 protected:
     unsigned char _height;

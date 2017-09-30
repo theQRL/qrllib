@@ -15,10 +15,7 @@ public:
 
     TSIGNATURE sign(const TMESSAGE &message) override;
 
-    static bool verify(const TMESSAGE &message,
-                       const TSIGNATURE &signature,
-                       const TKEY &pk,
-                       unsigned char height);
+    unsigned int setIndex(unsigned int new_index) override;
 
 protected:
     // FIXME: This needs refactoring (encapsulate)

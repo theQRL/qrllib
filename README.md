@@ -28,16 +28,13 @@ This library currently exposes the following functionality:
 
 #### Ubuntu
 ```
-sudo apt -y install swig3.0 python3-dev build-essential cmake pkg-config
+sudo apt -y install swig3.0 python3-dev build-essential cmake pkg-config libboost-random-dev
 pip3 install pyqrllib
 ````
 
 #### OSX
 
-If you dont have brew yet, you should:
-```bash
-/usr/bin/ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"
-```
+If you dont have brew yet, we think you should :) Install brew following the instructions here: [https://brew.sh/](https://brew.sh/)
 
 Now install some dependencies
 

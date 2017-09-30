@@ -5,6 +5,7 @@
 #include <iostream>
 #include "gtest/gtest.h"
 #include <algsxmss_fast.h>
+#include <xmss_common.h>
 
 namespace {
     TEST(Leon, LeonsTest) {
@@ -47,7 +48,7 @@ namespace {
         int y = xmssfast_update(sk, state, h, 10);
 
         x = xmssfast_Signmsg(sk, state, sign, msg,32, h);
-        x = xmssfast_Verifysig(msg,32, sign,pk, h);
+        x = xmss_Verifysig(msg,32, sign,pk, h);
 
         printf("\n%d\n",x);
 
@@ -55,16 +56,16 @@ namespace {
         x = xmssfast_Signmsg(sk, state, sign, msg,32, h);
 
         msg[10] ^= 1;
-        x = xmssfast_Verifysig(msg,32, sign,pk, h);
+        x = xmss_Verifysig(msg,32, sign,pk, h);
 
         printf("\n%d\n",x);
 
         msg[0]^=1;
-        x = xmssfast_Verifysig(msg,32, sign,pk, h);
+        x = xmss_Verifysig(msg,32, sign,pk, h);
         printf("\n%d\n",x);
         msg[0]^=1;
         sign[5*32]^=1;
-        x = xmssfast_Verifysig(msg,32, sign,pk, h);
+        x = xmss_Verifysig(msg,32, sign,pk, h);
         printf("\n%d\n",x);
     }
 }

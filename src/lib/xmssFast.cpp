@@ -3,6 +3,7 @@
 #include <iostream>
 #include "xmssFast.h"
 #include "algsxmss_fast.h"
+#include "xmss_common.h"
 
 XmssFast::XmssFast(const TSEED &seed, unsigned char height): XmssBase(seed, height)
 {
@@ -54,11 +55,19 @@ XmssFast::XmssFast(const TSEED &seed, unsigned char height): XmssBase(seed, heig
                         _height);
 }
 
+unsigned int XmssFast::setIndex(unsigned int new_index)
+{
+    xmssfast_update(_sk.data(), &_state, _height, new_index);
+    return new_index;
+}
 
 TSIGNATURE XmssFast::sign(const TMESSAGE &message)
 {
     // TODO: Fix constness in library
     auto signature = TSIGNATURE(getSignatureSize(), 0);
+
+    auto index = getIndex();
+    setIndex( index );
 
     xmssfast_Signmsg(_sk.data(),
                      &_state,
@@ -68,20 +77,4 @@ TSIGNATURE XmssFast::sign(const TMESSAGE &message)
                      _height);
 
     return signature;
-}
-
-bool XmssFast::verify(const TMESSAGE &message,
-                      const TSIGNATURE &signature,
-                      const TKEY &pk,
-                      unsigned char height)
-{
-    // TODO: Fix constness in library
-    auto tmp_signature = static_cast<TSIGNATURE>(signature);
-
-    // TODO: xmssfast_Verifysig returns 0 when valid.. this is odd
-    return xmssfast_Verifysig(static_cast<TMESSAGE>(message).data(),
-                          message.size(),
-                          tmp_signature.data(),
-                          pk.data(),
-                          height) == 0;
 }

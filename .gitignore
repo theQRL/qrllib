@@ -47,3 +47,9 @@ build/
 coverage\.xml
 .eggs/
 pyqrllib.egg-info/
+
+cmake-build-relwithdebinfo/
+
+cmake-build-minsizerel/
+
+cmake-build-debug wtests/
