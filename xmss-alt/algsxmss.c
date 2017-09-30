@@ -4,18 +4,12 @@
 // by Andreas Hülsing and Joost Rijneveld
 
 #include "algsxmss.h"
-#include <stdlib.h>
-#include <string.h>
-#include <stdint.h>
-#include <math.h>
-#include "fips202.h"
+#include <cstring>
 
-#include "wots.h"
 #include "hash.h"
 #include "xmss_commons.h"
 #include "hash_address.h"
-#include <stdio.h>
-#include <fips202.h>
+#include "fips202.h"
 
 xmss_params params;
 

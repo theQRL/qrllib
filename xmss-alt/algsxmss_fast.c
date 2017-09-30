@@ -20,6 +20,8 @@ Public domain.
 #include "wots.h"
 #include <cstdio>
 
+
+// FIXME: Global parameters?
 xmssfast_params paramsfast;
 
 /**
