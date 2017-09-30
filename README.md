@@ -28,7 +28,7 @@ This library currently exposes the following functionality:
 
 #### Ubuntu
 ```
-sudo apt -y install swig3.0 python3-dev build-essential cmake pkg-config
+sudo apt -y install swig3.0 python3-dev build-essential cmake pkg-config libboost-random-dev
 pip3 install pyqrllib
 ````
 
