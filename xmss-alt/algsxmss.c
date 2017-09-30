@@ -10,7 +10,6 @@
 #include <math.h>
 #include "fips202.h"
 
-#include "randombytes.h"
 #include "wots.h"
 #include "hash.h"
 #include "xmss_commons.h"

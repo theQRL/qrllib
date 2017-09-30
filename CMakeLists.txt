@@ -19,7 +19,7 @@ message(STATUS "GOLANG WRAPPER " ${BUILD_GO})
 message(STATUS "PYTHON WRAPPER " ${BUILD_PYTHON})
 message(STATUS "WEBASSEMBLY " ${BUILD_WEBASSEMBLY})
 
-find_package(Boost REQUIRED)
+find_package(Boost REQUIRED COMPONENTS "random" )
 
 if (BUILD_PYTHON OR BUILD_GO)
     find_package(SWIG REQUIRED)
@@ -47,7 +47,6 @@ set(LIBXMSSALT_SRC
         ${CMAKE_CURRENT_SOURCE_DIR}/xmss-alt/hash.c
         ${CMAKE_CURRENT_SOURCE_DIR}/xmss-alt/hash_address.c
         ${CMAKE_CURRENT_SOURCE_DIR}/xmss-alt/xmss_commons.c
-        ${CMAKE_CURRENT_SOURCE_DIR}/xmss-alt/randombytes.c
         ${CMAKE_CURRENT_SOURCE_DIR}/xmss-alt/wots.c
         #${CMAKE_CURRENT_SOURCE_DIR}/xmss-alt/xmss_core.c
         ${CMAKE_CURRENT_SOURCE_DIR}/xmss-alt/fips202.c
@@ -61,6 +60,8 @@ SET_SOURCE_FILES_PROPERTIES(${LIBXMSSALT_SRC} PROPERTIES LANGUAGE CXX)
 add_library(qrllib SHARED
             ${LIB_SRC}
             ${LIBXMSSALT_SRC} )
+
+target_link_libraries( qrllib ${Boost_LIBRARIES} )
 
 if (BUILD_TESTS)
     ##############################
@@ -101,7 +102,7 @@ if (BUILD_TESTS)
             ${LIBTEST_SRC}
             )
 
-    target_link_libraries(qrllib_test qrllib gtest_main)
+    target_link_libraries(qrllib_test qrllib gtest_main )
 endif()
 
 ## SWIG + API - Python related stuff
