@@ -8,12 +8,15 @@ set(CMAKE_CXX_STANDARD 14)
 #set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++14 -Wall -Wextra -pedantic")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIC")
 set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS} -std=c++14 -O3")
-set(CMAKE_VERBOSE_MAKEFILE ON)
 
-set(BUILD_TESTS OFF CACHE BOOL "Enables tests")
+set(CMAKE_VERBOSE_MAKEFILE FALSE)
+set(CMAKE_ERROR_DEPRECATED FALSE)
+set(CMAKE_WARN_DEPRECATED FALSE)
+
+set(BUILD_TESTS ON CACHE BOOL "Enables tests")
 set(BUILD_GO OFF CACHE BOOL "Enables go wrapper")
-set(BUILD_PYTHON ON CACHE BOOL "Enables python wrapper")
-set(BUILD_PYTHON_LOCALDEPLOY ON CACHE BOOL "Deploys python locally")
+set(BUILD_PYTHON OFF CACHE BOOL "Enables python wrapper")
+set(BUILD_PYTHON_LOCALDEPLOY OFF CACHE BOOL "Deploys python locally")
 set(BUILD_WEBASSEMBLY OFF CACHE BOOL "Enables emscripten build")
 
 message(STATUS "GOLANG WRAPPER " ${BUILD_GO})
@@ -58,13 +61,10 @@ SET_SOURCE_FILES_PROPERTIES(${LIB_SRC} PROPERTIES LANGUAGE CXX)
 SET_SOURCE_FILES_PROPERTIES(${LIBTEST_SRC} PROPERTIES LANGUAGE CXX)
 SET_SOURCE_FILES_PROPERTIES(${LIBXMSSALT_SRC} PROPERTIES LANGUAGE CXX)
 
-add_library(qrllib SHARED
-            ${LIB_SRC}
-            ${LIBXMSSALT_SRC} )
-
-target_link_libraries( qrllib ${Boost_LIBRARIES} )
 
 if (BUILD_TESTS)
+    message(STATUS "Python wrapper enabled")
+
     ##############################
     # Google Test
     # Based on instructions in https://github.com/google/googletest/tree/master/googletest#incorporating-into-an-existing-cmake-project
@@ -101,17 +101,24 @@ if (BUILD_TESTS)
     # Google tests
     add_executable(qrllib_test
             ${LIBTEST_SRC}
+            ${LIB_SRC}
+            ${LIBXMSSALT_SRC}
             )
 
-    target_link_libraries(qrllib_test qrllib gtest_main )
+    target_link_libraries(qrllib_test gtest_main ${Boost_LIBRARIES})
 endif()
 
 ## SWIG + API - Python related stuff
 if (BUILD_PYTHON)
+    message(STATUS "Python wrapper enabled")
+
+    if (NOT CMAKE_LIBRARY_OUTPUT_DIRECTORY)
+        set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR} )
+    endif()
+
     set(SWIG_INTERFACE
             ${CMAKE_CURRENT_SOURCE_DIR}/src/api/api.i)
 
-    message(STATUS "Python wrapper enabled")
     set(language python)
     find_package(PythonLibs 3.4 REQUIRED)
     include_directories(${PYTHON_INCLUDE_PATH})
@@ -125,6 +132,8 @@ if (BUILD_PYTHON)
 
     set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/pyqrllib)
 
+    message(STATUS "CMAKE_SWIG_OUTDIR: " ${CMAKE_SWIG_OUTDIR})
+    message(STATUS "CMAKE_LIBRARY_OUTPUT_DIRECTORY: " ${CMAKE_LIBRARY_OUTPUT_DIRECTORY})
     # Intentionally use a deprecated version to provide support for the raspberry pi
     SWIG_ADD_MODULE( pyqrllib
             ${language}
@@ -173,9 +182,11 @@ if (BUILD_GO)
             ${language}
             ${SWIG_INTERFACE}
             src/api/api.cxx
+            ${LIB_SRC}
+            ${LIBXMSSALT_SRC}
             )
 
-    SWIG_LINK_LIBRARIES(goqrllib qrllib ${SWIG_LANG_LIBRARIES} ${Boost_LIBRARIES})
+    SWIG_LINK_LIBRARIES(goqrllib ${SWIG_LANG_LIBRARIES} ${Boost_LIBRARIES})
 
     add_custom_command(TARGET ${SWIG_MODULE_goqrllib_REAL_NAME}
             POST_BUILD
@@ -193,8 +204,10 @@ if (BUILD_WEBASSEMBLY)
     message(STATUS "webassembly enabled")
     add_library(jsqrl SHARED
             ${JS_INTERFACE}
+            ${LIB_SRC}
+            ${LIBXMSSALT_SRC}
     )
 
-    target_link_libraries(jsqrl qrllib)
+    target_link_libraries(jsqrl)
 
 endif ()
