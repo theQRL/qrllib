@@ -106,6 +106,11 @@ if (BUILD_TESTS)
             )
 
     target_link_libraries(qrllib_test gtest_main ${Boost_LIBRARIES})
+
+    include(CTest)
+    enable_testing()
+
+    add_test(gtest ${PROJECT_BINARY_DIR}/qrllib_test)
 endif()
 
 ## SWIG + API - Python related stuff
