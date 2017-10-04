@@ -16,6 +16,7 @@
     #include "misc.h"
     #include "hashing.h"
     #include "xmssFast.h"
+    #include "xmssPool.h"
 %}
 
 %array_class(unsigned char, ucharCArray)
@@ -39,3 +40,4 @@ namespace std {
 %include "hashing.h"
 %include "xmss.h"
 %include "xmssFast.h"
+%include "xmssPool.h"
