@@ -1,8 +1,9 @@
 #!/usr/bin/env bash
+set -e
+sudo mkhomedir_helper $(whoami)
 
 BUILD_DIR="build"
-
-set -e
+cmake --version
 
 cd /travis
 mkdir -p ${BUILD_DIR}

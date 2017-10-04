@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-echo "OS" ${TRAVIS_OS_NAME}
+echo "TRAVIS_OS_NAME" ${TRAVIS_OS_NAME}
 echo "PLATFORM" ${PLATFORM}
 
 case "${TRAVIS_OS_NAME}" in

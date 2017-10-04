@@ -1,14 +1,25 @@
 #!/usr/bin/env bash
+set -e
+sudo mkhomedir_helper $(whoami)
 
 BUILD_DIR="build"
+cmake --version
 
-set -e
+# Get emscripten
+cd ${HOME}
+curl -O https://s3.amazonaws.com/mozilla-games/emscripten/releases/emsdk-portable.tar.gz
+tar -xvzf emsdk-portable.tar.gz
+cd emsdk-portable
+
+./emsdk update
+./emsdk install latest
+./emsdk activate latest
+
+source ./emsdk_env.sh
 
 cd /travis
 mkdir -p ${BUILD_DIR}
 cd ${BUILD_DIR}
-
-source ./root/emsdk-portable/emsdk_env.sh
 
 emconfigure cmake -DBUILD_WEBASSEMBLY=ON ${CMAKE_ARGS} -DCMAKE_BUILD_TYPE=Release /travis
 
@@ -27,6 +38,5 @@ if [ -n "${TEST:+1}" ]; then
 fi
 
 if [ -n "${DEPLOY:+1}" ]; then
-    cd /travis
-    python3 setup.py sdist
+    echo "******** Prepare deployment package HERE ********"
 fi

@@ -1,42 +1,27 @@
 #Download base ubuntu image
 FROM ubuntu:16.04
-RUN apt-get update
-RUN apt-get -y install software-properties-common python-software-properties
-RUN apt-get -y install ca-certificates curl
-RUN apt-get -y install build-essential git sudo
-
-# Prepare python
-RUN apt-get -y install swig3.0 python3 python3-dev python3-pip cmake pkg-config libboost-random-dev
+RUN apt-get update && \
+    apt-get -y install software-properties-common python-software-properties && \
+    apt-get -y install ca-certificates curl && \
+    apt-get -y install build-essential git sudo wget nano && \
+    apt-get -y install swig3.0 python3 python3-dev python3-pip cmake pkg-config
 
 RUN pip3 install --upgrade pip virtualenv setuptools twine PyScaffold==2.5.8
-RUN virtualenv test
 
 # Install nodejs
 RUN wget -qO- https://raw.githubusercontent.com/creationix/nvm/v0.33.5/install.sh | bash
-RUN [ -s "$HOME/.nvm/nvm.sh" ] && \. "$HOME/.nvm/nvm.sh"  # This loads nvm
-RUN [ -s "$HOME/.nvm/bash_completion" ] && \. "$HOME/.nvm/bash_completion"  # This loads nvm bash_completion
-RUN nvm install stable
 
-
-# Get emscripten
-RUN cd /root
-RUN curl -O https://s3.amazonaws.com/mozilla-games/emscripten/releases/emsdk-portable.tar.gz
-RUN tar -xvzf emsdk-portable.tar.gz
-RUN cd emsdk-portable
-
-RUN ./emsdk update
-RUN ./emsdk install latest
-RUN ./emsdk activate latest
-
+RUN echo "ALL ALL=NOPASSWD: ALL" >> /etc/sudoers
 
 # ENV - Define environment variables
 
 # COPY - Copy configuration/scripts
 COPY travis/xenial-emscripten/build.sh /build.sh
-
-# VOLUME - link directories to host
-
-# START SCRIPT - The script is started from travis with the appropriate environment variables
-#CMD ["/root/start.sh"]
-
-# EXPOSE PORTS
+#
+## VOLUME - link directories to host
+#
+## START SCRIPT - The script is started from travis with the appropriate environment variables
+##CMD ["/root/start.sh"]
+#ENTRYPOINT ['sleep', 'infinity']
+#
+## EXPOSE PORTS
