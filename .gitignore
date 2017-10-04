@@ -13,7 +13,7 @@ pyqrllib/_pyqrl\.so
 pyqrllib/apiPYTHON_wrap\.cxx
 pyqrllib/_pyqrllib\.so
 pyqrllib/pyqrllib\.py
-pyqrllib/_pyqrllibd\.so
+pyqrllib/_pyqrllib.so
 
 goqrllib/apiGO_wrap\.cxx
 goqrllib/goqrllib\.so
