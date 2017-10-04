@@ -1,9 +1,11 @@
 // Distributed under the MIT software license, see the accompanying
 // file LICENSE or http://www.opensource.org/licenses/mit-license.php.
 #include <iostream>
+#include <algorithm>
 #include "xmssFast.h"
 #include "xmssPool.h"
 #include "hashing.h"
+#include "misc.h"
 
 XmssPool::XmssPool(const TSEED &base_seed, uint8_t height, const size_t starting_index, size_t pool_size): _base_seed(base_seed),
   _height(height),
@@ -56,13 +58,20 @@ XmssFast XmssPool::prepareTree(size_t index)
 {
     auto tmp_seed(_base_seed);
 
-    // FIXME: Check with Leon
-    index++;
-    while(index>0)
-    {
-        tmp_seed.push_back(static_cast<unsigned char &&>(index & 0xFF));
-        index >>= 8;
-    }
-    auto stake_seed = shake256(48, tmp_seed);
+    // FIXME: Check with Leon. The commented code is a proposal
+//    index++;
+//    while(index>0)
+//    {
+//        tmp_seed.push_back(static_cast<unsigned char &&>(index & 0xFF));
+//        index >>= 8;
+//    }
+//    auto stake_seed = shake256(48, tmp_seed);
+
+    // This was the original approach in python
+    auto seed_str = bin2hstr(_base_seed) + std::to_string(index+1);
+    auto stake_seed = sha2_256(str2bin(seed_str));
+    stake_seed.reserve(48);
+    std::copy_n(stake_seed.begin(), 16, std::back_inserter(stake_seed));
+
     return XmssFast(stake_seed, _height);
 }
