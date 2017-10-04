@@ -85,7 +85,7 @@ jobs:
 #    - CMAKE_ARGS='-DBUILD_TESTS=ON'
 #    - TEST='TRUE'
 #    script:
-    - "./travis/build.sh"
+#   - "./travis/build.sh"
 
 #  ######################## OSX - PYQRLLIB
 #  - stage: build+test
