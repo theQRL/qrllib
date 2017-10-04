@@ -35,10 +35,10 @@ jobs:
     script:
     - echo
 
-  - stage: prepare cache
-    os: osx
-    if: branch = master
-    script: "./travis/prepare.sh"
+#  - stage: prepare cache
+#    os: osx
+#    if: branch = master
+#    script: "./travis/prepare.sh"
 
 
   ######################## XENIAL - OLD COMPILER (Useful for Raspberry Pi)
@@ -77,24 +77,24 @@ jobs:
     - PLATFORM='xenial-emscripten'
     script: "./travis/build.sh"
 
-  ######################## OSX + TESTS
-  - stage: build+test
-    os: osx
-    if: branch = master
-    env:
-    - CMAKE_ARGS='-DBUILD_TESTS=ON'
-    - TEST='TRUE'
-    script:
+#  ######################## OSX + TESTS
+#  - stage: build+test
+#    os: osx
+#    if: branch = master
+#    env:
+#    - CMAKE_ARGS='-DBUILD_TESTS=ON'
+#    - TEST='TRUE'
+#    script:
     - "./travis/build.sh"
 
-  ######################## OSX - PYQRLLIB
-  - stage: build+test
-    os: osx
-    if: branch = master
-    env:
-    - CMAKE_ARGS='-DBUILD_PYTHON=ON'
-    script:
-    - "./travis/build.sh"
+#  ######################## OSX - PYQRLLIB
+#  - stage: build+test
+#    os: osx
+#    if: branch = master
+#    env:
+#    - CMAKE_ARGS='-DBUILD_PYTHON=ON'
+#    script:
+#    - "./travis/build.sh"
 
   ########################
   - stage: test_deployment
