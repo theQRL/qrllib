@@ -4,12 +4,17 @@ services: docker
 language: cpp
 python:
 - '3.4'
-env:
-  matrix:
-  - CC_VER="4" PLATFORM='xenial'
-  - CC_VER="5" PLATFORM='xenial'
 cache:
   timeout: 600
+
+cache:
+  directories:
+    - $HOME/Library/Caches/Homebrew
+
+cache:
+  - pip
+  - apt
+
 virtualenv:
   system_site_packages: true
 
@@ -20,20 +25,104 @@ addons:
     - python3
     - python3-pip
 
-before_install:
-- sudo pip3 install -U pip setuptools twine
-- "./travis/before_install.sh"
-script:
-- "./travis/build.sh"
-notifications:
-  email: false
+########################
+########################
+jobs:
+  include:
+  ########################
+  - stage: prepare cache
+    os: linux
+    script:
+    - echo
 
-deploy:
-  provider: pypi
-  skip_cleanup: true
-  user: jleni
-  password:
-    secure: LEHilAb+FXCKVvd1/AEmVlUPyf8sOVYt/rMLZPr3bMEiwgK//lFJWlBPli9+G9ed4HjDpq/YFGpTKsRs9Etl4MWSnEJwYJPL0qBTWRCvEn1Py1kTI68dqRKR6oLpssj2BsLpuZvLt+2kE9PVvLSTGbwUGrnvob2AX2suUZcxnZD2q25TOnbZS2/M2F7SOy/0rVn6jlvGPwhMbdsmiLBStsx4rdiu84e1aryUDELSNTP7GtX61dmZs3et2Tpfz7uHXF++mxuT4hzjRe6mUKbtBekCy5EuAzI8vUTmys/m0llmB++gORSLeM22jfpGyfT7AxlkAxO3vlX3XLIythPIYcAEEjBA2xdt8GRlLWH3XLJJYWVEQgdA21sQLuQEGBepc44oKsdUH5t1Ok7kBYjvtQWJCa1/gv+GowKnU5159iJe6MBL9iJqzaz+tbGqKbQHpCvkPlNmipEBKVUANIx7IoXc/tHruCJtjp/vX4hbbOcT4674UaCcHtWpM3ME6EafC2r/nHNNA7rLoX1CP0RCrbSZJOGzhTZlyY9lB0qAmJe+3NDVSiY+6wO2qDFDN7nSl7BUBppPWHkhCVdXq3647RJB31djCguNfnjJLT7hoKkFTMFrrpkpvYUdPkJUAPqh3VZdl+esfMQnHctqBk0D8B+0lX6IJ9v8I5R/kyBs7/g=
-  on:
-    tags: true
-    all_branches: true
+  - stage: prepare cache
+    os: osx
+    script: "./travis/prepare.sh"
+
+  ######################## XENIAL - OLD COMPILER (Useful for Raspberry Pi)
+  - stage: build+test
+    os: linux
+    env:
+    - CMAKE_ARGS='-DBUILD_TESTS=ON'
+    - TEST='TRUE'
+    - CC_VER="4.9"
+    - PLATFORM='xenial'
+    script: "./travis/build.sh"
+
+  ######################## XENIAL - TESTS
+  - stage: build+test
+    os: linux
+    env:
+    - CMAKE_ARGS='-DBUILD_TESTS=ON'
+    - TEST='TRUE'
+    - CC_VER="5"
+    - PLATFORM='xenial'
+    script: "./travis/build.sh"
+
+  ######################## XENIAL - PYQRLLIB
+  - stage: build+test
+    os: linux
+    env:
+    - CMAKE_ARGS='-DBUILD_PYTHON=ON'
+    - CC_VER="5"
+    - PLATFORM='xenial'
+    script: "./travis/build.sh"
+
+  ######################## XENIAL-EMSCRIPTEN
+  - stage: build+test
+    os: linux
+    env:
+    - PLATFORM='xenial-emscripten'
+    script: "./travis/build.sh"
+
+  ######################## OSX + TESTS
+  - stage: build+test
+    os: osx
+    env:
+    - CMAKE_ARGS='-DBUILD_TESTS=ON'
+    - TEST='TRUE'
+    script:
+    - "./travis/build.sh"
+
+  ######################## OSX - PYQRLLIB
+  - stage: build+test
+    os: osx
+    env:
+    - CMAKE_ARGS='-DBUILD_PYTHON=ON'
+    script:
+    - "./travis/build.sh"
+
+  ########################
+  - stage: test_deployment
+    script: echo "TODO..."
+
+  ########################
+  - stage: publish
+    if: branch = master
+    os: linux
+    env:
+    - CC_VER="5"
+    - PLATFORM='xenial'
+    - DEPLOY='TRUE'
+    script:
+    - "./travis/build.sh"
+    - sudo pip3 install -U pip setuptools twine
+
+    deploy:
+      provider: pypi
+      skip_cleanup: true
+      user: jleni
+      password:
+        secure: LEHilAb+FXCKVvd1/AEmVlUPyf8sOVYt/rMLZPr3bMEiwgK//lFJWlBPli9+G9ed4HjDpq/YFGpTKsRs9Etl4MWSnEJwYJPL0qBTWRCvEn1Py1kTI68dqRKR6oLpssj2BsLpuZvLt+2kE9PVvLSTGbwUGrnvob2AX2suUZcxnZD2q25TOnbZS2/M2F7SOy/0rVn6jlvGPwhMbdsmiLBStsx4rdiu84e1aryUDELSNTP7GtX61dmZs3et2Tpfz7uHXF++mxuT4hzjRe6mUKbtBekCy5EuAzI8vUTmys/m0llmB++gORSLeM22jfpGyfT7AxlkAxO3vlX3XLIythPIYcAEEjBA2xdt8GRlLWH3XLJJYWVEQgdA21sQLuQEGBepc44oKsdUH5t1Ok7kBYjvtQWJCa1/gv+GowKnU5159iJe6MBL9iJqzaz+tbGqKbQHpCvkPlNmipEBKVUANIx7IoXc/tHruCJtjp/vX4hbbOcT4674UaCcHtWpM3ME6EafC2r/nHNNA7rLoX1CP0RCrbSZJOGzhTZlyY9lB0qAmJe+3NDVSiY+6wO2qDFDN7nSl7BUBppPWHkhCVdXq3647RJB31djCguNfnjJLT7hoKkFTMFrrpkpvYUdPkJUAPqh3VZdl+esfMQnHctqBk0D8B+0lX6IJ9v8I5R/kyBs7/g=
+      on:
+        tags: true
+
+  ########################
+#  - stage: publish
+#    if: branch = master
+#    https://docs.travis-ci.com/user/build-stages/deploy-npm/
+
+  ########################
+  - stage: end
+    script: echo "Yay!"
+
