@@ -19,7 +19,6 @@ public:
 
 protected:
     // FIXME: This needs refactoring (encapsulate)
-    const unsigned int _k = 2;
 
     bds_state _state;
     unsigned int _stackoffset = 0;

@@ -11,8 +11,6 @@
 #include "hash_address.h"
 #include "fips202.h"
 
-extern xmss_params params;
-
 /**
  * Used for pseudorandom keygeneration,
  * generates the seed for the WOTS keypair at address addr
@@ -34,15 +32,20 @@ static void get_seed(unsigned char *seed, const unsigned char *sk_seed, int n, u
  * Computes the leaf at a given address. First generates the WOTS key pair, then computes leaf using l_tree. As this happens position independent, we only require that addr encodes the right ltree-address.
  */
 
-static void gen_leaf_wots(unsigned char *leaf, const unsigned char *sk_seed, const xmss_params *params,
-                          const unsigned char *pub_seed, uint32_t ltree_addr[8], uint32_t ots_addr[8]) {
+static void gen_leaf_wots(unsigned char *leaf,
+                          const unsigned char *sk_seed,
+                          const xmss_params *params,
+                          const unsigned char *pub_seed,
+                          uint32_t ltree_addr[8],
+                          uint32_t ots_addr[8])
+{
     unsigned char seed[params->n];
     unsigned char pk[params->wots_par.keysize];
 
     get_seed(seed, sk_seed, params->n, ots_addr);
     wots_pkgen(pk, seed, &(params->wots_par), pub_seed, ots_addr);
 
-    l_tree(leaf, pk, params, pub_seed, ltree_addr);
+    l_tree(&params->wots_par, leaf, pk, pub_seed, ltree_addr);
 }
 
 /**
@@ -155,11 +158,13 @@ static void compute_authpath_wots(unsigned char *root, unsigned char *authpath, 
     memcpy(root, tree + n, n);
 }
 
-int xmss_Genkeypair(unsigned char *pk, unsigned char *sk, unsigned char *seed, unsigned char h) {
-    // TODO: Remove parameters and convert to template
-    xmss_set_params(&params, 32, h, 16, 2);
 
-    unsigned int n = params.n;
+int xmss_Genkeypair(xmss_params *params,
+                    unsigned char *pk,
+                    unsigned char *sk,
+                    unsigned char *seed)
+{
+    unsigned int n = params->n;
     // Set idx = 0
     sk[0] = 0;
     sk[1] = 0;
@@ -176,7 +181,7 @@ int xmss_Genkeypair(unsigned char *pk, unsigned char *sk, unsigned char *seed, u
 
     uint32_t addr[8] = {0, 0, 0, 0, 0, 0, 0, 0};
     // Compute root
-    treehash(pk, params.h, 0, sk + 4, &params, sk + 4 + 2 * n, addr);
+    treehash(pk, params->h, 0, sk + 4, params, sk + 4 + 2 * n, addr);
     // copy root to sk
     memcpy(sk + 4 + 3 * n, pk, n);
 
@@ -202,10 +207,14 @@ int xmss_updateSK(unsigned char *sk, unsigned long k) {
     }
 }
 
-int xmss_Signmsg(unsigned char *sk, unsigned char *sig_msg, unsigned char *msg, const size_t msglen, unsigned int h) {
+int xmss_Signmsg(xmss_params *params,
+                 unsigned char *sk,
+                 unsigned char *sig_msg,
+                 unsigned char *msg,
+                 size_t msglen)
+{
     unsigned long long sig_msg_len;
-    xmss_set_params(&params, 32, h, 16, 2);
-    uint16_t n = params.n;
+    uint16_t n = params->n;
     uint16_t i = 0;
 
     // Extract SK
@@ -283,14 +292,14 @@ int xmss_Signmsg(unsigned char *sk, unsigned char *sig_msg, unsigned char *msg, 
     get_seed(ots_seed, sk_seed, n, ots_addr);
 
     // Compute WOTS signature
-    wots_sign(sig_msg, msg_h, ots_seed, &(params.wots_par), pub_seed, ots_addr);
+    wots_sign(sig_msg, msg_h, ots_seed, &(params->wots_par), pub_seed, ots_addr);
 
-    sig_msg += params.wots_par.keysize;
-    sig_msg_len += params.wots_par.keysize;
+    sig_msg += params->wots_par.keysize;
+    sig_msg_len += params->wots_par.keysize;
 
-    compute_authpath_wots(root, sig_msg, idx, sk_seed, &params, pub_seed, ots_addr);
-    sig_msg += params.h * n;
-    sig_msg_len += params.h * n;
+    compute_authpath_wots(root, sig_msg, idx, sk_seed, params, pub_seed, ots_addr);
+    sig_msg += params->h * n;
+    sig_msg_len += params->h * n;
 
     //Whipe secret elements?
     //zerobytes(tsk, CRYPTO_SECRETKEYBYTES);

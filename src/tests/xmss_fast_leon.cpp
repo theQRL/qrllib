@@ -37,7 +37,10 @@ namespace {
         }
         xmss_set_bds_state(state, stack, stackoffset, stacklevels, auth, keep, treehash, retain, 0);
 
-        xmssfast_Genkeypair(pk, sk, state, seed, h);
+        xmss_params params;
+        xmss_set_params(&params, 32, h, 16, 2);
+
+        xmssfast_Genkeypair(&params, pk, sk, state, seed);
 
         unsigned char msg[32] = {0};
         unsigned char sign[10000];
@@ -45,27 +48,27 @@ namespace {
         printf("Sign / Verify");
 
         int x;
-        int y = xmssfast_update(sk, state, h, 10);
+        int y = xmssfast_update(&params, sk, state, 10);
 
-        x = xmssfast_Signmsg(sk, state, sign, msg,32, h);
-        x = xmss_Verifysig(msg,32, sign,pk, h);
+        x = xmssfast_Signmsg(&params, sk, state, sign, msg,32);
+        x = xmss_Verifysig(&params.wots_par, msg,32, sign,pk, h);
 
         printf("\n%d\n",x);
 
         unsigned long long m = 32;
-        x = xmssfast_Signmsg(sk, state, sign, msg,32, h);
+        x = xmssfast_Signmsg(&params, sk, state, sign, msg,32);
 
         msg[10] ^= 1;
-        x = xmss_Verifysig(msg,32, sign,pk, h);
+        x = xmss_Verifysig(&params.wots_par, msg,32, sign,pk, h);
 
         printf("\n%d\n",x);
 
         msg[0]^=1;
-        x = xmss_Verifysig(msg,32, sign,pk, h);
+        x = xmss_Verifysig(&params.wots_par, msg,32, sign,pk, h);
         printf("\n%d\n",x);
         msg[0]^=1;
         sign[5*32]^=1;
-        x = xmss_Verifysig(msg,32, sign,pk, h);
+        x = xmss_Verifysig(&params.wots_par, msg,32, sign,pk, h);
         printf("\n%d\n",x);
     }
 }
