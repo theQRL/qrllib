@@ -23,8 +23,6 @@ message(STATUS "GOLANG WRAPPER " ${BUILD_GO})
 message(STATUS "PYTHON WRAPPER " ${BUILD_PYTHON})
 message(STATUS "WEBASSEMBLY " ${BUILD_WEBASSEMBLY})
 
-find_package(Boost REQUIRED COMPONENTS "random" )
-
 if (BUILD_PYTHON OR BUILD_GO)
     find_package(SWIG REQUIRED)
     INCLUDE(${SWIG_USE_FILE})
@@ -36,7 +34,6 @@ include_directories(
         ${CMAKE_CURRENT_SOURCE_DIR}/src/lib
         ${CMAKE_CURRENT_SOURCE_DIR}/xmss-alt
         ${CMAKE_CURRENT_SOURCE_DIR}/PicoSHA2
-        ${Boost_INCLUDE_DIR}
 )
 
 file(GLOB_RECURSE LIB_SRC
@@ -105,7 +102,7 @@ if (BUILD_TESTS)
             ${LIBXMSSALT_SRC}
             )
 
-    target_link_libraries(qrllib_test gtest_main ${Boost_LIBRARIES})
+    target_link_libraries(qrllib_test gtest_main)
 
     include(CTest)
     enable_testing()
@@ -148,7 +145,7 @@ if (BUILD_PYTHON)
             ${LIBXMSSALT_SRC}
             )
 
-    SWIG_LINK_LIBRARIES(pyqrllib ${SWIG_LANG_LIBRARIES} ${Boost_LIBRARIES} )
+    SWIG_LINK_LIBRARIES(pyqrllib ${SWIG_LANG_LIBRARIES} )
 
     add_custom_command(TARGET ${SWIG_MODULE_pyqrllib_REAL_NAME}
             POST_BUILD
@@ -191,7 +188,7 @@ if (BUILD_GO)
             ${LIBXMSSALT_SRC}
             )
 
-    SWIG_LINK_LIBRARIES(goqrllib ${SWIG_LANG_LIBRARIES} ${Boost_LIBRARIES})
+    SWIG_LINK_LIBRARIES(goqrllib ${SWIG_LANG_LIBRARIES} )
 
     add_custom_command(TARGET ${SWIG_MODULE_goqrllib_REAL_NAME}
             POST_BUILD

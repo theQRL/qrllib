@@ -8,8 +8,7 @@
 #include <picosha2.h>
 #include <iostream>
 #include <unordered_map>
-
-#include <boost/random/random_device.hpp>
+#include <fstream>
 
 std::string bin2hstr(const std::vector<unsigned char> &vec, uint32_t wrap)
 {
@@ -173,8 +172,19 @@ std::string getAddress(const std::string &prefix, const std::vector<unsigned cha
 std::vector<unsigned char> getRandomSeed(uint32_t seed_size, const std::string &entropy)
 {
     std::vector<unsigned char> tmp(seed_size, 0);
-    boost::random::random_device rng;
-    rng.generate(tmp.begin(), tmp.end());
+
+    std::ifstream urandom("/dev/urandom", std::ios::in|std::ios::binary);
+    if (!urandom)
+    {
+        throw std::runtime_error("error accessing /dev/urandom");
+    }
+
+    urandom.read(reinterpret_cast<char *>(tmp.data()), seed_size);
+    if (!urandom)
+    {
+        throw std::runtime_error("error reading from /dev/urandom");
+    }
+    urandom.close();
 
     auto tmpbytes = str2bin(entropy);
     tmp.insert( tmp.end(), tmpbytes.begin(), tmpbytes.end());
