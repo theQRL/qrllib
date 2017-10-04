@@ -140,15 +140,16 @@ void wots_sign(unsigned char *sig, const unsigned char *msg, const unsigned char
 void wots_pkFromSig(unsigned char *pk,
                     const unsigned char *sig,
                     const unsigned char *msg,
-                    const wots_params *params,
+                    const wots_params *wotsParams,
                     const unsigned char *pub_seed,
-                    uint32_t addr[8]) {
-    uint32_t XMSS_WOTS_LEN = params->len;
-    uint32_t XMSS_WOTS_LEN1 = params->len_1;
-    uint32_t XMSS_WOTS_LEN2 = params->len_2;
-    uint32_t XMSS_WOTS_LOG_W = params->log_w;
-    uint32_t XMSS_WOTS_W = params->w;
-    uint32_t XMSS_N = params->n;
+                    uint32_t addr[8])
+{
+    uint32_t XMSS_WOTS_LEN = wotsParams->len;
+    uint32_t XMSS_WOTS_LEN1 = wotsParams->len_1;
+    uint32_t XMSS_WOTS_LEN2 = wotsParams->len_2;
+    uint32_t XMSS_WOTS_LOG_W = wotsParams->log_w;
+    uint32_t XMSS_WOTS_W = wotsParams->w;
+    uint32_t XMSS_N = wotsParams->n;
 
     int basew[XMSS_WOTS_LEN];
     int csum = 0;
@@ -156,7 +157,7 @@ void wots_pkFromSig(unsigned char *pk,
     int csum_basew[XMSS_WOTS_LEN2];
     uint32_t i = 0;
 
-    base_w(basew, XMSS_WOTS_LEN1, msg, params);
+    base_w(basew, XMSS_WOTS_LEN1, msg, wotsParams);
 
     for (i = 0; i < XMSS_WOTS_LEN1; i++) {
         csum += XMSS_WOTS_W - 1 - basew[i];
@@ -165,7 +166,7 @@ void wots_pkFromSig(unsigned char *pk,
     csum = csum << (8 - ((XMSS_WOTS_LEN2 * XMSS_WOTS_LOG_W) % 8));
 
     to_byte(csum_bytes, csum, ((XMSS_WOTS_LEN2 * XMSS_WOTS_LOG_W) + 7) / 8);
-    base_w(csum_basew, XMSS_WOTS_LEN2, csum_bytes, params);
+    base_w(csum_basew, XMSS_WOTS_LEN2, csum_bytes, wotsParams);
 
     for (i = 0; i < XMSS_WOTS_LEN2; i++) {
         basew[XMSS_WOTS_LEN1 + i] = csum_basew[i];
@@ -173,6 +174,6 @@ void wots_pkFromSig(unsigned char *pk,
     for (i = 0; i < XMSS_WOTS_LEN; i++) {
         setChainADRS(addr, i);
         gen_chain(pk + i * XMSS_N, sig + i * XMSS_N,
-                  basew[i], XMSS_WOTS_W - 1 - basew[i], params, pub_seed, addr);
+                  basew[i], XMSS_WOTS_W - 1 - basew[i], wotsParams, pub_seed, addr);
     }
 }

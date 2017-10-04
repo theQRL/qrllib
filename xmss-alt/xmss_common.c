@@ -12,6 +12,7 @@ Public domain.
 #include "xmss_common.h"
 #include "hash_address.h"
 #include "hash.h"
+#include "wots.h"
 #include <cstdio>
 #include <cstring>
 
@@ -28,9 +29,6 @@ void hexdump(const unsigned char *a, size_t len) {
     for (i = 0; i < len; i++)
         printf("%02x", a[i]);
 }
-
-// FIXME: This is very BAD. Singleton configuration?
-xmss_params params;
 
 /**
  * Initialize xmss params struct
@@ -51,12 +49,13 @@ void xmss_set_params(xmss_params *params, uint32_t n, uint32_t h, uint32_t w, ui
     params->wots_par = wots_par;
 }
 
-void l_tree(unsigned char *leaf,
-       unsigned char *wots_pk,
-       const xmss_params *params,
-       const unsigned char *pub_seed,
-       uint32_t addr[8]) {
-    unsigned int l = params->wots_par.len;
+void l_tree(const wots_params *params,
+            unsigned char *leaf,
+            unsigned char *wots_pk,
+            const unsigned char *pub_seed,
+            uint32_t addr[8])
+{
+    unsigned int l = params->len;
     unsigned int n = params->n;
     uint32_t i = 0;
     uint32_t height = 0;
@@ -64,7 +63,8 @@ void l_tree(unsigned char *leaf,
 
     setTreeHeight(addr, height);
 
-    while (l > 1) {
+    while (l > 1)
+    {
         bound = l >> 1;
         for (i = 0; i < bound; i++) {
             setTreeIndex(addr, i);
@@ -86,10 +86,15 @@ void l_tree(unsigned char *leaf,
  * Computes a root node given a leaf and an authapth
  */
 static void
-validate_authpath(unsigned char *root, const unsigned char *leaf, unsigned long leafidx, const unsigned char *authpath,
-                  const xmss_params *params, const unsigned char *pub_seed, uint32_t addr[8]) {
-    unsigned int n = params->n;
-
+validate_authpath(unsigned char *root,
+                  const unsigned char *leaf,
+                  unsigned long leafidx,
+                  const unsigned char *authpath,
+                  const uint32_t n,
+                  const uint32_t h,
+                  const unsigned char *pub_seed,
+                  uint32_t addr[8])
+{
     uint32_t i, j;
     unsigned char buffer[2 * n];
 
@@ -108,7 +113,7 @@ validate_authpath(unsigned char *root, const unsigned char *leaf, unsigned long 
     }
     authpath += n;
 
-    for (i = 0; i < params->h - 1; i++) {
+    for (i = 0; i < h - 1; i++) {
         setTreeHeight(addr, i);
         leafidx >>= 1;
         setTreeIndex(addr, leafidx);
@@ -123,7 +128,7 @@ validate_authpath(unsigned char *root, const unsigned char *leaf, unsigned long 
         }
         authpath += n;
     }
-    setTreeHeight(addr, (params->h - 1));
+    setTreeHeight(addr, (h - 1));
     leafidx >>= 1;
     setTreeIndex(addr, leafidx);
     hash_h(root, buffer, pub_seed, addr, n);
@@ -133,21 +138,21 @@ validate_authpath(unsigned char *root, const unsigned char *leaf, unsigned long 
 /**
  * Verifies a given message signature pair under a given public key.
  */
-int xmss_Verifysig(unsigned char *msg,
+int xmss_Verifysig(wots_params *wotsParams,
+                   unsigned char *msg,
                    const size_t msglen,
                    unsigned char *sig_msg,
                    const unsigned char *pk,
                    unsigned char h)
 {
-    // TODO: This is bad! Remove
-    xmss_set_params(&params, 32, h, 16, 2);
 
     unsigned long long sig_msg_len = static_cast<unsigned long long int>(4 + 32 + 67 * 32 + h * 32);
-    uint16_t n = params.n;
+
+    uint32_t n = wotsParams->n;
 
     unsigned long long i, m_len;
     unsigned long idx = 0;
-    unsigned char wots_pk[params.wots_par.keysize];
+    unsigned char wots_pk[wotsParams->keysize];
     unsigned char pkhash[n];
     unsigned char root[n];
     unsigned char msg_h[n];
@@ -182,7 +187,7 @@ int xmss_Verifysig(unsigned char *msg,
     sig_msg_len -= (n + 4);
 
     // hash message
-    unsigned long long tmp_sig_len = params.wots_par.keysize + params.h * n;
+    unsigned long long tmp_sig_len = wotsParams->keysize + h * n;
     m_len = sig_msg_len - tmp_sig_len;
     //h_msg(msg_h, sig_msg + tmp_sig_len, m_len, hash_key, 3*n, n);
     h_msg(msg_h, msg, msglen, hash_key, 3 * n, n);
@@ -193,20 +198,20 @@ int xmss_Verifysig(unsigned char *msg,
     // Prepare Address
     setOTSADRS(ots_addr, idx);
     // Check WOTS signature
-    wots_pkFromSig(wots_pk, sig_msg, msg_h, &(params.wots_par), pub_seed, ots_addr);
+    wots_pkFromSig(wots_pk, sig_msg, msg_h, wotsParams, pub_seed, ots_addr);
 
-    sig_msg += params.wots_par.keysize;
-    sig_msg_len -= params.wots_par.keysize;
+    sig_msg += wotsParams->keysize;
+    sig_msg_len -= wotsParams->keysize;
 
     // Compute Ltree
     setLtreeADRS(ltree_addr, idx);
-    l_tree(pkhash, wots_pk, &params, pub_seed, ltree_addr);
+    l_tree(wotsParams, pkhash, wots_pk, pub_seed, ltree_addr);
 
     // Compute root
-    validate_authpath(root, pkhash, idx, sig_msg, &params, pub_seed, node_addr);
+    validate_authpath(root, pkhash, idx, sig_msg, n, h, pub_seed, node_addr);
 
-    sig_msg += params.h * n;
-    sig_msg_len -= params.h * n;
+    sig_msg += h * n;
+    sig_msg_len -= h * n;
 
     for (i = 0; i < n; i++)
         if (root[i] != pk[i])

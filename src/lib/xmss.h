@@ -19,6 +19,10 @@ public:
     Xmss(const TSEED &seed, unsigned char height);
 
     TSIGNATURE sign(const TMESSAGE &message) override;
+
+private:
+    xmss_params params;
+
 };
 
 #endif //QRLLIB_XMSS_H

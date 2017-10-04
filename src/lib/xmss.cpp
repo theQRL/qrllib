@@ -28,7 +28,12 @@ Xmss::Xmss(const TSEED &seed, unsigned char height): XmssBase(seed, height)
         throw std::invalid_argument("Seed should be 48 bytes. Other values are not currently supported");
     }
 
-    xmss_Genkeypair(tmp.data(), _sk.data(), _seed.data(), height);
+    xmss_set_params(&params, 32, height, 16, 2 );
+
+    xmss_Genkeypair(&params,
+                    tmp.data(),
+                    _sk.data(),
+                    _seed.data());
 }
 
 
@@ -37,11 +42,11 @@ TSIGNATURE Xmss::sign(const TMESSAGE &message)
     // TODO: Fix constness in library
     auto signature = TSIGNATURE(getSignatureSize(), 0);
 
-    xmss_Signmsg(_sk.data(),
+    xmss_Signmsg(&params,
+                 _sk.data(),
                  signature.data(),
                  static_cast<TMESSAGE>(message).data(),
-                 message.size(),
-                 _height);
+                 message.size());
 
     return signature;
 }

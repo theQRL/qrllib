@@ -4,13 +4,18 @@
 // by Andreas Hülsing and Joost Rijneveld
 
 #include <cstddef>
+#include "xmss_common.h"
 
+int xmss_Genkeypair(xmss_params *params,
+                    unsigned char *pk,
+                    unsigned char *sk,
+                    unsigned char *seed);
 
-int xmss_Genkeypair(unsigned char *pk, unsigned char *sk, unsigned char *seed, unsigned char h);
-int xmss_updateSK(unsigned char *sk, unsigned long k);
+int xmss_updateSK(unsigned char *sk,
+                  unsigned long k);
 
-int xmss_Signmsg(unsigned char *sk,
+int xmss_Signmsg(xmss_params *params,
+                 unsigned char *sk,
                  unsigned char *sig_msg,
                  unsigned char *msg,
-                 const size_t msglen,
-                 unsigned int h);
+                 size_t msglen);

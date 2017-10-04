@@ -60,11 +60,11 @@ void xmss_set_bds_state(bds_state *state,
  * Format sk: [(32bit) idx || SK_SEED || SK_PRF || PUB_SEED || root]
  * Format pk: [root || PUB_SEED] omitting algo oid.
  */
-int xmssfast_Genkeypair(unsigned char *pk,
+int xmssfast_Genkeypair(xmss_params *params,            // TODO: Refactor this. Remove params, etc.
+                        unsigned char *pk,
                         unsigned char *sk,
                         bds_state *state,
-                        unsigned char *seed,
-                        unsigned char h);
+                        unsigned char *seed);
 
 /**
  * Signs a message.
@@ -73,16 +73,16 @@ int xmssfast_Genkeypair(unsigned char *pk,
  * 2. an updated secret key!
  * 
  */
-int xmssfast_Signmsg(unsigned char *sk,
+int xmssfast_Signmsg(xmss_params *params,
+                     unsigned char *sk,
                      bds_state *state,
                      unsigned char *sig_msg,
                      unsigned char *msg,
-                     unsigned long long msglen,
-                     unsigned char h);
+                     unsigned long long msglen);
 
-int xmssfast_update(unsigned char *sk,
+int xmssfast_update(xmss_params *params,
+                    unsigned char *sk,
                     bds_state *state,
-                    unsigned long h,
                     unsigned long new_idx);
 
 #endif // XMSSALT_XMSS_FAST_H

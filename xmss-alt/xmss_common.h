@@ -29,18 +29,18 @@ typedef struct{
     uint32_t k;
 } xmss_params;
 
+void xmss_set_params(xmss_params *params, uint32_t n, uint32_t h, uint32_t w, uint32_t k);
+
 
 void to_byte(unsigned char *output, unsigned long long in, uint32_t bytes);
 
 void hexdump(const unsigned char *a, size_t len);
 
-void xmss_set_params(xmss_params *params, uint32_t n, uint32_t h, uint32_t w, uint32_t k);
-
-void l_tree(unsigned char *leaf,
-           unsigned char *wots_pk,
-           const xmss_params *params,
-           const unsigned char *pub_seed,
-           uint32_t addr[8]);
+void l_tree(const wots_params *params,
+            unsigned char *leaf,
+            unsigned char *wots_pk,
+            const unsigned char *pub_seed,
+            uint32_t addr[8]);
 
 /**
  * Verifies a given message signature pair under a given public key.
@@ -48,7 +48,8 @@ void l_tree(unsigned char *leaf,
  * Note: msg and msglen are pure outputs which carry the message in case verification succeeds. The (input) message is assumed to be within sig_msg which has the form (sig||msg).
  */
 
-int xmss_Verifysig(unsigned char *msg,
+int xmss_Verifysig(wots_params *wotsParams,
+                   unsigned char *msg,
                    size_t msglen,
                    unsigned char *sig_msg,
                    const unsigned char *pk,

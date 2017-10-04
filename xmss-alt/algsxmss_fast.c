@@ -20,9 +20,6 @@ Public domain.
 #include "wots.h"
 #include <cstdio>
 
-
-extern xmss_params params;
-
 /**
  * Used for pseudorandom keygeneration,
  * generates the seed for the WOTS keypair at address addr
@@ -71,15 +68,20 @@ void xmss_set_bds_state(bds_state *state,
 /**
  * Computes the leaf at a given address. First generates the WOTS key pair, then computes leaf using l_tree. As this happens position independent, we only require that addr encodes the right ltree-address.
  */
-static void gen_leaf_wots(unsigned char *leaf, const unsigned char *sk_seed, const xmss_params *params,
-                          const unsigned char *pub_seed, uint32_t ltree_addr[8], uint32_t ots_addr[8]) {
+static void gen_leaf_wots(unsigned char *leaf,
+                          const unsigned char *sk_seed,
+                          const xmss_params *params,
+                          const unsigned char *pub_seed,
+                          uint32_t ltree_addr[8],
+                          uint32_t ots_addr[8])
+{
     unsigned char seed[params->n];
     unsigned char pk[params->wots_par.keysize];
 
     get_seed(seed, sk_seed, params->n, ots_addr);
     wots_pkgen(pk, seed, &(params->wots_par), pub_seed, ots_addr);
 
-    l_tree(leaf, pk, params, pub_seed, ltree_addr);
+    l_tree(&params->wots_par, leaf, pk, pub_seed, ltree_addr);
 }
 
 static int treehash_minheight_on_stack(bds_state *state, const xmss_params *params, const treehash_inst *treehash) {
@@ -453,14 +455,18 @@ bds_round(bds_state *state, const unsigned long leaf_idx, const unsigned char *s
  * Format sk: [(32bit) idx || SK_SEED || SK_PRF || PUB_SEED || root]
  * Format pk: [root || PUB_SEED] omitting algo oid.
  */
-int xmssfast_Genkeypair(unsigned char *pk, unsigned char *sk, bds_state *state, unsigned char *seed, unsigned char h) {
-    if (h & 1) {
+int xmssfast_Genkeypair(xmss_params *params,            // TODO: Refactor this. Remove params, etc.
+                        unsigned char *pk,
+                        unsigned char *sk,
+                        bds_state *state,
+                        unsigned char *seed)
+{
+    if (params->h & 1) {
         printf("Not a valid h, only even numbers supported! Try again with an even number");
         return -1;
     }
-    xmss_set_params(&params, 32, h, 16, 2);
-    unsigned int k = params.k;
-    unsigned int n = params.n;
+    unsigned int k = params->k;
+    unsigned int n = params->n;
 
     // Set idx = 0
     sk[0] = 0;
@@ -479,15 +485,18 @@ int xmssfast_Genkeypair(unsigned char *pk, unsigned char *sk, bds_state *state, 
     uint32_t addr[8] = {0, 0, 0, 0, 0, 0, 0, 0};
 
     // Compute root
-    treehash_setup(pk, params.h, 0, state, sk + 4, &params, sk + 4 + 2 * n, addr);
+    treehash_setup(pk, params->h, 0, state, sk + 4, params, sk + 4 + 2 * n, addr);
     // copy root to sk
     memcpy(sk + 4 + 3 * n, pk, pks);
     return 0;
 }
 
-int xmssfast_update(unsigned char *sk, bds_state *state, unsigned long h, unsigned long new_idx) {
-    xmss_set_params(&params, 32, h, 16, 2);
-    unsigned long k = params.k;
+int xmssfast_update(xmss_params *params,
+                    unsigned char *sk,
+                    bds_state *state,
+                    unsigned long new_idx)
+{
+    unsigned long k = params->k;
 
     // FIXME: Avoid this repetition
     auto idxkey = static_cast<uint32_t>(((unsigned long) sk[0] << 24) |
@@ -517,20 +526,23 @@ int xmssfast_update(unsigned char *sk, bds_state *state, unsigned long h, unsign
     uint32_t ots_addr[8] = {0, 0, 0, 0, 0, 0, 0, 0};
 
     for (int j = idxkey; j < new_idx; j++) {
-        if (j < (1U << h) - 1) {
-            bds_round(state, j, sk_seed, &params, pub_seed, ots_addr);
-            bds_treehash_update(state, (h - k) >> 1, sk_seed, &params, pub_seed, ots_addr);
+        if (j < (1U << params->h) - 1) {
+            bds_round(state, j, sk_seed, params, pub_seed, ots_addr);
+            bds_treehash_update(state, (params->h - k) >> 1, sk_seed, params, pub_seed, ots_addr);
         }
     }
 
     return 0;
 }
 
-int xmssfast_Signmsg(unsigned char *sk, bds_state *state, unsigned char *sig_msg, unsigned char *msg,
-                     unsigned long long msglen, unsigned char h) {
-    xmss_set_params(&params, 32, h, 16, 2);
-    unsigned int n = params.n;
-    unsigned int k = params.k;
+int xmssfast_Signmsg(xmss_params *params,
+                     unsigned char *sk,
+                     bds_state *state,
+                     unsigned char *sig_msg,
+                     unsigned char *msg,
+                     unsigned long long msglen)
+{
+    unsigned int n = params->n;
     uint16_t i = 0;
 
     // Extract SK
@@ -608,20 +620,20 @@ int xmssfast_Signmsg(unsigned char *sk, bds_state *state, unsigned char *sig_msg
     get_seed(ots_seed, sk_seed, n, ots_addr);
 
     // Compute WOTS signature
-    wots_sign(sig_msg, msg_h, ots_seed, &(params.wots_par), pub_seed, ots_addr);
-    sig_msg += params.wots_par.keysize;
-    sig_msg_len += params.wots_par.keysize;
+    wots_sign(sig_msg, msg_h, ots_seed, &(params->wots_par), pub_seed, ots_addr);
+    sig_msg += params->wots_par.keysize;
+    sig_msg_len += params->wots_par.keysize;
 
     // the auth path was already computed during the previous round
-    memcpy(sig_msg, state->auth, h * n);
+    memcpy(sig_msg, state->auth, params->h * params->n);
 
-    if (idx < (1U << h) - 1) {
-        bds_round(state, idx, sk_seed, &params, pub_seed, ots_addr);
-        bds_treehash_update(state, (h - k) >> 1, sk_seed, &params, pub_seed, ots_addr);
+    if (idx < (1U << params->h) - 1) {
+        bds_round(state, idx, sk_seed, params, pub_seed, ots_addr);
+        bds_treehash_update(state, (params->h - params->k) >> 1, sk_seed, params, pub_seed, ots_addr);
     }
 
-    sig_msg += params.h * n;
-    sig_msg_len += params.h * n;
+    sig_msg += params->h * params->n;
+    sig_msg_len += params->h * params->n;
 
     //Whipe secret elements?
     //zerobytes(tsk, CRYPTO_SECRETKEYBYTES);

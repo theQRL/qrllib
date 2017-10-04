@@ -36,6 +36,8 @@ XmssFast::XmssFast(const TSEED &seed, unsigned char height): XmssBase(seed, heig
         _treehash[i].node = &_th_nodes[n*i];
     }
 
+    xmss_set_params(&params, 32, h, 16, 2 );
+
     xmss_set_bds_state(&_state,
                        _stack.data(),
                        _stackoffset,
@@ -48,16 +50,20 @@ XmssFast::XmssFast(const TSEED &seed, unsigned char height): XmssBase(seed, heig
 
     _sk = TKEY(132, 0);
     auto tmp = TKEY(64, 0);
-    xmssfast_Genkeypair(tmp.data(),
+    xmssfast_Genkeypair(&params,
+                        tmp.data(),
                         _sk.data(),
                         &_state,
-                        _seed.data(),
-                        _height);
+                        _seed.data());
 }
 
 unsigned int XmssFast::setIndex(unsigned int new_index)
 {
-    xmssfast_update(_sk.data(), &_state, _height, new_index);
+    xmssfast_update(&params,
+                    _sk.data(),
+                    &_state,
+                    new_index);
+
     return new_index;
 }
 
@@ -69,12 +75,12 @@ TSIGNATURE XmssFast::sign(const TMESSAGE &message)
     auto index = getIndex();
     setIndex( index );
 
-    xmssfast_Signmsg(_sk.data(),
+    xmssfast_Signmsg(&params,
+                     _sk.data(),
                      &_state,
                      signature.data(),
                      static_cast<TMESSAGE>(message).data(),
-                     message.size(),
-                     _height);
+                     message.size());
 
     return signature;
 }
