@@ -3,6 +3,7 @@
 
 #include <string>
 #include <vector>
+#include "xmss_params.h"
 
 #define TSIGNATURE std::vector<unsigned char>
 #define TMESSAGE std::vector<unsigned char>
@@ -44,6 +45,8 @@ public:
                        unsigned char height);
 
 protected:
+    xmss_params params;
+
     unsigned char _height;
     TKEY _sk;
     TSEED _seed;

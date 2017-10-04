@@ -19,9 +19,6 @@ public:
 
 protected:
     // FIXME: This needs refactoring (encapsulate)
-    const unsigned int _k = 2;
-
-    xmss_params params;
 
     bds_state _state;
     unsigned int _stackoffset = 0;

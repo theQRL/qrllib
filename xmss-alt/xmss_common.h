@@ -15,19 +15,7 @@ Public domain.
 #include <cstdlib>
 #include <cstdint>
 #include "wots.h"
-
-typedef struct{
-    unsigned int level;
-    unsigned long long subtree;
-    unsigned int subleaf;
-} leafaddr;
-
-typedef struct{
-    wots_params wots_par;
-    uint32_t n;
-    uint32_t h;
-    uint32_t k;
-} xmss_params;
+#include "xmss_params.h"
 
 void xmss_set_params(xmss_params *params, uint32_t n, uint32_t h, uint32_t w, uint32_t k);
 
