@@ -102,7 +102,7 @@ jobs:
 
   ########################
   - stage: publish
-    if: tag =~ ^v1
+    if: tag =~ ^v
     os: linux
     env:
     - CC_VER="5"
