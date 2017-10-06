@@ -7,6 +7,7 @@
 #include <string>
 #include <future>
 #include <deque>
+#include <memory>
 #include "xmssBase.h"
 #include "xmssFast.h"
 
@@ -20,7 +21,7 @@ public:
 
     ~XmssPool();
 
-    XmssFast getNextTree();
+    std::shared_ptr<XmssFast> getNextTree();
     bool isAvailable();
 
     size_t getCurrentIndex()
@@ -33,10 +34,10 @@ private:
     uint8_t _height;
     size_t _current_index;
     size_t _pool_size;
-    std::deque<std::future<XmssFast>> _cache;
+    std::deque<std::future<std::shared_ptr<XmssFast>>> _cache;
 
     void fillCache();
-    XmssFast prepareTree(size_t index);
+    std::shared_ptr<XmssFast> prepareTree(size_t index);
 };
 
 #endif // QRLLIB_XMSSTREEPOOL_H
