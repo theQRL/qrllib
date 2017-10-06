@@ -42,6 +42,7 @@ XmssFast::XmssFast(const TSEED &seed, unsigned char height): XmssBase(seed, heig
     _treehash = std::vector<treehash_inst>(h-k);
     _th_nodes = std::vector<unsigned char>((h-k)*n);
     _retain = std::vector<unsigned char>(((1 << k) - k - 1)*n);
+
     for (int i = 0; i < h-k; i++)
     {
         _treehash[i].node = &_th_nodes[n*i];

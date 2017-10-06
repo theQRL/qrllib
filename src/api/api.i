@@ -8,16 +8,7 @@
 %include "std_string.i"
 %include "stl.i"
 %include "std_except.i"
-
-%module pyqrllib
-%{
-    #include "api.h"
-    #include "xmss.h"
-    #include "misc.h"
-    #include "hashing.h"
-    #include "xmssFast.h"
-    #include "xmssPool.h"
-%}
+%include "std_shared_ptr.i"
 
 %array_class(unsigned char, ucharCArray)
 %array_class(uint, uintCArray)
@@ -33,11 +24,27 @@ namespace std {
   %template(_string_list_list) vector<vector<unsigned char>>;
 }
 
-#%array_functions(uint32_t, uint32ArrayRaw)
+%shared_ptr(XmssBase)
+%shared_ptr(Xmss)
+%shared_ptr(XmssFast)
+
+// %array_functions(uint32_t, uint32ArrayRaw)
+
+%module pyqrllib
+%{
+    #include "api.h"
+    #include "xmss.h"
+    #include "misc.h"
+    #include "hashing.h"
+    #include "xmssBase.h"
+    #include "xmssFast.h"
+    #include "xmssPool.h"
+%}
 
 %include "api.h"
 %include "misc.h"
 %include "hashing.h"
 %include "xmss.h"
+%include "xmssBase.h"
 %include "xmssFast.h"
 %include "xmssPool.h"

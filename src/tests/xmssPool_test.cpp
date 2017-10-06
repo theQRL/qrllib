@@ -32,7 +32,7 @@ namespace {
         {
             EXPECT_EQ(pool.getCurrentIndex(), i);
             auto xmss = pool.getNextTree();
-            EXPECT_EQ(pks[i], bin2hstr(xmss.getPK()));
+            EXPECT_EQ(pks[i], bin2hstr(xmss->getPK()));
         }
     }
 
@@ -50,7 +50,7 @@ namespace {
         {
             EXPECT_EQ(pool.getCurrentIndex(), i);
             auto xmss = pool.getNextTree();
-            EXPECT_EQ(pks[i], bin2hstr(xmss.getPK()));
+            EXPECT_EQ(pks[i], bin2hstr(xmss->getPK()));
         }
     }
 
@@ -68,7 +68,7 @@ namespace {
         {
             EXPECT_EQ(pool.getCurrentIndex(), i);
             auto xmss = pool.getNextTree();
-            EXPECT_EQ(pks[i], bin2hstr(xmss.getPK()));
+            EXPECT_EQ(pks[i], bin2hstr(xmss->getPK()));
         }
     }
 }

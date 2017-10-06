@@ -33,7 +33,7 @@ void XmssPool::fillCache()
     }
 }
 
-XmssFast XmssPool::getNextTree()
+std::shared_ptr<XmssFast> XmssPool::getNextTree()
 {
     if (_cache.empty())
     {
@@ -54,7 +54,7 @@ bool XmssPool::isAvailable()
     return _cache.front().wait_for(std::chrono::seconds(0)) == std::future_status::ready;
 }
 
-XmssFast XmssPool::prepareTree(size_t index)
+std::shared_ptr<XmssFast> XmssPool::prepareTree(size_t index)
 {
     auto tmp_seed(_base_seed);
 
@@ -73,5 +73,5 @@ XmssFast XmssPool::prepareTree(size_t index)
     stake_seed.reserve(48);
     std::copy_n(stake_seed.begin(), 16, std::back_inserter(stake_seed));
 
-    return XmssFast(stake_seed, _height);
+    return std::make_shared<XmssFast>(stake_seed, _height);
 }
