@@ -4,9 +4,9 @@
   <component name="CidrRootsConfiguration">
     <sourceRoots>
       <file path="$PROJECT_DIR$/PicoSHA2" />
+      <file path="$PROJECT_DIR$/deps/xmss-alt" />
       <file path="$PROJECT_DIR$/pyqrllib" />
       <file path="$PROJECT_DIR$/src" />
-      <file path="$PROJECT_DIR$/xmss-alt" />
       <file path="$PROJECT_DIR$/xmss-reference_patch" />
     </sourceRoots>
     <excludeRoots>

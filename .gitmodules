@@ -1,6 +1,6 @@
-[submodule "xmss-reference"]
-	path = xmss-reference
-	url = https://github.com/jleni/xmss-reference
-[submodule "PicoSHA2"]
-	path = PicoSHA2
+[submodule "deps/PicoSHA2"]
+	path = deps/PicoSHA2
 	url = https://github.com/okdshin/PicoSHA2
+[submodule "deps/xmss-reference"]
+	path = deps/xmss-reference
+	url = https://github.com/jleni/xmss-reference
