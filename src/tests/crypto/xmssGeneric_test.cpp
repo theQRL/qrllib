@@ -1,12 +1,12 @@
 // Distributed under the MIT software license, see the accompanying
 // file LICENSE or http://www.opensource.org/licenses/mit-license.php.
 #include <algsxmss.h>
-#include <xmss.h>
+#include <crypto/xmss.h>
 #include <vector>
 #include <iostream>
 #include "gtest/gtest.h"
-#include <misc.h>
-#include <xmssFast.h>
+#include <crypto/misc.h>
+#include <crypto/xmssFast.h>
 
 namespace {
     constexpr uint8_t XMSS_HEIGHT = 4;

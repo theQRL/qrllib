@@ -13,7 +13,7 @@
 
 // TODO: Add a namespace
 
-class Xmss : public ::XmssBase {
+class Xmss : public XmssBase {
 public:
     // TODO: Fix constness / passing by copy, this requires changes in the underlying lib
     Xmss(const TSEED &seed, unsigned char height);

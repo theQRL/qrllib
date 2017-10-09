@@ -2,9 +2,9 @@
 // file LICENSE or http://www.opensource.org/licenses/mit-license.php.
 #include "gtest/gtest.h"
 
-#include <misc.h>
-#include <hashing.h>
-#include <wordlist.h>
+#include <crypto/misc.h>
+#include <crypto/hashing.h>
+#include <crypto/wordlist.h>
 
 namespace {
     #define XMSS_HEIGHT 8
@@ -33,63 +33,63 @@ namespace {
     TEST(Misc, bin2mnemonic_empty) {
         std::vector<unsigned char> input = {};
 
-        auto mnemonic = bin2mnemonic(input);
+        auto mnemonic = bin2mnemonic(input, wordlist);
         EXPECT_EQ(mnemonic, "");
     }
 
     TEST(Misc, bin2mnemonic_simple1) {
         std::vector<unsigned char> input = {0x12, 0x34, 0x56, 0x78};
 
-        auto mnemonic = bin2mnemonic(input);
-        EXPECT_EQ(mnemonic, "base elbow knew");
+        auto mnemonic = bin2mnemonic(input, wordlist);
+        EXPECT_EQ(mnemonic, "basin eighth khaki");
     }
 
     TEST(Misc, bin2mnemonic_simple2) {
         std::vector<unsigned char> input = {0x12, 0x34, 0x56, 0x78, 0x00};
 
-        auto mnemonic = bin2mnemonic(input);
-        EXPECT_EQ(mnemonic, "base elbow knew aback");
+        auto mnemonic = bin2mnemonic(input, wordlist);
+        EXPECT_EQ(mnemonic, "basin eighth khaki aback");
     }
 
     TEST(Misc, bin2mnemonic_simple3) {
         std::vector<unsigned char> input = {0x12, 0x34, 0x56, 0x78, 0x01};
 
-        auto mnemonic = bin2mnemonic(input);
-        EXPECT_EQ(mnemonic, "base elbow knew badge");
+        auto mnemonic = bin2mnemonic(input, wordlist);
+        EXPECT_EQ(mnemonic, "basin eighth khaki bag");
     }
 
     TEST(Misc, bin2mnemonic_simple3b) {
         std::vector<unsigned char> input = {0x12, 0x34, 0x56, 0x78, 0x01, 0x00};
 
-        auto mnemonic = bin2mnemonic(input);
-        EXPECT_EQ(mnemonic, "base elbow knew badge");
+        auto mnemonic = bin2mnemonic(input, wordlist);
+        EXPECT_EQ(mnemonic, "basin eighth khaki bag");
     }
 
     TEST(Misc, bin2mnemonic_simple4) {
         std::vector<unsigned char> input = {0x00};
 
-        auto mnemonic = bin2mnemonic(input);
+        auto mnemonic = bin2mnemonic(input, wordlist);
         EXPECT_EQ(mnemonic, "aback");
     }
 
     TEST(Misc, bin2mnemonic_simple5) {
         std::vector<unsigned char> input = {0x01};
 
-        auto mnemonic = bin2mnemonic(input);
-        EXPECT_EQ(mnemonic, "absorb");
+        auto mnemonic = bin2mnemonic(input, wordlist);
+        EXPECT_EQ(mnemonic, "absurd");
     }
 
     TEST(Misc, mnemonic2bin_simple1) {
-        std::string input = "base elbow knew aback";
-        auto data = mnemonic2bin(input);
+        std::string input = "basin eighth khaki aback";
+        auto data = mnemonic2bin(input, wordlist);
         EXPECT_EQ(bin2hstr(data), "123456780000");
     }
 
     TEST(Misc, mnemonic2bin_simple2) {
-        std::string input = "base elbow knew bag";
-        auto data = mnemonic2bin(input);
+        std::string input = "basin eighth khaki bag";
+        auto data = mnemonic2bin(input, wordlist);
 
-        EXPECT_EQ(bin2hstr(data), "123456780102");
+        EXPECT_EQ(bin2hstr(data), "123456780100");
     }
 
     TEST(Misc, mnemonic2bin_long) {
@@ -97,16 +97,16 @@ namespace {
                             "snack queen meadow thing far cotton add emblem strive probe zurich edge peer alight "
                             "libel won corn medal";
 
-        auto data = mnemonic2bin(input);
+        auto data = mnemonic2bin(input, wordlist);
 
         EXPECT_EQ( bin2hstr(data),
-                   "7ad1e6c1083de2081221056dd8b0c142cdfa3fd053cd4ae288ee324cd30e027462d8eaaffff445a1105b7e4fc1302894");
+                   "7bf1e7c1c84be2c820211572d990c0430e09401053ce2af489ee3e4d030c027464d9cac1fff449a2405b7f3fc63018a4");
     }
 
     TEST(Misc, mnemonic2bin_wrongword) {
         EXPECT_THROW({
                          std::string input = "basin xxWRONGxx";
-                         auto data = mnemonic2bin(input);
+                         auto data = mnemonic2bin(input, wordlist);
                      },
                      std::invalid_argument);
     }

@@ -25,27 +25,27 @@ namespace std {
   %template(_string_list_list) vector<vector<unsigned char>>;
 }
 
-%shared_ptr(XmssBase)
-%shared_ptr(Xmss)
-%shared_ptr(XmssFast)
-
 // %array_functions(uint32_t, uint32ArrayRaw)
 
 %module pyqrllib
 %{
     #include "api.h"
-    #include "xmss.h"
     #include "misc.h"
     #include "hashing.h"
     #include "xmssBase.h"
+    #include "xmss.h"
     #include "xmssFast.h"
     #include "xmssPool.h"
 %}
 
+%shared_ptr(XmssBase)
+%shared_ptr(Xmss)
+%shared_ptr(XmssFast)
+
 %include "api.h"
 %include "misc.h"
 %include "hashing.h"
-%include "xmss.h"
 %include "xmssBase.h"
+%include "xmss.h"
 %include "xmssFast.h"
 %include "xmssPool.h"
