@@ -2,9 +2,19 @@
 // file LICENSE or http://www.opensource.org/licenses/mit-license.php.
 // Based on the public domain XMSS reference implementation
 // by Andreas Hülsing and Joost Rijneveld
-#ifndef RANDOMBYTES_H
-#define RANDOMBYTES_H
 
-extern void randombytes(unsigned char * x,unsigned long long xlen);
+#ifndef XMSS_PARAMS_H
+#define XMSS_PARAMS_H
 
-#endif
+#include <cstdint>
+#include "wots.h"
+
+typedef struct
+{
+    wots_params wots_par;
+    uint32_t n;
+    uint32_t h;
+    uint32_t k;
+} xmss_params;
+
+#endif // XMSS_PARAMS_H

@@ -1,15 +1,14 @@
 // Distributed under the MIT software license, see the accompanying
 // file LICENSE or http://www.opensource.org/licenses/mit-license.php.
+#include "hashing.h"
 #include "misc.h"
 #include "xmssBase.h"
 #include <sstream>
 #include <iomanip>
-#include <fips202.h>
 #include <picosha2.h>
-#include <randombytes.h>
 #include <iostream>
 #include <unordered_map>
-#include <stdexcept>
+#include <fstream>
 
 std::string bin2hstr(const std::vector<unsigned char> &vec, uint32_t wrap)
 {
@@ -154,27 +153,6 @@ std::vector<unsigned char> mnemonic2bin(const std::string &mnemonic, const std::
     return result;
 }
 
-std::vector<unsigned char> shake128(size_t hash_size, std::vector<unsigned char> input)
-{
-    std::vector<unsigned char> hashed_output(hash_size, 0);
-    shake128(hashed_output.data(), hash_size, input.data(), input.size() );
-    return hashed_output;
-}
-
-std::vector<unsigned char> shake256(size_t hash_size, std::vector<unsigned char> input)
-{
-    std::vector<unsigned char> hashed_output(hash_size, 0);
-    shake256(hashed_output.data(), hash_size, input.data(), input.size() );
-    return hashed_output;
-}
-
-std::vector<unsigned char> sha2_256(std::vector<unsigned char> input)
-{
-    std::vector<unsigned char> hashed_output(32, 0);
-    picosha2::hash256( input.begin(), input.end(), hashed_output.begin(), hashed_output.end() );
-    return hashed_output;
-}
-
 std::string getAddress(const std::string &prefix, const std::vector<unsigned char> &key)
 {
     TKEY hashed_key(ADDRESS_HASH_SIZE, 0);
@@ -193,11 +171,23 @@ std::string getAddress(const std::string &prefix, const std::vector<unsigned cha
 
 std::vector<unsigned char> getRandomSeed(uint32_t seed_size, const std::string &entropy)
 {
-    auto tmpbytes = str2bin(entropy);
     std::vector<unsigned char> tmp(seed_size, 0);
 
+    std::ifstream urandom("/dev/urandom", std::ios::in|std::ios::binary);
+    if (!urandom)
+    {
+        throw std::runtime_error("error accessing /dev/urandom");
+    }
+
+    urandom.read(reinterpret_cast<char *>(tmp.data()), seed_size);
+    if (!urandom)
+    {
+        throw std::runtime_error("error reading from /dev/urandom");
+    }
+    urandom.close();
+
+    auto tmpbytes = str2bin(entropy);
     tmp.insert( tmp.end(), tmpbytes.begin(), tmpbytes.end());
-    randombytes(tmp.data(), seed_size);
 
     return shake256(seed_size, tmp);
 }

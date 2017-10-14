@@ -4,33 +4,12 @@
 // by Andreas Hülsing and Joost Rijneveld
 
 #include "algsxmss.h"
-#include <stdlib.h>
-#include <string.h>
-#include <stdint.h>
-#include <math.h>
-#include "fips202.h"
+#include <cstring>
 
-#include "randombytes.h"
-#include "wots.h"
 #include "hash.h"
-#include "xmss_commons.h"
+#include "xmss_common.h"
 #include "hash_address.h"
-#include <stdio.h>
-#include <fips202.h>
-
-xmss_params params;
-
-/**
- * Initialize xmss params struct
- * parameter names are the same as in the draft
- */
-void xmss_set_params(xmss_params *params, int n, int h, int w) {
-    params->h = h;
-    params->n = n;
-    wots_params wots_par;
-    wots_set_params(&wots_par, n, w);
-    params->wots_par = wots_par;
-}
+#include "fips202.h"
 
 /**
  * Used for pseudorandom keygeneration,
@@ -49,57 +28,24 @@ static void get_seed(unsigned char *seed, const unsigned char *sk_seed, int n, u
     prf(seed, bytes, sk_seed, n);
 }
 
-static void
-l_tree(unsigned char *leaf, unsigned char *wots_pk, const xmss_params *params, const unsigned char *pub_seed,
-       uint32_t addr[8]) {
-    unsigned int l = params->wots_par.len;
-    unsigned int n = params->n;
-    uint32_t i = 0;
-    uint32_t height = 0;
-    uint32_t bound;
-
-    //ADRS.setTreeHeight(0);
-    setTreeHeight(addr, height);
-
-    while (l > 1) {
-        bound = l >> 1; //floor(l / 2);
-        for (i = 0; i < bound; i++) {
-            //ADRS.setTreeIndex(i);
-            setTreeIndex(addr, i);
-            //wots_pk[i] = RAND_HASH(pk[2i], pk[2i + 1], SEED, ADRS);
-            hash_h(wots_pk + i * n, wots_pk + i * 2 * n, pub_seed, addr, n);
-        }
-        //if ( l % 2 == 1 ) {
-        if (l & 1) {
-            //pk[floor(l / 2) + 1] = pk[l];
-            memcpy(wots_pk + (l >> 1) * n, wots_pk + (l - 1) * n, n);
-            //l = ceil(l / 2);
-            l = (l >> 1) + 1;
-        } else {
-            //l = ceil(l / 2);
-            l = (l >> 1);
-        }
-        //ADRS.setTreeHeight(ADRS.getTreeHeight() + 1);
-        height++;
-        setTreeHeight(addr, height);
-    }
-    //return pk[0];
-    memcpy(leaf, wots_pk, n);
-}
-
 /**
  * Computes the leaf at a given address. First generates the WOTS key pair, then computes leaf using l_tree. As this happens position independent, we only require that addr encodes the right ltree-address.
  */
 
-static void gen_leaf_wots(unsigned char *leaf, const unsigned char *sk_seed, const xmss_params *params,
-                          const unsigned char *pub_seed, uint32_t ltree_addr[8], uint32_t ots_addr[8]) {
+static void gen_leaf_wots(unsigned char *leaf,
+                          const unsigned char *sk_seed,
+                          const xmss_params *params,
+                          const unsigned char *pub_seed,
+                          uint32_t ltree_addr[8],
+                          uint32_t ots_addr[8])
+{
     unsigned char seed[params->n];
     unsigned char pk[params->wots_par.keysize];
 
     get_seed(seed, sk_seed, params->n, ots_addr);
     wots_pkgen(pk, seed, &(params->wots_par), pub_seed, ots_addr);
 
-    l_tree(leaf, pk, params, pub_seed, ltree_addr);
+    l_tree(&params->wots_par, leaf, pk, pub_seed, ltree_addr);
 }
 
 /**
@@ -159,53 +105,6 @@ treehash(unsigned char *node,
 }
 
 /**
- * Computes a root node given a leaf and an authapth
- */
-static void
-validate_authpath(unsigned char *root, const unsigned char *leaf, unsigned long leafidx, const unsigned char *authpath,
-                  const xmss_params *params, const unsigned char *pub_seed, uint32_t addr[8]) {
-    unsigned int n = params->n;
-
-    uint32_t i, j;
-    unsigned char buffer[2 * n];
-
-    // If leafidx is odd (last bit = 1), current path element is a right child and authpath has to go to the left.
-    // Otherwise, it is the other way around
-    if (leafidx & 1) {
-        for (j = 0; j < n; j++)
-            buffer[n + j] = leaf[j];
-        for (j = 0; j < n; j++)
-            buffer[j] = authpath[j];
-    } else {
-        for (j = 0; j < n; j++)
-            buffer[j] = leaf[j];
-        for (j = 0; j < n; j++)
-            buffer[n + j] = authpath[j];
-    }
-    authpath += n;
-
-    for (i = 0; i < params->h - 1; i++) {
-        setTreeHeight(addr, i);
-        leafidx >>= 1;
-        setTreeIndex(addr, leafidx);
-        if (leafidx & 1) {
-            hash_h(buffer + n, buffer, pub_seed, addr, n);
-            for (j = 0; j < n; j++)
-                buffer[j] = authpath[j];
-        } else {
-            hash_h(buffer, buffer, pub_seed, addr, n);
-            for (j = 0; j < n; j++)
-                buffer[j + n] = authpath[j];
-        }
-        authpath += n;
-    }
-    setTreeHeight(addr, (params->h - 1));
-    leafidx >>= 1;
-    setTreeIndex(addr, leafidx);
-    hash_h(root, buffer, pub_seed, addr, n);
-}
-
-/**
  * Computes the authpath and the root. This method is using a lot of space as we build the whole tree and then select the authpath nodes.
  * For more efficient algorithms see e.g. the chapter on hash-based signatures in Bernstein, Buchmann, Dahmen. "Post-quantum Cryptography", Springer 2009.
  * It returns the authpath in "authpath" with the node on level 0 at index 0.
@@ -259,11 +158,13 @@ static void compute_authpath_wots(unsigned char *root, unsigned char *authpath, 
     memcpy(root, tree + n, n);
 }
 
-int xmss_Genkeypair(unsigned char *pk, unsigned char *sk, unsigned char *seed, unsigned char h) {
-    // TODO: Remove parameters and convert to template
-    xmss_set_params(&params, 32, h, 16);
 
-    unsigned int n = params.n;
+int xmss_Genkeypair(xmss_params *params,
+                    unsigned char *pk,
+                    unsigned char *sk,
+                    unsigned char *seed)
+{
+    unsigned int n = params->n;
     // Set idx = 0
     sk[0] = 0;
     sk[1] = 0;
@@ -280,7 +181,7 @@ int xmss_Genkeypair(unsigned char *pk, unsigned char *sk, unsigned char *seed, u
 
     uint32_t addr[8] = {0, 0, 0, 0, 0, 0, 0, 0};
     // Compute root
-    treehash(pk, params.h, 0, sk + 4, &params, sk + 4 + 2 * n, addr);
+    treehash(pk, params->h, 0, sk + 4, params, sk + 4 + 2 * n, addr);
     // copy root to sk
     memcpy(sk + 4 + 3 * n, pk, n);
 
@@ -306,10 +207,14 @@ int xmss_updateSK(unsigned char *sk, unsigned long k) {
     }
 }
 
-int xmss_Signmsg(unsigned char *sk, unsigned char *sig_msg, unsigned char *msg, const size_t msglen, unsigned int h) {
+int xmss_Signmsg(xmss_params *params,
+                 unsigned char *sk,
+                 unsigned char *sig_msg,
+                 unsigned char *msg,
+                 size_t msglen)
+{
     unsigned long long sig_msg_len;
-    xmss_set_params(&params, 32, h, 16);
-    uint16_t n = params.n;
+    uint16_t n = params->n;
     uint16_t i = 0;
 
     // Extract SK
@@ -387,14 +292,14 @@ int xmss_Signmsg(unsigned char *sk, unsigned char *sig_msg, unsigned char *msg, 
     get_seed(ots_seed, sk_seed, n, ots_addr);
 
     // Compute WOTS signature
-    wots_sign(sig_msg, msg_h, ots_seed, &(params.wots_par), pub_seed, ots_addr);
+    wots_sign(sig_msg, msg_h, ots_seed, &(params->wots_par), pub_seed, ots_addr);
 
-    sig_msg += params.wots_par.keysize;
-    sig_msg_len += params.wots_par.keysize;
+    sig_msg += params->wots_par.keysize;
+    sig_msg_len += params->wots_par.keysize;
 
-    compute_authpath_wots(root, sig_msg, idx, sk_seed, &params, pub_seed, ots_addr);
-    sig_msg += params.h * n;
-    sig_msg_len += params.h * n;
+    compute_authpath_wots(root, sig_msg, idx, sk_seed, params, pub_seed, ots_addr);
+    sig_msg += params->h * n;
+    sig_msg_len += params->h * n;
 
     //Whipe secret elements?
     //zerobytes(tsk, CRYPTO_SECRETKEYBYTES);
@@ -402,95 +307,4 @@ int xmss_Signmsg(unsigned char *sk, unsigned char *sig_msg, unsigned char *msg, 
     //  memcpy(sig_msg, msg, msglen);
     //sig_msg_len += msglen;
     return 0;
-}
-
-/**
- * Verifies a given message signature pair under a given public key.
- */
-int xmss_Verifysig(unsigned char *msg,
-                   const size_t msglen,
-                   unsigned char *sig_msg,
-                   const unsigned char *pk,
-                   unsigned char h) {
-
-    xmss_set_params(&params, 32, h, 16);
-    unsigned long long sig_msg_len = static_cast<unsigned long long int>(4 + 32 + 67 * 32 + h * 32);
-    uint16_t n = params.n;
-
-    unsigned long long i, m_len;
-    unsigned long idx = 0;
-    unsigned char wots_pk[params.wots_par.keysize];
-    unsigned char pkhash[n];
-    unsigned char root[n];
-    unsigned char msg_h[n];
-    unsigned char hash_key[3 * n];
-
-    unsigned char pub_seed[n];
-    memcpy(pub_seed, pk + n, n);
-
-    // Init addresses
-    uint32_t ots_addr[8] = {0, 0, 0, 0, 0, 0, 0, 0};
-    uint32_t ltree_addr[8] = {0, 0, 0, 0, 0, 0, 0, 0};
-    uint32_t node_addr[8] = {0, 0, 0, 0, 0, 0, 0, 0};
-
-    setType(ots_addr, 0);
-    setType(ltree_addr, 1);
-    setType(node_addr, 2);
-
-    // Extract index
-    idx = ((unsigned long) sig_msg[0] << 24) |
-          ((unsigned long) sig_msg[1] << 16) |
-          ((unsigned long) sig_msg[2] << 8) |
-          sig_msg[3];
-
-    // printf("verify:: idx = %lu\n", idx);
-
-    // Generate hash key (R || root || idx)
-    memcpy(hash_key, sig_msg + 4, n);
-    memcpy(hash_key + n, pk, n);
-    to_byte(hash_key + 2 * n, idx, n);
-
-    sig_msg += (n + 4);
-    sig_msg_len -= (n + 4);
-
-    // hash message
-    unsigned long long tmp_sig_len = params.wots_par.keysize + params.h * n;
-    m_len = sig_msg_len - tmp_sig_len;
-    //h_msg(msg_h, sig_msg + tmp_sig_len, m_len, hash_key, 3*n, n);
-    h_msg(msg_h, msg, msglen, hash_key, 3 * n, n);
-    //-----------------------
-    // Verify signature
-    //-----------------------
-
-    // Prepare Address
-    setOTSADRS(ots_addr, idx);
-    // Check WOTS signature
-    wots_pkFromSig(wots_pk, sig_msg, msg_h, &(params.wots_par), pub_seed, ots_addr);
-
-    sig_msg += params.wots_par.keysize;
-    sig_msg_len -= params.wots_par.keysize;
-
-    // Compute Ltree
-    setLtreeADRS(ltree_addr, idx);
-    l_tree(pkhash, wots_pk, &params, pub_seed, ltree_addr);
-
-    // Compute root
-    validate_authpath(root, pkhash, idx, sig_msg, &params, pub_seed, node_addr);
-
-    sig_msg += params.h * n;
-    sig_msg_len -= params.h * n;
-
-    for (i = 0; i < n; i++)
-        if (root[i] != pk[i])
-            goto fail;
-
-    for (i = 0; i < sig_msg_len; i++)
-        msg[i] = sig_msg[i];
-
-    return 0;
-
-    fail:
-    for (i = 0; i < sig_msg_len; i++)
-        msg[i] = 0;
-    return -1;
 }

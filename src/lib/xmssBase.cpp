@@ -1,6 +1,7 @@
 #include "algsxmss.h"
 #include "xmss.h"
 #include <iostream>
+#include <xmss_common.h>
 #include "xmssBase.h"
 #include "misc.h"
 
@@ -105,4 +106,22 @@ std::string XmssBase::getAddress(const std::string &prefix)
 {
     std::vector<unsigned char> key = getPK();
     return ::getAddress(prefix, key);
+}
+
+bool XmssBase::verify(const TMESSAGE &message,
+                      const TSIGNATURE &signature,
+                      const TKEY &pk,
+                      unsigned char height)
+{
+    xmss_params params;
+    xmss_set_params(&params, 32, height, 16, 2 );
+
+    // TODO: Fix constness in library
+    auto tmp = static_cast<TSIGNATURE>(signature);
+    return xmss_Verifysig(&params.wots_par,
+                          static_cast<TMESSAGE>(message).data(),
+                          message.size(),
+                          tmp.data(),
+                          pk.data(),
+                          height) == 0;
 }

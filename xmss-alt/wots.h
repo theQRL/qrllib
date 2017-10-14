@@ -19,14 +19,15 @@ Public domain.
  * 
  * Meaning as defined in draft-irtf-cfrg-xmss-hash-based-signatures-02
  */
+// FIXME: Get rid of this
 typedef struct {
-  uint32_t len_1;
-  uint32_t len_2;
-  uint32_t len;
-  uint32_t n;
-  uint32_t w;
-  uint32_t log_w;
-  uint32_t keysize;
+    uint32_t len_1;
+    uint32_t len_2;
+    uint32_t len;
+    uint32_t n;
+    uint32_t w;
+    uint32_t log_w;
+    uint32_t keysize;
 } wots_params;
 
 /**
@@ -46,18 +47,32 @@ void wots_set_params(wots_params *params, int n, int w);
  * 
  * Places the computed public key at address pk.
  */
-void wots_pkgen(unsigned char *pk, const unsigned char *sk, const wots_params *params, const unsigned char *pub_seed, uint32_t addr[8]);
+void wots_pkgen(unsigned char *pk,
+                const unsigned char *sk,
+                const wots_params *params,
+                const unsigned char *pub_seed,
+                uint32_t addr[8]);
 
 /**
  * Takes a m-byte message and the 32-byte seed for the secret key to compute a signature that is placed at "sig".
  *  
  */
-void wots_sign(unsigned char *sig, const unsigned char *msg, const unsigned char *sk, const wots_params *params, const unsigned char *pub_seed, uint32_t addr[8]);
+void wots_sign(unsigned char *sig,
+               const unsigned char *msg,
+               const unsigned char *sk,
+               const wots_params *params,
+               const unsigned char *pub_seed,
+               uint32_t addr[8]);
 
 /**
  * Takes a WOTS signature, a m-byte message and computes a WOTS public key that it places at pk.
  * 
  */
-void wots_pkFromSig(unsigned char *pk, const unsigned char *sig, const unsigned char *msg, const wots_params *params, const unsigned char *pub_seed, uint32_t addr[8]);
+void wots_pkFromSig(unsigned char *pk,
+                    const unsigned char *sig,
+                    const unsigned char *msg,
+                    const wots_params *wotsParams,
+                    const unsigned char *pub_seed,
+                    uint32_t addr[8]);
 
 #endif

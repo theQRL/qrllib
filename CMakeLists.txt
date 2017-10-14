@@ -6,14 +6,18 @@ project(qrllib)
 
 set(CMAKE_CXX_STANDARD 14)
 #set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++14 -Wall -Wextra -pedantic")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIC")
 set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS} -std=c++14 -O3")
-set(CMAKE_VERBOSE_MAKEFILE ON)
 
-set(BUILD_TESTS OFF CACHE BOOL "Enables tests")
+set(CMAKE_VERBOSE_MAKEFILE FALSE)
+set(CMAKE_ERROR_DEPRECATED FALSE)
+set(CMAKE_WARN_DEPRECATED FALSE)
+
+set(BUILD_TESTS ON CACHE BOOL "Enables tests")
 set(BUILD_GO OFF CACHE BOOL "Enables go wrapper")
-set(BUILD_PYTHON ON CACHE BOOL "Enables python wrapper")
+set(BUILD_PYTHON OFF CACHE BOOL "Enables python wrapper")
+set(BUILD_PYTHON_LOCALDEPLOY OFF CACHE BOOL "Deploys python locally")
 set(BUILD_WEBASSEMBLY OFF CACHE BOOL "Enables emscripten build")
-set(BUILD_PYTHON_LOCALDEPLOY ON CACHE BOOL "Deploys python locally")
 
 message(STATUS "GOLANG WRAPPER " ${BUILD_GO})
 message(STATUS "PYTHON WRAPPER " ${BUILD_PYTHON})
@@ -32,13 +36,6 @@ include_directories(
         ${CMAKE_CURRENT_SOURCE_DIR}/PicoSHA2
 )
 
-set(SWIG_INTERFACE
-        ${CMAKE_CURRENT_SOURCE_DIR}/src/api/api.i)
-
-set(JS_INTERFACE
-        ${CMAKE_CURRENT_SOURCE_DIR}/src/jswrapper/jswrapper.cpp
-        )
-
 file(GLOB_RECURSE LIB_SRC
         "${CMAKE_CURRENT_SOURCE_DIR}/src/lib/*.cpp")
 
@@ -50,21 +47,10 @@ set(LIBXMSSALT_SRC
         ${CMAKE_CURRENT_SOURCE_DIR}/xmss-alt/algsxmss.c
         ${CMAKE_CURRENT_SOURCE_DIR}/xmss-alt/hash.c
         ${CMAKE_CURRENT_SOURCE_DIR}/xmss-alt/hash_address.c
-        ${CMAKE_CURRENT_SOURCE_DIR}/xmss-alt/xmss_commons.c
-        ${CMAKE_CURRENT_SOURCE_DIR}/xmss-alt/randombytes.c
+        ${CMAKE_CURRENT_SOURCE_DIR}/xmss-alt/xmss_common.c
         ${CMAKE_CURRENT_SOURCE_DIR}/xmss-alt/wots.c
         #${CMAKE_CURRENT_SOURCE_DIR}/xmss-alt/xmss_core.c
         ${CMAKE_CURRENT_SOURCE_DIR}/xmss-alt/fips202.c
-        )
-
-set(LIBXMSSREF_SRC
-        ${CMAKE_CURRENT_SOURCE_DIR}/xmss-reference/hash.c
-        ${CMAKE_CURRENT_SOURCE_DIR}/xmss-reference/hash_address.c
-        ${CMAKE_CURRENT_SOURCE_DIR}/xmss-reference/xmss_commons.c
-        ${CMAKE_CURRENT_SOURCE_DIR}/xmss-reference/randombytes.c
-        ${CMAKE_CURRENT_SOURCE_DIR}/xmss-reference/wots.c
-        ${CMAKE_CURRENT_SOURCE_DIR}/xmss-reference/xmss_core.c
-        ${CMAKE_CURRENT_SOURCE_DIR}/xmss-reference/fips202.c
         )
 
 # Forcing XMSS to be compiled as C++
@@ -72,13 +58,10 @@ SET_SOURCE_FILES_PROPERTIES(${LIB_SRC} PROPERTIES LANGUAGE CXX)
 SET_SOURCE_FILES_PROPERTIES(${LIBTEST_SRC} PROPERTIES LANGUAGE CXX)
 SET_SOURCE_FILES_PROPERTIES(${LIBXMSSALT_SRC} PROPERTIES LANGUAGE CXX)
 
-#SET_SOURCE_FILES_PROPERTIES( ${LIBXMSSREF_SRC} PROPERTIES LANGUAGE CXX )
-#add_custom_target(
-#        prepareXMSSParams
-#        COMMAND python3 ${CMAKE_CURRENT_SOURCE_DIR}/xmss-reference/params.h.py XMSS_SHAKE256_W16_H10 > ${CMAKE_CURRENT_SOURCE_DIR}/xmss-reference/params.h
-#)
 
 if (BUILD_TESTS)
+    message(STATUS "Python wrapper enabled")
+
     ##############################
     # Google Test
     # Based on instructions in https://github.com/google/googletest/tree/master/googletest#incorporating-into-an-existing-cmake-project
@@ -97,8 +80,7 @@ if (BUILD_TESTS)
         message(FATAL_ERROR "Build step for googletest failed: ${result}")
     endif ()
 
-    # Prevent overriding the parent project's compiler/linker
-    # settings on Windows
+    # Prevent overriding the parent project's compiler/linker settings on Windows
     set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
 
     # Add googletest directly to our build. This defines
@@ -113,35 +95,47 @@ if (BUILD_TESTS)
         include_directories("${gtest_SOURCE_DIR}/include")
     endif ()
 
-
-    # LIBRARY RELATED
-
     # Google tests
     add_executable(qrllib_test
             ${LIBTEST_SRC}
             ${LIB_SRC}
             ${LIBXMSSALT_SRC}
-            #        ${LIBXMSSREF_SRC}
             )
+
     target_link_libraries(qrllib_test gtest_main)
-#    add_dependencies(qrllib_test prepareXMSSParams)
+
+    include(CTest)
+    enable_testing()
+
+    add_test(gtest ${PROJECT_BINARY_DIR}/qrllib_test)
 endif()
 
 ## SWIG + API - Python related stuff
 if (BUILD_PYTHON)
     message(STATUS "Python wrapper enabled")
+
+    if (NOT CMAKE_LIBRARY_OUTPUT_DIRECTORY)
+        set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR} )
+    endif()
+
+    set(SWIG_INTERFACE
+            ${CMAKE_CURRENT_SOURCE_DIR}/src/api/api.i)
+
     set(language python)
     find_package(PythonLibs 3.4 REQUIRED)
     include_directories(${PYTHON_INCLUDE_PATH})
 
     set(SWIG_LANG_LIBRARIES ${PYTHON_LIBRARIES})
+
     set(CMAKE_SWIG_OUTDIR ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/pyqrllib)
-#    set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/pyqrllib)
+
     set_source_files_properties(${SWIG_INTERFACE} PROPERTIES CPLUSPLUS ON)
     set_property(SOURCE ${SWIG_INTERFACE} PROPERTY SWIG_FLAGS "-includeall" "-ignoremissing")
 
     set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/pyqrllib)
 
+    message(STATUS "CMAKE_SWIG_OUTDIR: " ${CMAKE_SWIG_OUTDIR})
+    message(STATUS "CMAKE_LIBRARY_OUTPUT_DIRECTORY: " ${CMAKE_LIBRARY_OUTPUT_DIRECTORY})
     # Intentionally use a deprecated version to provide support for the raspberry pi
     SWIG_ADD_MODULE( pyqrllib
             ${language}
@@ -151,24 +145,7 @@ if (BUILD_PYTHON)
             ${LIBXMSSALT_SRC}
             )
 
-    # TODO: Upgrade once the cmake pip package is fixed
-#    SWIG_ADD_LIBRARY(pyqrllib
-#            LANGUAGE "${language}"
-#            ${SWIG_LANG_TYPE}
-#            SOURCES ${SWIG_INTERFACE}
-#            src/api/api.cxx
-#            ${LIB_SRC}
-#            ${LIBXMSSALT_SRC}
-#            #        ${LIBXMSSREF_SRC}
-#            )
-
-    SWIG_LINK_LIBRARIES(pyqrllib ${SWIG_LANG_LIBRARIES})
-    #add_dependencies(${SWIG_MODULE_pyqrllib_REAL_NAME} prepareXMSSParams)
-
-    get_cmake_property(_variableNames VARIABLES)
-    foreach (_variableName ${_variableNames})
-        message(STATUS "${_variableName}=${${_variableName}}")
-    endforeach()
+    SWIG_LINK_LIBRARIES(pyqrllib ${SWIG_LANG_LIBRARIES} )
 
     add_custom_command(TARGET ${SWIG_MODULE_pyqrllib_REAL_NAME}
             POST_BUILD
@@ -182,7 +159,6 @@ if (BUILD_PYTHON)
             COMMAND ${CMAKE_COMMAND} -E copy_if_different ${swig_extra_generated_files} ${CMAKE_CURRENT_SOURCE_DIR}/pyqrllib/pyqrllib.py
             )
 
-
     # Get python packages destination
     #execute_process(COMMAND python -c "from distutils.sysconfig import get_python_lib; print get_python_lib()"
     #                OUTPUT_VARIABLE PYTHON_SITE_PACKAGES OUTPUT_STRIP_TRAILING_WHITESPACE)
@@ -193,10 +169,12 @@ endif ()
 
 # SWIG + API - Golang related stuff
 if (BUILD_GO)
+    set(SWIG_INTERFACE
+            ${CMAKE_CURRENT_SOURCE_DIR}/src/api/api.i)
+
     message(STATUS "golang wrapper enabled")
     set(language go)
     #find_package(go 1.5 REQUIRED)
-    #include_directories(${PYTHON_INCLUDE_PATH})
     set(SWIG_LANG_LIBRARIES ${PYTHON_LIBRARIES})
     set(CMAKE_SWIG_OUTDIR ${CMAKE_CURRENT_SOURCE_DIR}/goqrllib)
     set_source_files_properties(${SWIG_INTERFACE} PROPERTIES CPLUSPLUS ON)
@@ -210,17 +188,8 @@ if (BUILD_GO)
             ${LIBXMSSALT_SRC}
             )
 
-#    SWIG_ADD_LIBRARY(goqrllib
-#            ${language}
-#            ${SWIG_LANG_TYPE}
-#            SOURCES ${SWIG_INTERFACE}
-#            src/api/api.cxx
-#            ${LIB_SRC}
-#            ${LIBXMSSALT_SRC}
-#            #${LIBXMSSREF_SRC}
-#            )
-    SWIG_LINK_LIBRARIES(goqrllib ${SWIG_LANG_LIBRARIES})
-    add_dependencies(${SWIG_MODULE_goqrllib_REAL_NAME} prepareXMSSParams)
+    SWIG_LINK_LIBRARIES(goqrllib ${SWIG_LANG_LIBRARIES} )
+
     add_custom_command(TARGET ${SWIG_MODULE_goqrllib_REAL_NAME}
             POST_BUILD
             COMMAND ${CMAKE_COMMAND} -E cmake_echo_color --cyan $<TARGET_FILE:${SWIG_MODULE_goqrllib_REAL_NAME}>
@@ -230,11 +199,17 @@ if (BUILD_GO)
 endif ()
 
 if (BUILD_WEBASSEMBLY)
+    set(JS_INTERFACE
+            ${CMAKE_CURRENT_SOURCE_DIR}/src/jswrapper/jswrapper.cpp
+            )
+
     message(STATUS "webassembly enabled")
     add_library(jsqrl SHARED
             ${JS_INTERFACE}
             ${LIB_SRC}
             ${LIBXMSSALT_SRC}
     )
+
+    target_link_libraries(jsqrl)
 
 endif ()

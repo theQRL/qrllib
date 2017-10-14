@@ -3,6 +3,7 @@
 
 #include <string>
 #include <vector>
+#include "xmss_params.h"
 
 #define TSIGNATURE std::vector<unsigned char>
 #define TMESSAGE std::vector<unsigned char>
@@ -32,13 +33,20 @@ public:
     std::string getAddress(const std::string &prefix);
 
     unsigned int getIndex();
-    unsigned int setIndex(unsigned int new_index);
+    virtual unsigned int setIndex(unsigned int new_index);
 
     unsigned int getSignatureSize();
     unsigned int getSecretKeySize();
     unsigned int getPublicKeySize();
 
+    static bool verify(const TMESSAGE &message,
+                       const TSIGNATURE &signature,
+                       const TKEY &pk,
+                       unsigned char height);
+
 protected:
+    xmss_params params;
+
     unsigned char _height;
     TKEY _sk;
     TSEED _seed;

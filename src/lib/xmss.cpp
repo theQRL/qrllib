@@ -2,6 +2,7 @@
 // file LICENSE or http://www.opensource.org/licenses/mit-license.php.
 #include <iostream>
 #include <stdexcept>
+#include <xmss_common.h>
 #include "xmss.h"
 #include "algsxmss.h"
 
@@ -27,7 +28,12 @@ Xmss::Xmss(const TSEED &seed, unsigned char height): XmssBase(seed, height)
         throw std::invalid_argument("Seed should be 48 bytes. Other values are not currently supported");
     }
 
-    xmss_Genkeypair(tmp.data(), _sk.data(), _seed.data(), height);
+    xmss_set_params(&params, 32, height, 16, 2 );
+
+    xmss_Genkeypair(&params,
+                    tmp.data(),
+                    _sk.data(),
+                    _seed.data());
 }
 
 
@@ -36,26 +42,13 @@ TSIGNATURE Xmss::sign(const TMESSAGE &message)
     // TODO: Fix constness in library
     auto signature = TSIGNATURE(getSignatureSize(), 0);
 
-    xmss_Signmsg(_sk.data(),
+    xmss_Signmsg(&params,
+                 _sk.data(),
                  signature.data(),
                  static_cast<TMESSAGE>(message).data(),
-                 message.size(),
-                 _height);
+                 message.size());
 
     return signature;
 }
 
-bool Xmss::verify(const TMESSAGE &message,
-            const TSIGNATURE &signature,
-            const TKEY &pk,
-            unsigned char height)
-{
-    // TODO: Fix constness in library
-    auto tmp = static_cast<TSIGNATURE>(signature);
-    return xmss_Verifysig(static_cast<TMESSAGE>(message).data(),
-                          message.size(),
-                          tmp.data(),
-                          pk.data(),
-                          height) == 0;
-}
 
