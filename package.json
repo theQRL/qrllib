@@ -1,9 +1,8 @@
 {
   "name": "qrllib",
-  "version": "0.0.1",
   "description": "QRL Core Library",
   "scripts": {
-    "test": "cd build/js && node test.js"
+    "test": "cd build && node test.js"
   },
   "repository": {
     "type": "git",
@@ -14,10 +13,10 @@
     "qrl"
   ],
   "files": [
-    "build/js/web-libjsqrl.js",
-    "build/js/web-libjsqrl.wasm",
-    "build/js/libjsqrl.js.mem",
-    "build/js/libjsqrl.js"
+    "build/web-libjsqrl.js",
+    "build/web-libjsqrl.wasm",
+    "build/libjsqrl.js.mem",
+    "build/libjsqrl.js"
   ],
   "engines": {
     "node": ">=4.2.4"

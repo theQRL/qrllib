@@ -123,8 +123,22 @@ jobs:
         all_branches: true
 
   ########################
-#  - stage: publish
-#    if: branch = master
+ - stage: publish
+   if: branch = master
+   os: linux
+   env:
+   - PLATFORM='xenial-emscripten'
+   script: "./travis/build.sh"
+
+   deploy:
+     provider: npm
+     skip_cleanup: true
+     email: "info@theqrl.org"
+     api_key: $NPM_API_KEY
+     on:
+       tags: true
+       all_branches: true
+
 #    https://docs.travis-ci.com/user/build-stages/deploy-npm/
 
   ########################
