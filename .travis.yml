@@ -130,6 +130,8 @@ jobs:
     - PLATFORM='xenial-emscripten'
     script: "./travis/build.sh"
 
+    before_deploy: npm version from-git
+
     deploy:
       provider: npm
       skip_cleanup: true
