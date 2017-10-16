@@ -124,7 +124,7 @@ jobs:
 
   ########################
   - stage: npm release
-    if: [ “$TRAVIS_BRANCH” = “master” ]
+    if: tag =~ ^v
     os: linux
     env:
     - PLATFORM='xenial-emscripten'
