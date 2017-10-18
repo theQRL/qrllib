@@ -31,10 +31,9 @@ namespace {
 
         static bool verify(const TMESSAGE &message,
                            const TSIGNATURE &signature,
-                           const TKEY &pk,
-                           unsigned char height)
+                           const TKEY &pk)
         {
-            return XmssFast::verify(message, signature, pk, height);
+            return XmssFast::verify(message, signature, pk);
         }
 
     private:

@@ -95,8 +95,8 @@ assert(libqrl.bin2hstr(signature2) === signature2_known_hstr, "SIGNATURE DOES NO
 
 console.log("\n========== VERIFY SIGNATURE ========");
 
-verification1 = libqrl.Xmss.verify(msg_in, signature1, sigpk, sigheight);
-verification2 = libqrl.Xmss.verify(msg_in, signature2, sigpk, sigheight);
+verification1 = libqrl.Xmss.verify(msg_in, signature1, sigpk);
+verification2 = libqrl.Xmss.verify(msg_in, signature2, sigpk);
 
 console.log("Verif1      : ", verification1);
 console.log("Verif2      : ", verification2);

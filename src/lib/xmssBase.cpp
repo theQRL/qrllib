@@ -16,8 +16,14 @@ XmssBase::XmssBase(const TSEED &seed, unsigned char height): _seed(seed), _heigh
 uint32_t XmssBase::getSignatureSize()
 {
     // 4 + n + (len + h) * n)
-    // FIXME: There could be consistency problems due to changes in N
+    // FIXME: There could be consistency problems due to changes in len
     return static_cast<uint32_t>(4 + 32 + 67 * 32 + _height * 32);
+}
+
+uint8_t XmssBase::getHeightFromSigSize(size_t sigSize)
+{
+    // FIXME: Clean this up and consider len
+    return static_cast<uint8_t>((sigSize - 4 - 32 - 67 * 32) / 32);
 }
 
 uint32_t XmssBase::getPublicKeySize()
@@ -110,11 +116,14 @@ std::string XmssBase::getAddress(const std::string &prefix)
 
 bool XmssBase::verify(const TMESSAGE &message,
                       const TSIGNATURE &signature,
-                      const TKEY &pk,
-                      unsigned char height)
+                      const TKEY &pk)
 {
+    const auto height = static_cast<const unsigned char>(XmssBase::getHeightFromSigSize(signature.size()));
+
     xmss_params params;
     xmss_set_params(&params, 32, height, 16, 2 );
+
+    // Estimate height
 
     // TODO: Fix constness in library
     auto tmp = static_cast<TSIGNATURE>(signature);
