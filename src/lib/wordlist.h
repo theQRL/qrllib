@@ -1,5 +1,5 @@
-#include <vector>
+#include <array>
 #include <string>
 
-extern std::vector<std::string> wordlist;
+extern const std::array<std::string, 4096> wordlist;
 
