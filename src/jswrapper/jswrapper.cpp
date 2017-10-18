@@ -55,12 +55,12 @@ namespace {
 
     std::vector<unsigned char> EMSCRIPTEN_KEEPALIVE _mnemonic2bin(const std::string &mnemonic)
     {
-        return mnemonic2bin(mnemonic, wordlist);
+        return mnemonic2bin(mnemonic);
     }
 
     std::string EMSCRIPTEN_KEEPALIVE _bin2mnemonic(const std::vector<unsigned char> &vec)
     {
-        return bin2mnemonic(vec, wordlist);
+        return bin2mnemonic(vec);
     }
 
     using namespace emscripten;
