@@ -1,6 +1,6 @@
 #include <wordlist.h>
 
-std::vector<std::string> wordlist{
+const std::array<std::string, 4096> wordlist {
         "aback", "abbey", "abbot", "abide", "ablaze", "able", "aboard", "abode", "abort", "abound", "about", "above",
         "abra", "abroad", "abrupt", "absent", "absorb", "absurd", "accent", "accept", "access", "accord", "accuse", "ace",
         "ache", "aching", "acid", "acidic", "acorn", "acre", "across", "act", "action", "active", "actor", "actual",

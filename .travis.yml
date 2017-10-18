@@ -15,9 +15,6 @@ cache:
   - pip
   - apt
 
-virtualenv:
-  system_site_packages: true
-
 addons:
   apt:
     packages:
@@ -85,8 +82,8 @@ jobs:
 #    - CMAKE_ARGS='-DBUILD_TESTS=ON'
 #    - TEST='TRUE'
 #    script:
-#   - "./travis/build.sh"
-
+#    - "./travis/build.sh"
+#
 #  ######################## OSX - PYQRLLIB
 #  - stage: build+test
 #    os: osx
@@ -96,9 +93,9 @@ jobs:
 #    script:
 #    - "./travis/build.sh"
 
-  ########################
-  - stage: test_deployment
-    script: echo "TODO..."
+#  ########################
+#  - stage: test_deployment
+#    script: echo "TODO..."
 
   ########################
   - stage: publish
@@ -123,7 +120,7 @@ jobs:
         all_branches: true
 
   ########################
-  - stage: npm release
+  - stage: publish
     if: tag =~ ^v
     os: linux
     env:
@@ -140,10 +137,3 @@ jobs:
       on:
         tags: true
         all_branches: true
-
-#    https://docs.travis-ci.com/user/build-stages/deploy-npm/
-
-  ########################
-  - stage: end
-    script: echo "Yay!"
-
