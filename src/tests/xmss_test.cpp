@@ -93,9 +93,9 @@ namespace {
         std::cout << "data       :" << data.size() << " bytes\n" << bin2hstr(data, 64) << std::endl;
         std::cout << "signature  :" << signature.size() << " bytes\n" << bin2hstr(signature, 64) << std::endl;
 
-        EXPECT_TRUE(Xmss::verify(data, signature, pk, XMSS_HEIGHT));
+        EXPECT_TRUE(Xmss::verify(data, signature, pk));
 
         signature[1] += 1;
-        EXPECT_FALSE(Xmss::verify(data, signature, xmss.getPK(), XMSS_HEIGHT));
+        EXPECT_FALSE(Xmss::verify(data, signature, xmss.getPK()));
     }
 }

@@ -134,7 +134,7 @@ namespace {
         std::cout << "data       :" << data.size() << " bytes\n" << bin2hstr(data, 64) << std::endl;
         std::cout << "signature  :" << signature1.size() << " bytes\n" << bin2hstr(signature1) << std::endl;
 
-        EXPECT_TRUE(TestFixture::TXMSS::verify(data, signature1, pk, XMSS_HEIGHT));
+        EXPECT_TRUE(TestFixture::TXMSS::verify(data, signature1, pk));
 
         auto signature2 = xmss.sign(data);
 
@@ -144,17 +144,17 @@ namespace {
         std::cout << "data       :" << data.size() << " bytes\n" << bin2hstr(data, 64) << std::endl;
         std::cout << "signature  :" << signature2.size() << " bytes\n" << bin2hstr(signature2) << std::endl;
 
-        EXPECT_TRUE(TestFixture::TXMSS::verify(data, signature2, pk, XMSS_HEIGHT));
+        EXPECT_TRUE(TestFixture::TXMSS::verify(data, signature2, pk));
 
         std::cout << "---------------------------------------------" << std::endl;
         std::cout << "---------------------------------------------" << std::endl;
         signature1[1] += 1;
         // FIXME: This is intentionally breaking the index
-        EXPECT_FALSE(TestFixture::TXMSS::verify(data, signature1, xmss.getPK(), XMSS_HEIGHT));
+        EXPECT_FALSE(TestFixture::TXMSS::verify(data, signature1, xmss.getPK()));
 
         signature2[1] += 1;
         // FIXME: This is intentionally breaking the index
-        EXPECT_FALSE(TestFixture::TXMSS::verify(data, signature2, xmss.getPK(), XMSS_HEIGHT));
+        EXPECT_FALSE(TestFixture::TXMSS::verify(data, signature2, xmss.getPK()));
     }
 
     TYPED_TEST(XmssGenericTest, SignVerifyIndexShift) {
@@ -175,7 +175,7 @@ namespace {
         {
             auto signature = xmss.sign(data);
             std::cout << "signature  :" << signature.size() << " bytes\n" << bin2hstr(signature) << std::endl;
-            EXPECT_TRUE(TestFixture::TXMSS::verify(data, signature, pk, XMSS_HEIGHT));
+            EXPECT_TRUE(TestFixture::TXMSS::verify(data, signature, pk));
         }
     }
 

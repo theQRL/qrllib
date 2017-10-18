@@ -36,13 +36,14 @@ public:
     virtual unsigned int setIndex(unsigned int new_index);
 
     unsigned int getSignatureSize();
+    static uint8_t getHeightFromSigSize(size_t sigSize);
+
     unsigned int getSecretKeySize();
     unsigned int getPublicKeySize();
 
     static bool verify(const TMESSAGE &message,
                        const TSIGNATURE &signature,
-                       const TKEY &pk,
-                       unsigned char height);
+                       const TKEY &pk);
 
 protected:
     xmss_params params;

@@ -46,8 +46,7 @@ class TestHash(TestCase):
         for i in range(1000):
             self.assertTrue(pyqrllib.Xmss.verify(message,
                                                  signature,
-                                                 xmss.getPK(),
-                                                 xmss.getHeight()))
+                                                 xmss.getPK()))
         end = time()
         print(end - start)
 
@@ -55,22 +54,18 @@ class TestHash(TestCase):
         signature[100] += 1
         self.assertFalse(pyqrllib.Xmss.verify(message,
                                               signature,
-                                              xmss.getPK(),
-                                              xmss.getHeight()))
+                                              xmss.getPK()))
         signature[100] -= 1
         self.assertTrue(pyqrllib.Xmss.verify(message,
                                              signature,
-                                             xmss.getPK(),
-                                             xmss.getHeight()))
+                                             xmss.getPK()))
 
         # Touch the message
         message[2] += 1
         self.assertFalse(pyqrllib.Xmss.verify(message,
                                               signature,
-                                              xmss.getPK(),
-                                              xmss.getHeight()))
+                                              xmss.getPK()))
         message[2] -= 1
         self.assertTrue(pyqrllib.Xmss.verify(message,
                                              signature,
-                                             xmss.getPK(),
-                                             xmss.getHeight()))
+                                             xmss.getPK()))
