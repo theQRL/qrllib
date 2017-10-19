@@ -125,7 +125,9 @@ jobs:
     os: linux
     env:
     - PLATFORM='xenial-emscripten'
-    script: "./travis/build.sh"
+    script:
+    - "./travis/build.sh"
+    - "./travis/patch_npmversion.sh"
 
     before_deploy: npm version
 

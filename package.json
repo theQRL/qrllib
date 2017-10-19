@@ -1,6 +1,6 @@
 {
   "name": "qrllib",
-  "version": "0.1.29",
+  "version": "__QRLLIB_VERSION__",
   "description": "QRL Core Library",
   "scripts": {
     "test": "cd build && node test.js"
