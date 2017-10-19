@@ -27,7 +27,8 @@ echo "Building..."
 emmake make
 
 echo "Emscripten Binding/Optimizing..."
-emcc --bind libjsqrl.so -O3 -o libjsqrl.js
+#FIXME: Disable .mem for node.js until this gets fixed: https://github.com/kripken/emscripten/issues/2542
+emcc --bind libjsqrl.so -O2 -o libjsqrl.js
 emcc --bind libjsqrl.so -O3 -s WASM=1 -o web-libjsqrl.js
 
 
