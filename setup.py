@@ -16,7 +16,7 @@ class CMakeBuild(build_ext):
 
         env = os.environ.copy()
         env['CXXFLAGS'] = env.get('CXXFLAGS', '')
-        env['CXXFLAGS'] += '-DVERSION_INFO=\\"'+self.distribution.get_version()+'\\"'
+        env['CXXFLAGS'] += ' -DVERSION_INFO=\\"'+self.distribution.get_version()+'\\"'
 
         for ext in self.extensions:
             extension_path = os.path.abspath(os.path.dirname(self.get_ext_fullpath(ext.name)))
