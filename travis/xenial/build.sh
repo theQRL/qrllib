@@ -26,3 +26,10 @@ if [ -n "${DEPLOY:+1}" ]; then
     cd /travis
     python3 setup.py sdist
 fi
+
+if [ -n "${BUILD:+1}" ]; then
+    cd /travis
+    mkdir unrelated && cd unrelated
+    pip3 download --no-deps pyqrllib
+    py2dsc-deb --with-python2=False --with-python3=True $(find . -name "pyqrllib-*.tar.gz")
+fi
