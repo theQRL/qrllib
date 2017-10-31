@@ -4,30 +4,40 @@
 #include <xmssFast.h>
 #include <misc.h>
 #include <wordlist.h>
+#include <memory>
+#include <future>
 
 namespace {
 
     class XmssWrapper
     {
     public:
-        XmssWrapper(const std::vector<unsigned char> &seed, unsigned char height) : _xmss(seed, height) {}
+        XmssWrapper(const std::vector<unsigned char> &seed, unsigned char height)
+        {
+            _xmss= std::async(std::launch::async,  [seed, height]()
+            {
+                return std::make_shared<XmssFast>(seed, height);
+            });
+        }
 
-        TSIGNATURE sign(const TMESSAGE &message)    {   return _xmss.sign(message);     }
+        bool willBlock() {    return _xmss.wait_for(std::chrono::seconds(0)) != std::future_status::ready;  }
 
-        TKEY getSK() {  return _xmss.getSK(); }
-        TKEY getPK() {  return _xmss.getPK(); }
-        TSEED getSeed() {  return _xmss.getSeed(); }
-        int getHeight() {  return _xmss.getHeight(); }
+        TSIGNATURE sign(const TMESSAGE &message)    {   return _xmss.get()->sign(message);     }
 
-        TKEY getRoot() {  return _xmss.getRoot(); }
-        TKEY getPKSeed() {  return _xmss.getPKSeed(); }
-        TKEY getSKSeed() {  return _xmss.getSKSeed(); }
-        TKEY getSKPRF() {  return _xmss.getSKPRF(); }
+        TKEY getSK() {  return _xmss.get()->getSK(); }
+        TKEY getPK() {  return _xmss.get()->getPK(); }
+        TSEED getSeed() {  return _xmss.get()->getSeed(); }
+        int getHeight() {  return _xmss.get()->getHeight(); }
 
-        std::string getAddress() {  return _xmss.getAddress("Q"); }
+        TKEY getRoot() {  return _xmss.get()->getRoot(); }
+        TKEY getPKSeed() {  return _xmss.get()->getPKSeed(); }
+        TKEY getSKSeed() {  return _xmss.get()->getSKSeed(); }
+        TKEY getSKPRF() {  return _xmss.get()->getSKPRF(); }
 
-        unsigned int getIndex() {  return _xmss.getIndex(); }
-        unsigned int setIndex(unsigned int new_index) {  return _xmss.setIndex(new_index); }
+        std::string getAddress() {  return _xmss.get()->getAddress("Q"); }
+
+        unsigned int getIndex() {  return _xmss.get()->getIndex(); }
+        unsigned int setIndex(unsigned int new_index) {  return _xmss.get()->setIndex(new_index); }
 
         static bool verify(const TMESSAGE &message,
                            const TSIGNATURE &signature,
@@ -37,7 +47,7 @@ namespace {
         }
 
     private:
-        XmssFast _xmss;
+        std::future<std::shared_ptr<XmssFast>> _xmss;
     };
 
     std::string EMSCRIPTEN_KEEPALIVE _bin2hstr(const std::vector<unsigned char> &input) {
@@ -75,6 +85,9 @@ namespace {
 
         class_<XmssWrapper>("Xmss")
                 .constructor<TSEED, unsigned char>()
+
+                .function("willBlock", &XmssWrapper::willBlock)
+
                 .function("getPK", &XmssWrapper::getPK)
                 .function("getSK", &XmssWrapper::getSK)
                 .function("getSeed", &XmssWrapper::getSeed)
@@ -88,9 +101,10 @@ namespace {
                 .function("getAddress", &XmssWrapper::getAddress)
 
                 .function("getIndex", &XmssWrapper::getIndex)
+                .function("setIndex", &XmssWrapper::setIndex)
+
                 .function("sign", &XmssWrapper::sign)
                 .class_function("verify", &XmssWrapper::verify)
         ;
     }
-
 }
