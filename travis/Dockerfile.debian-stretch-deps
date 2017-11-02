@@ -2,15 +2,18 @@
 FROM debian:stretch
 RUN apt-get update
 RUN apt-get -y install swig3.0 python-all-dev python3-all-dev python3-pip python-stdeb python3-stdeb build-essential cmake pkg-config libssl-dev libffi-dev
-RUN apt-get -y install build-essential git sudo wget htop
+RUN apt-get -y install build-essential git sudo wget htop nano
 
 # Prepare python
 RUN pip3 install --upgrade pip virtualenv setuptools twine PyScaffold==2.5.8
 
 # ENV - Define environment variables
+ENV BUILD_DIR /build
+ENV PROTOBUF_VER 3.4.1
+ENV GRPCIO_VER 1.7.0
 
-# COPY - Copy configuration/scripts
-COPY travis/debian-stretch/build.sh /build.sh
+# COPY - Copy the script that actually builds things in there
+COPY debian-stretch-deps/build.sh /build.sh
 RUN chmod +x /build.sh
 
 # VOLUME - link directories to host
@@ -20,3 +23,4 @@ VOLUME ["/build", "/travis"]
 #CMD ["/root/start.sh"]
 
 # EXPOSE PORTS
+
