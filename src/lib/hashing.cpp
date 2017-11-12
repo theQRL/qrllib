@@ -30,3 +30,21 @@ std::vector<unsigned char> sha2_256(std::vector<unsigned char> input)
     picosha2::hash256( input.begin(), input.end(), hashed_output.begin(), hashed_output.end() );
     return hashed_output;
 }
+
+std::vector<unsigned char> sha2_256_n(std::vector<unsigned char> input, size_t count)
+{
+    if (count==0)
+    {
+        throw std::invalid_argument("Invalid count. It should be > 0");
+    }
+
+    std::vector<unsigned char> hashed_output(32, 0);
+
+    picosha2::hash256( input.begin(), input.end(), hashed_output.begin(), hashed_output.end() );
+    for(size_t i = 1; i<count; i++)
+    {
+        picosha2::hash256( hashed_output.begin(), hashed_output.end(), hashed_output.begin(), hashed_output.end() );
+    }
+
+    return hashed_output;
+}
