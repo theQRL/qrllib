@@ -19,7 +19,7 @@ public:
                  size_t starting_index,
                  size_t pool_size);
 
-    ~XmssPool();
+    ~XmssPool() = default;
 
     std::shared_ptr<XmssFast> getNextTree();
     bool isAvailable();

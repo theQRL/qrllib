@@ -9,6 +9,7 @@
 %include "stl.i"
 %include "std_except.i"
 %include "std_shared_ptr.i"
+%include "exception.i"
 
 %array_class(unsigned char, ucharCArray)
 %array_class(uint, uintCArray)

@@ -28,7 +28,19 @@ class TestSha2_256(TestCase):
         self.assertEqual(hex_in, hex_in_before)
         self.assertEqual(hex_out, expected)
 
+    def check_sha_n_result(self, data_text, expected, count):
+        size_out = 32
+
+        hex_in_before = pyqrllib.bin2hstr(pyqrllib.str2bin(data_text))
+        data_out = pyqrllib.sha2_256_n(pyqrllib.str2bin(data_text), count)
+
+        # This is just to keep as an example. Things could be compared without converting to hex
+        hex_in = pyqrllib.bin2hstr(pyqrllib.str2bin(data_text))
+        hex_out = pyqrllib.bin2hstr(data_out)
+
+        self.assertEqual(hex_in, hex_in_before)
+        self.assertEqual(hex_out, expected)
+
     def test_check_sha2_256(self):
         self.check_sha_result(self.sha2_input1, self.sha2_expected_result1)
         self.check_sha_result(self.sha2_input2, self.sha2_expected_result2)
-

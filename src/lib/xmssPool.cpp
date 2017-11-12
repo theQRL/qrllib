@@ -15,10 +15,6 @@ XmssPool::XmssPool(const TSEED &base_seed, uint8_t height, const size_t starting
     fillCache();
 }
 
-XmssPool::~XmssPool()
-{
-}
-
 void XmssPool::fillCache()
 {
     size_t start = _current_index + _cache.size();
