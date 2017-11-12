@@ -63,6 +63,7 @@ jobs:
     os: linux
     env:
     - CMAKE_ARGS='-DBUILD_PYTHON=ON'
+    - TEST='TRUE'
     - CC_VER="5"
     - PLATFORM='xenial'
     script: "./travis/build.sh"
