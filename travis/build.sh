@@ -31,9 +31,9 @@ case "${TRAVIS_OS_NAME}" in
         docker stop $(docker ps -aq --filter name=builder) || true
         docker rm $(docker ps -aq --filter name=builder) || true
         docker build --file travis/Dockerfile.${PLATFORM} -t builder-${PLATFORM} .
-        #docker run -d --name builder ${SHARE_SRC} ${SHARE_USER_INFO} builder-${PLATFORM} tail -f /dev/null
-        docker run -it --name builder -e CC_VER=${CC_VER} -e CMAKE_ARGS=${CMAKE_ARGS} -e TEST=${TEST} -e DEPLOY=${DEPLOY} -e BUILD=${BUILD} -e GPGKEY=84B8A307 ${SHARE_SRC} ${SHARE_SECRETS} builder-${PLATFORM} bash
-        #docker exec -t -e CC_VER=${CC_VER} -e CMAKE_ARGS=${CMAKE_ARGS} -e TEST=${TEST} -e DEPLOY=${DEPLOY} builder /build.sh
+        docker run -d --name builder --env-file=travis/env ${SHARE_SRC} ${SHARE_USER_INFO} builder-${PLATFORM} tail -f /dev/null
+        #docker run -it --name builder -e CC_VER=${CC_VER} -e CMAKE_ARGS=${CMAKE_ARGS} -e TEST=${TEST} -e DEPLOY=${DEPLOY} -e BUILD_DIST=${BUILD_DIST} --env-file=travis/env ${SHARE_SRC} ${SHARE_USER_INFO} builder-${PLATFORM} bash
+        docker exec -t -e CC_VER=${CC_VER} -e CMAKE_ARGS=${CMAKE_ARGS} -e TEST=${TEST} -e DEPLOY=${DEPLOY} -e BUILD_DIST=${BUILD_DIST} builder /build.sh
         ;;
     *)
         echo "UNSUPPORTED OS"

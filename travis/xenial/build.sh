@@ -27,15 +27,17 @@ if [ -n "${DEPLOY:+1}" ]; then
     python3 setup.py sdist
 fi
 
-if [ -n "${BUILD:+1}" ]; then
-    mkdir -p /travis/results # for the compiled debian files
+if [ -n "${BUILD_DIST:+1}" ]; then
+    mkdir -p /travis/results # /travis is persistent
 
     cd /travis/travis
     tar xvf keys.tar
     gpg --import public.gpg || true
     gpg --import private.gpg || true
 
-    mkdir -p /build
+    # /build is inside the Docker container. we don't want to litter the host with persistent files. Especially useful if this is your dev machine
+    # /build is already made by the Dockerfile, so let's prepare it for use by a normal user
+    sudo chown -R $(id -u):$(id -g) /build
     cd /build
     pip3 download --no-deps pyqrllib
     export PYQRLLIB_TARBALL=$(find . -name "pyqrllib-*.tar.gz")
