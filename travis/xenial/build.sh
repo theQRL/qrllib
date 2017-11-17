@@ -26,3 +26,8 @@ if [ -n "${DEPLOY:+1}" ]; then
     cd /travis
     python3 setup.py sdist
 fi
+
+if [ -n "${BUILD:+1}" ]; then
+    cd /travis
+    python3 --command-packages=stdeb.command bdist_deb  # should fail because not clone recursive
+fi
