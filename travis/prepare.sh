@@ -2,6 +2,8 @@
 
 echo "TRAVIS_OS_NAME" ${TRAVIS_OS_NAME}
 echo "PLATFORM" ${PLATFORM}
+echo "CC_VER" ${CC_VER}
+echo "BUILD" ${BUILD}
 
 case "${TRAVIS_OS_NAME}" in
     osx)
