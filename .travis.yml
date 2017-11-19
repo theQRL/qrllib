@@ -19,41 +19,27 @@ jobs:
     os: linux
     script:
     - echo
-  - stage: build+test
-    os: linux
-    env:
-    - CMAKE_ARGS='-DBUILD_TESTS=ON'
-    - TEST='TRUE'
-    - CC_VER="4.9"
-    - PLATFORM='xenial'
-    script: "./travis/build.sh"
-  - stage: build+test
-    os: linux
-    env:
-    - CMAKE_ARGS='-DBUILD_TESTS=ON'
-    - TEST='TRUE'
-    - CC_VER="5"
-    - PLATFORM='xenial'
-    script: "./travis/build.sh"
-  - stage: build+test
-    os: linux
-    env:
-    - CMAKE_ARGS='-DBUILD_PYTHON=ON'
-    - TEST='TRUE'
-    - CC_VER="5"
-    - PLATFORM='xenial'
-    script: "./travis/build.sh"
-  - stage: build+test
-    os: linux
-    env:
-    - PLATFORM='xenial-emscripten'
   - stage: build_deb_dist
     os: linux
     env:
       - BUILD_DIST='TRUE'
       - CC_VER=5
       - PLATFORM='xenial'
-    script: "./travis/build.sh"
+    script:
+    - "./travis/build.sh"
+    - "./travis/xenial/push_debs_github.sh"
+  - stage: build_deb_dist
+    os: linux
+    env:
+      - BUILD_DIST='TRUE'
+      - CC_VER=5
+      - PLATFORM='stretch'
+    script:
+    - "./travis/build.sh"
+    - "./travis/stretch/push_debs_github.sh"
+  - stage: merge_deb_platforms_to_ghpages
+    os: linux
+    script: "./travis/merge_debs_ghpages.sh"
   - stage: publish
     if: tag =~ ^v
     os: linux
