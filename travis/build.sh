@@ -38,12 +38,6 @@ case "${TRAVIS_OS_NAME}" in
         #docker run -it --name builder -e CC_VER=${CC_VER} -e CMAKE_ARGS=${CMAKE_ARGS} -e TEST=${TEST} -e DEPLOY=${DEPLOY} -e BUILD_DIST=${BUILD_DIST} --env-file=travis/env ${SHARE_SRC} ${SHARE_USER_INFO} builder-${PLATFORM} bash
         docker exec -t -e CC_VER=${CC_VER} -e CMAKE_ARGS=${CMAKE_ARGS} -e TEST=${TEST} -e DEPLOY=${DEPLOY} -e BUILD_DIST=${BUILD_DIST} builder /build.sh
 
-        echo "PUSHING TO GITHUB PAGES"
-        git checkout --orphan ${PLATFORM}
-        git rm -rf .
-        git add results/
-        git commit -m "pyqrllib ${PLATFORM} release"
-        git push https://randomshinichi:$GITHUB_TOKEN@github.com/randomshinichi/qrllib.git HEAD:${PLATFORM} -f
         ;;
     *)
         echo "UNSUPPORTED OS"
