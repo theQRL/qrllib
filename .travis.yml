@@ -5,40 +5,20 @@ language: cpp
 python:
 - '3.4'
 cache:
-  timeout: 600
-
-cache:
-  directories:
-    - $HOME/Library/Caches/Homebrew
-
-cache:
-  - pip
-  - apt
-
+- pip
+- apt
 addons:
   apt:
     packages:
     - git
     - python3
     - python3-pip
-
-########################
-########################
 jobs:
   include:
-  ########################
   - stage: prepare cache
     os: linux
     script:
     - echo
-
-#  - stage: prepare cache
-#    os: osx
-#    if: branch = master
-#    script: "./travis/prepare.sh"
-
-
-  ######################## XENIAL - OLD COMPILER (Useful for Raspberry Pi)
   - stage: build+test
     os: linux
     env:
@@ -47,8 +27,6 @@ jobs:
     - CC_VER="4.9"
     - PLATFORM='xenial'
     script: "./travis/build.sh"
-
-  ######################## XENIAL - TESTS
   - stage: build+test
     os: linux
     env:
@@ -57,8 +35,6 @@ jobs:
     - CC_VER="5"
     - PLATFORM='xenial'
     script: "./travis/build.sh"
-
-  ######################## XENIAL - PYQRLLIB
   - stage: build+test
     os: linux
     env:
@@ -67,38 +43,17 @@ jobs:
     - CC_VER="5"
     - PLATFORM='xenial'
     script: "./travis/build.sh"
-
-  ######################## XENIAL-EMSCRIPTEN
   - stage: build+test
     os: linux
     env:
     - PLATFORM='xenial-emscripten'
+  - stage: build_deb_dist
+    os: linux
+    env:
+      - BUILD_DIST='TRUE'
+      - CC_VER=5
+      - PLATFORM='xenial'
     script: "./travis/build.sh"
-
-#  ######################## OSX + TESTS
-#  - stage: build+test
-#    os: osx
-#    if: branch = master
-#    env:
-#    - CMAKE_ARGS='-DBUILD_TESTS=ON'
-#    - TEST='TRUE'
-#    script:
-#    - "./travis/build.sh"
-#
-#  ######################## OSX - PYQRLLIB
-#  - stage: build+test
-#    os: osx
-#    if: branch = master
-#    env:
-#    - CMAKE_ARGS='-DBUILD_PYTHON=ON'
-#    script:
-#    - "./travis/build.sh"
-
-#  ########################
-#  - stage: test_deployment
-#    script: echo "TODO..."
-
-  ########################
   - stage: publish
     if: tag =~ ^v
     os: linux
@@ -109,7 +64,6 @@ jobs:
     script:
     - sudo pip3 install -U pip setuptools twine
     - "./travis/build.sh"
-
     deploy:
       provider: pypi
       skip_cleanup: true
@@ -119,8 +73,6 @@ jobs:
       on:
         tags: true
         all_branches: true
-
-  ########################
   - stage: publish
     if: tag =~ ^v
     os: linux
@@ -129,14 +81,15 @@ jobs:
     script:
     - "./travis/build.sh"
     - "./travis/patch_npmversion.sh"
-
     before_deploy: npm version
-
     deploy:
       provider: npm
       skip_cleanup: true
-      email: "info@theqrl.org"
-      api_key: $NPM_API_KEY
+      email: info@theqrl.org
+      api_key: "$NPM_API_KEY"
       on:
         tags: true
         all_branches: true
+before_install:
+- openssl aes-256-cbc -K $encrypted_450b689219c8_key -iv $encrypted_450b689219c8_iv
+  -in keys.tar.enc -out travis/keys.tar -d

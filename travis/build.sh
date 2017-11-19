@@ -28,12 +28,22 @@ case "${TRAVIS_OS_NAME}" in
         SHARE_USER_INFO="-v /etc/group:/etc/group:ro -v /etc/passwd:/etc/passwd:ro -u ${USER_INFO}"
         SHARE_SRC="-v $(pwd):/travis"
 
-        docker stop $(docker ps -aq --filter name=builder) || true
+        # Ensure git submodules are fully loaded before attempting to compile
+        git submodule update --init --recursive
+
+        docker stop -t 0 $(docker ps -aq --filter name=builder) || true
         docker rm $(docker ps -aq --filter name=builder) || true
         docker build --file travis/Dockerfile.${PLATFORM} -t builder-${PLATFORM} .
         docker run -d --name builder --env-file=travis/env ${SHARE_SRC} ${SHARE_USER_INFO} builder-${PLATFORM} tail -f /dev/null
         #docker run -it --name builder -e CC_VER=${CC_VER} -e CMAKE_ARGS=${CMAKE_ARGS} -e TEST=${TEST} -e DEPLOY=${DEPLOY} -e BUILD_DIST=${BUILD_DIST} --env-file=travis/env ${SHARE_SRC} ${SHARE_USER_INFO} builder-${PLATFORM} bash
         docker exec -t -e CC_VER=${CC_VER} -e CMAKE_ARGS=${CMAKE_ARGS} -e TEST=${TEST} -e DEPLOY=${DEPLOY} -e BUILD_DIST=${BUILD_DIST} builder /build.sh
+
+        echo "PUSHING TO GITHUB PAGES"
+        git checkout --orphan ${PLATFORM}
+        git rm -rf .
+        git add results/
+        git commit -m "pyqrllib ${PLATFORM} release"
+        git push https://randomshinichi:$GITHUB_TOKEN@github.com/randomshinichi/qrllib.git HEAD:${PLATFORM} -f
         ;;
     *)
         echo "UNSUPPORTED OS"
