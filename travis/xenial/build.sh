@@ -46,5 +46,7 @@ if [ -n "${BUILD_DIST:+1}" ]; then
     export PYQRLLIB_SLUG=$(find . -name "pyqrllib-*" -type d)
     cd $PYQRLLIB_SLUG
     dpkg-buildpackage -rfakeroot -k$GPGKEY
-    cp /build/deb_dist/* /travis/results
+    # now that we're in /build/deb_dist/pyqrllib-0.2.9, we cd .. and copy
+    cd /build/deb_dist
+    find -maxdepth 1 -type f -exec cp {} /travis/results \;
 fi
