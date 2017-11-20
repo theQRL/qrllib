@@ -57,6 +57,15 @@ jobs:
     script:
     - "./travis/build.sh"
     - "./travis/xenial/push_to_ghpages.sh"
+  - stage: build_deb_dist
+    os: linux
+    env:
+      - BUILD_DIST='TRUE'
+      - CC_VER=5
+      - PLATFORM='stretch'
+    script:
+    - "./travis/build.sh"
+    - "./travis/stretch/push_to_ghpages.sh"
   - stage: publish
     if: tag =~ ^v
     os: linux
