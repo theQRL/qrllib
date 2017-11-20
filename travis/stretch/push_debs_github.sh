@@ -1,5 +1,8 @@
 echo "PUSHING TO GITHUB PAGES"
-cd /travis
+if [ `git branch --list ${PLATFORM} `]
+then
+    echo "Branch ${PLATFORM} already exists, deleting"
+fi
 git checkout --orphan ${PLATFORM}
 git rm -rf .
 git add results/
