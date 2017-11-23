@@ -39,35 +39,35 @@ jobs:
     os: linux
     script:
     - echo
-  - stage: build+test
-    os: linux
-    env:
-    - CMAKE_ARGS='-DBUILD_TESTS=ON'
-    - TEST='TRUE'
-    - CC_VER="4.9"
-    - PLATFORM='xenial'
-    script: "./travis/build.sh"
-  - stage: build+test
-    os: linux
-    env:
-    - CMAKE_ARGS='-DBUILD_TESTS=ON'
-    - TEST='TRUE'
-    - CC_VER="5"
-    - PLATFORM='xenial'
-    script: "./travis/build.sh"
-  - stage: build+test
-    os: linux
-    env:
-    - CMAKE_ARGS='-DBUILD_PYTHON=ON'
-    - TEST='TRUE'
-    - CC_VER="5"
-    - PLATFORM='xenial'
-    script: "./travis/build.sh"
-  - stage: build+test
-    os: linux
-    env:
-    - PLATFORM='xenial-emscripten'
-    script: "./travis/build.sh"
+#  - stage: build+test
+#    os: linux
+#    env:
+#    - CMAKE_ARGS='-DBUILD_TESTS=ON'
+#    - TEST='TRUE'
+#    - CC_VER="4.9"
+#    - PLATFORM='xenial'
+#    script: "./travis/build.sh"
+#  - stage: build+test
+#    os: linux
+#    env:
+#    - CMAKE_ARGS='-DBUILD_TESTS=ON'
+#    - TEST='TRUE'
+#    - CC_VER="5"
+#    - PLATFORM='xenial'
+#    script: "./travis/build.sh"
+#  - stage: build+test
+#    os: linux
+#    env:
+#    - CMAKE_ARGS='-DBUILD_PYTHON=ON'
+#    - TEST='TRUE'
+#    - CC_VER="5"
+#    - PLATFORM='xenial'
+#    script: "./travis/build.sh"
+#  - stage: build+test
+#    os: linux
+#    env:
+#    - PLATFORM='xenial-emscripten'
+#    script: "./travis/build.sh"
   - stage: publish
     if: tag =~ ^v
     os: linux
@@ -105,7 +105,7 @@ jobs:
         tags: true
         all_branches: true
   - stage: build_deb_dist
-    if: tag =~ ^v
+    # if: tag =~ ^v
     before_install:
     - openssl aes-256-cbc -K $encrypted_450b689219c8_key -iv $encrypted_450b689219c8_iv -in keys.tar.enc -out travis/keys.tar -d
     os: linux
@@ -115,9 +115,9 @@ jobs:
       - PLATFORM='xenial'
     script:
     - "./travis/build.sh"
-    - "./travis/xenial/push_debs_github.sh"
+    - "./travis/push_debs_github.sh"
   - stage: build_deb_dist
-    if: tag =~ ^v
+    # if: tag =~ ^v
     before_install:
     - openssl aes-256-cbc -K $encrypted_450b689219c8_key -iv $encrypted_450b689219c8_iv -in keys.tar.enc -out travis/keys.tar -d
     os: linux
@@ -127,8 +127,8 @@ jobs:
       - PLATFORM='stretch'
     script:
     - "./travis/build.sh"
-    - "./travis/stretch/push_debs_github.sh"
+    - "./travis/push_debs_github.sh"
   - stage: merge_deb_platforms_to_ghpages
-    if: tag =~ ^v
+    # if: tag =~ ^v
     os: linux
     script: "./travis/merge_debs_ghpages.sh"

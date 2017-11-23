@@ -2,7 +2,7 @@
 ls -lh
 # Travis only clones the master branch, so I have to clone everything again to make sure I can switch branches.
 mkdir merging_dir
-git clone https://github.com/randomshinichi/qrllib.git merging_dir/qrllib
+git clone ${GIT_HTTPS_REPO} merging_dir/qrllib
 cd merging_dir/qrllib
 git remote -v
 git branch -a
@@ -21,4 +21,5 @@ mv  ../xenial ../stretch .
 
 git add .
 git commit -m "qrllib release debs"
-git push https://randomshinichi:$GITHUB_TOKEN@github.com/randomshinichi/qrllib.git HEAD:gh-pages -f
+echo "Git PUSHING"
+git push ${GIT_HTTPS_REPO_AUTHED} HEAD:gh-pages -f
