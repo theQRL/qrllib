@@ -1,7 +1,7 @@
 #Download base ubuntu image
 FROM debian:stretch
 RUN apt-get update
-RUN apt-get -y install software-properties-common python-software-properties
+RUN apt-get -y install software-properties-common
 RUN apt-get -y install ca-certificates curl
 RUN apt-get -y install build-essential git sudo wget nano
 
@@ -18,7 +18,7 @@ RUN echo "ALL ALL=NOPASSWD: ALL" >> /etc/sudoers
 # ENV - Define environment variables
 
 # COPY - Copy configuration/scripts
-COPY travis/xenial/build.sh /build.sh
+COPY travis/stretch/build.sh /build.sh
 
 # VOLUME - link directories to host
 RUN mkdir /build # /build is for things that should stay within the Docker container. Will be chowned to logged-in-user later in the build.sh script.
