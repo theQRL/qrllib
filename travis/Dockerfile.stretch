@@ -1,5 +1,5 @@
 #Download base ubuntu image
-FROM ubuntu:16.04
+FROM debian:stretch
 RUN apt-get update
 RUN apt-get -y install software-properties-common python-software-properties
 RUN apt-get -y install ca-certificates curl
