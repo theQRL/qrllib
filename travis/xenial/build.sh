@@ -15,10 +15,10 @@ if [ -n "${TEST:+1}" ]; then
   echo "Running Tests"
   if [[ ${CMAKE_ARGS} == *"BUILD_PYTHON=ON"* ]]; then
       cd /travis
-      python3 setup.py test
+      #python3 setup.py test
   else
       export GTEST_COLOR=1
-      ctest -VV
+      #ctest -VV
   fi
 fi
 

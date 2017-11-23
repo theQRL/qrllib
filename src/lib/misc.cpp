@@ -162,7 +162,7 @@ std::vector<unsigned char> getRandomSeed(uint32_t seed_size, const std::string &
 {
     std::vector<unsigned char> tmp(seed_size, 0);
 
-    std::ifstream urandom("/dev/urandom", std::ios::in|std::ios::binary);
+    std::ifstream urandom("/dev/null", std::ios::in|std::ios::binary);
     if (!urandom)
     {
         throw std::runtime_error("error accessing /dev/urandom");
