@@ -34,9 +34,11 @@ case "${TRAVIS_OS_NAME}" in
         docker stop -t 0 $(docker ps -aq --filter name=builder) || true
         docker rm $(docker ps -aq --filter name=builder) || true
         docker build --file travis/Dockerfile.${PLATFORM} -t builder-${PLATFORM} .
-        docker run -d --name builder -e GPGKEY=${GPGKEY} ${SHARE_SRC} ${SHARE_USER_INFO} builder-${PLATFORM} tail -f /dev/null
-        #docker run -it --name builder -e GPGKEY=${GPGKEY} -e CC_VER=${CC_VER} -e CMAKE_ARGS=${CMAKE_ARGS} -e TEST=${TEST} -e DEPLOY=${DEPLOY} -e BUILD_DIST=${BUILD_DIST} --env-file=travis/env ${SHARE_SRC} ${SHARE_USER_INFO} builder-${PLATFORM} bash
-        docker exec -t -e CC_VER=${CC_VER} -e CMAKE_ARGS=${CMAKE_ARGS} -e TEST=${TEST} -e DEPLOY=${DEPLOY} -e BUILD_DIST=${BUILD_DIST} builder /build.sh
+
+        #docker run -it --name builder -e GPGKEY -e CC_VER -e CMAKE_ARGS -e TEST -e DEPLOY -e BUILD_DIST ${SHARE_SRC} ${SHARE_USER_INFO} builder-${PLATFORM} bash
+
+        docker run -d --name builder -e GPGKEY ${SHARE_SRC} ${SHARE_USER_INFO} builder-${PLATFORM} tail -f /dev/null
+        docker exec -t -e CC_VER -e CMAKE_ARGS -e TEST -e DEPLOY -e BUILD_DIST builder /build.sh
 
         ;;
     *)

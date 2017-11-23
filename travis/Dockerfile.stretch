@@ -7,8 +7,6 @@ RUN apt-get -y install build-essential git sudo wget nano
 
 # Prepare python
 RUN apt-get -y install swig3.0 python3 python3-all-dev python3-pip cmake pkg-config python-stdeb python3-stdeb
-RUN apt-get install -y gcc-5 g++-5
-RUN apt-get install -y gcc-4.9 g++-4.9
 
 RUN pip3 install --upgrade pip virtualenv setuptools twine PyScaffold==2.5.8
 RUN virtualenv test

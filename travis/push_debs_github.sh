@@ -1,6 +1,7 @@
+#!/bin/bash
 set -e
 echo "PUSHING TO GITHUB PAGES"
-if [ `git rev-parse --quiet --verify ${PLATFORM}` > /dev/null ]
+if [ $(git rev-parse --quiet --verify ${PLATFORM}) > /dev/null ]
 then
     echo "Branch ${PLATFORM} already exists, deleting"
     git branch -D ${PLATFORM}
