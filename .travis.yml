@@ -15,6 +15,26 @@ addons:
     - python3-pip
 jobs:
   include:
+
+########################## OSX + TESTS 
+#  - stage: build+test
+#    os: osx
+#    if: branch = master
+#    env:
+#    - CMAKE_ARGS='-DBUILD_TESTS=ON'
+#    - TEST='TRUE'
+#    script:
+#    - "./travis/build.sh"
+#
+#  ######################## OSX - PYQRLLIB
+#  - stage: build+test
+#    os: osx
+#    if: branch = master
+#    env:
+#    - CMAKE_ARGS='-DBUILD_PYTHON=ON'
+#    script:
+#    - "./travis/build.sh"
+
   - stage: prepare cache
     os: linux
     script:
