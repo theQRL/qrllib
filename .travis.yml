@@ -39,35 +39,35 @@ jobs:
     os: linux
     script:
     - echo
-  - stage: build+test
-    os: linux
-    env:
-    - CMAKE_ARGS='-DBUILD_TESTS=ON'
-    - TEST='TRUE'
-    - CC_VER="4.9"
-    - PLATFORM='xenial'
-    script: "./travis/build.sh"
-  - stage: build+test
-    os: linux
-    env:
-    - CMAKE_ARGS='-DBUILD_TESTS=ON'
-    - TEST='TRUE'
-    - CC_VER="5"
-    - PLATFORM='xenial'
-    script: "./travis/build.sh"
-  - stage: build+test
-    os: linux
-    env:
-    - CMAKE_ARGS='-DBUILD_PYTHON=ON'
-    - TEST='TRUE'
-    - CC_VER="5"
-    - PLATFORM='xenial'
-    script: "./travis/build.sh"
-  - stage: build+test
-    os: linux
-    env:
-    - PLATFORM='xenial-emscripten'
-    script: "./travis/build.sh"
+#  - stage: build+test
+#    os: linux
+#    env:
+#    - CMAKE_ARGS='-DBUILD_TESTS=ON'
+#    - TEST='TRUE'
+#    - CC_VER="4.9"
+#    - PLATFORM='xenial'
+#    script: "./travis/build.sh"
+#  - stage: build+test
+#    os: linux
+#    env:
+#    - CMAKE_ARGS='-DBUILD_TESTS=ON'
+#    - TEST='TRUE'
+#    - CC_VER="5"
+#    - PLATFORM='xenial'
+#    script: "./travis/build.sh"
+#  - stage: build+test
+#    os: linux
+#    env:
+#    - CMAKE_ARGS='-DBUILD_PYTHON=ON'
+#    - TEST='TRUE'
+#    - CC_VER="5"
+#    - PLATFORM='xenial'
+#    script: "./travis/build.sh"
+#  - stage: build+test
+#    os: linux
+#    env:
+#    - PLATFORM='xenial-emscripten'
+#    script: "./travis/build.sh"
   - stage: publish
     if: tag =~ ^v
     os: linux
@@ -115,7 +115,12 @@ jobs:
       - PLATFORM='xenial'
     script:
     - "./travis/build.sh"
-    - "./travis/push_debs_github.sh"
+    deploy:
+      provider: script
+      skip_cleanup: true
+      script: "./travis/push_debs_github.sh"
+      on:
+        all_branches: true
   - stage: build_deb_dist
     # if: tag =~ ^v
     before_install:
@@ -125,9 +130,13 @@ jobs:
       - BUILD_DIST='TRUE'
       - CC_VER=6
       - PLATFORM='stretch'
-    script:
-    - "./travis/build.sh"
-    - "./travis/push_debs_github.sh"
+    script: "./travis/build.sh"
+    deploy:
+      provider: script
+      skip_cleanup: true
+      script: "./travis/push_debs_github.sh"
+      on:
+        all_branches: true
   - stage: merge_deb_platforms_to_ghpages
     # if: tag =~ ^v
     os: linux
