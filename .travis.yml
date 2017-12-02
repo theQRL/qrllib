@@ -85,14 +85,14 @@ jobs:
 #    script:
 #    - "./travis/build.sh"
 #
-#  ######################## OSX - PYQRLLIB
-#  - stage: build+test
-#    os: osx
-#    if: branch = master
-#    env:
-#    - CMAKE_ARGS='-DBUILD_PYTHON=ON'
-#    script:
-#    - "./travis/build.sh"
+  ######################## OSX - PYQRLLIB
+  - stage: build+test
+    os: osx
+    if: branch = master
+    env:
+    - CMAKE_ARGS='-DBUILD_PYTHON=ON'
+    script:
+    - "./travis/build.sh"
 
 #  ########################
 #  - stage: test_deployment
