@@ -21,21 +21,28 @@ set(BUILD_PYTHON OFF CACHE BOOL "Enables python wrapper")
 set(BUILD_PYTHON_LOCALDEPLOY OFF CACHE BOOL "Deploys python locally")
 set(BUILD_WEBASSEMBLY OFF CACHE BOOL "Enables emscripten build")
 
-find_package(Rocksdb)
+if (BUILD_WEBASSEMBLY)
+    if (BUILD_PYTHON OR BUILD_GO)
+        MESSAGE(FATAL_ERROR "Webassembly and other compilation options are not compatible")
+    endif()
+    set(BUILD_TESTS OFF)
+else()
+    if (BUILD_PYTHON OR BUILD_GO)
+        find_package(SWIG REQUIRED)
+        INCLUDE(${SWIG_USE_FILE})
+        unset(SWIG_LANG_TYPE)
+    endif()
+
+    find_package(Rocksdb)
+    if(NOT ROCKSDB_FOUND)
+        MESSAGE(FATAL_ERROR "RocksDB is required!")
+    endif()
+endif()
 
 message(STATUS "GOLANG WRAPPER " ${BUILD_GO})
 message(STATUS "PYTHON WRAPPER " ${BUILD_PYTHON})
-message(STATUS "WEBASSEMBLY " ${BUILD_WEBASSEMBLY})
-
-if (BUILD_PYTHON OR BUILD_GO)
-    find_package(SWIG REQUIRED)
-    INCLUDE(${SWIG_USE_FILE})
-    unset(SWIG_LANG_TYPE)
-endif()
-
-if(NOT ROCKSDB_FOUND)
-    MESSAGE(FATAL_ERROR "RocksDB is required!")
-endif()
+message(STATUS "WEBASSEMBLY    " ${BUILD_WEBASSEMBLY})
+message(STATUS "BUILD_TESTS    " ${BUILD_TESTS})
 
 include_directories(
         ${CMAKE_CURRENT_SOURCE_DIR}/src/swig

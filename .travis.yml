@@ -38,16 +38,6 @@ jobs:
 #    script: "./travis/prepare.sh"
 
 
-  ######################## XENIAL - OLD COMPILER (Useful for Raspberry Pi)
-  - stage: build+test
-    os: linux
-    env:
-    - CMAKE_ARGS='-DBUILD_TESTS=ON'
-    - TEST='TRUE'
-    - CC_VER="4.9"
-    - PLATFORM='xenial'
-    script: "./travis/build.sh"
-
   ######################## XENIAL - TESTS
   - stage: build+test
     os: linux

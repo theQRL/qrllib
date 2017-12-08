@@ -3,6 +3,7 @@
 #include "crypto/hashing.h"
 #include "misc.h"
 #include "crypto/xmssBase.h"
+#include "wordlist.h"
 #include <sstream>
 #include <iomanip>
 #include <picosha2.h>
@@ -75,14 +76,8 @@ std::vector<unsigned char> hstr2bin(const std::string &s) throw(std::invalid_arg
     return result;
 }
 
-std::string bin2mnemonic(const std::vector<unsigned char> &vec, const std::vector<std::string> &word_list)
+std::string bin2mnemonic(const std::vector<unsigned char> &vec)
 {
-    size_t num_words = word_list.size();
-    if (num_words != 4096)
-    {
-        throw std::invalid_argument("word list should contain 4096 words");
-    }
-
     std::stringstream ss;
     std::string separator;
     for(int nibble = 0; nibble < vec.size()*2; nibble+=3)
@@ -91,26 +86,20 @@ std::string bin2mnemonic(const std::vector<unsigned char> &vec, const std::vecto
         int b1 = vec[p];
         int b2 = p+1<vec.size() ? vec[p+1] : 0;
         int idx = nibble%2==0 ? (b1 << 4) + (b2 >> 4) : ((b1 & 0x0F) << 8) + b2;
-        //std::cout << nibble << " " << p << " " << std::hex <<  idx << std::endl;
-        ss << separator << word_list[idx];
+        ss << separator << wordlist[idx];
         separator = " ";
     }
 
     return ss.str();
 }
 
-std::vector<unsigned char> mnemonic2bin(const std::string &mnemonic, const std::vector<std::string> &word_list)
+std::vector<unsigned char> mnemonic2bin(const std::string &mnemonic)
 {
-    size_t num_words = word_list.size();
-    if (num_words != 4096)
-    {
-        throw std::invalid_argument("word list should contain 4096 words");
-    }
-
     // Prepare lookup
+    // FIXME: Create the look up in advance
     std::unordered_map<std::string, int> word_lookup;
     int count = 0;
-    for (auto &w: word_list)
+    for (auto &w: wordlist)
     {
         word_lookup[w]=count++;
     }
