@@ -2,9 +2,9 @@
 // file LICENSE or http://www.opensource.org/licenses/mit-license.php.
 #include "gtest/gtest.h"
 
-#include <misc.h>
-#include <hashing.h>
-#include <wordlist.h>
+#include <crypto/misc.h>
+#include <crypto/hashing.h>
+#include <crypto/wordlist.h>
 
 namespace {
     #define XMSS_HEIGHT 8

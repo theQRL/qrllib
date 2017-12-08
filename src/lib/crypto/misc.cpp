@@ -1,8 +1,8 @@
 // Distributed under the MIT software license, see the accompanying
 // file LICENSE or http://www.opensource.org/licenses/mit-license.php.
-#include "hashing.h"
+#include "crypto/hashing.h"
 #include "misc.h"
-#include "xmssBase.h"
+#include "crypto/xmssBase.h"
 #include "wordlist.h"
 #include <sstream>
 #include <iomanip>

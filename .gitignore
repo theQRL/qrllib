@@ -53,3 +53,5 @@ cmake-build-relwithdebinfo/
 cmake-build-minsizerel/
 
 cmake-build-debug wtests/
+
+pyqrllib/_pyqrllibd\.so

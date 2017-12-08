@@ -1,9 +1,9 @@
 #include <emscripten.h>
 #include <emscripten/bind.h>
 #include <iostream>
-#include <xmssFast.h>
-#include <misc.h>
-#include <wordlist.h>
+#include <crypto/xmssFast.h>
+#include <crypto/misc.h>
+#include <crypto/wordlist.h>
 
 namespace {
 

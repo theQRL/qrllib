@@ -2,7 +2,7 @@
 <module classpath="CMake" type="CPP_MODULE" version="4">
   <component name="FacetManager">
     <facet type="Python" name="Python facet">
-      <configuration sdkName="Python 3.5.4 (~/anaconda3/envs/qrl3/bin/python)" />
+      <configuration sdkName="" />
     </facet>
   </component>
 </module>
