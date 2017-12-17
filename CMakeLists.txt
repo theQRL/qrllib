@@ -32,8 +32,8 @@ endif()
 include_directories(
         ${CMAKE_CURRENT_SOURCE_DIR}/src/api
         ${CMAKE_CURRENT_SOURCE_DIR}/src/lib
-        ${CMAKE_CURRENT_SOURCE_DIR}/xmss-alt
-        ${CMAKE_CURRENT_SOURCE_DIR}/PicoSHA2
+        deps/xmss-alt
+        ${CMAKE_CURRENT_SOURCE_DIR}/deps/PicoSHA2
 )
 
 file(GLOB_RECURSE LIB_SRC
@@ -43,14 +43,17 @@ file(GLOB_RECURSE LIBTEST_SRC
         "${CMAKE_CURRENT_SOURCE_DIR}/src/tests/*.cpp")
 
 set(LIBXMSSALT_SRC
-        ${CMAKE_CURRENT_SOURCE_DIR}/xmss-alt/algsxmss_fast.c
-        ${CMAKE_CURRENT_SOURCE_DIR}/xmss-alt/algsxmss.c
-        ${CMAKE_CURRENT_SOURCE_DIR}/xmss-alt/hash.c
-        ${CMAKE_CURRENT_SOURCE_DIR}/xmss-alt/hash_address.c
-        ${CMAKE_CURRENT_SOURCE_DIR}/xmss-alt/xmss_common.c
-        ${CMAKE_CURRENT_SOURCE_DIR}/xmss-alt/wots.c
-        #${CMAKE_CURRENT_SOURCE_DIR}/xmss-alt/xmss_core.c
-        ${CMAKE_CURRENT_SOURCE_DIR}/xmss-alt/fips202.c
+        deps/xmss-alt/algsxmss_fast.c
+        deps/xmss-alt/algsxmss.c
+        deps/xmss-alt/hash.c
+        deps/xmss-alt/hash_address.c
+        deps/xmss-alt/xmss_common.c
+        deps/xmss-alt/wots.c
+        deps/xmss-alt/fips202.c
+        )
+
+set(GLOB_RECURSE LIBDILITHIUM_SRC
+        "${CMAKE_CURRENT_SOURCE_DIR}/deps/dilithium/ref/*.c"
         )
 
 # Forcing XMSS to be compiled as C++
@@ -100,6 +103,7 @@ if (BUILD_TESTS)
             ${LIBTEST_SRC}
             ${LIB_SRC}
             ${LIBXMSSALT_SRC}
+            ${LIBDILITHIUM_SRC}
             )
 
     target_link_libraries(qrllib_test gtest_main)
