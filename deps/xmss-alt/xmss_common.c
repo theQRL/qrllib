@@ -12,7 +12,6 @@ Public domain.
 #include "xmss_common.h"
 #include "hash_address.h"
 #include "hash.h"
-#include "wots.h"
 #include <cstdio>
 #include <cstring>
 
@@ -146,7 +145,7 @@ int xmss_Verifysig(wots_params *wotsParams,
                    unsigned char h)
 {
 
-    unsigned long long sig_msg_len = static_cast<unsigned long long int>(4 + 32 + 67 * 32 + h * 32);
+    auto sig_msg_len = static_cast<unsigned long long int>(4 + 32 + 67 * 32 + h * 32);
 
     uint32_t n = wotsParams->n;
 

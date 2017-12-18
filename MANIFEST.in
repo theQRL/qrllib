@@ -1,6 +1,6 @@
 include README.pypi LICENSE
 global-include CMakeLists.txt CMakeLists.txt.gtest.in *.cmake
 recursive-include src *
-recursive-include xmss-alt *
-recursive-include PicoSHA2 *
-
+recursive-include deps/xmss-alt *
+recursive-include deps/dilithium *
+recursive-include deps/PicoSHA2 *

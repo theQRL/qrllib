@@ -10,7 +10,7 @@ namespace {
     class XmssWrapper
     {
     public:
-        XmssWrapper(const std::vector<unsigned char> &seed, unsigned char height) : _xmss(seed, height) {}
+        explicit XmssWrapper(const std::vector<unsigned char> &seed, unsigned char height) : _xmss(seed, height) {}
 
         TSIGNATURE sign(const TMESSAGE &message)    {   return _xmss.sign(message);     }
 

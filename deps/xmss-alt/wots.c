@@ -13,7 +13,6 @@ Public domain.
 #include <cstdint>
 #include "xmss_common.h"
 #include "hash.h"
-#include "wots.h"
 #include "hash_address.h"
 
 

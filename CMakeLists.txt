@@ -32,35 +32,46 @@ endif()
 include_directories(
         ${CMAKE_CURRENT_SOURCE_DIR}/src/api
         ${CMAKE_CURRENT_SOURCE_DIR}/src/lib
-        ${CMAKE_CURRENT_SOURCE_DIR}/xmss-alt
-        ${CMAKE_CURRENT_SOURCE_DIR}/PicoSHA2
+        ${CMAKE_CURRENT_SOURCE_DIR}/deps/
 )
 
 file(GLOB_RECURSE LIB_SRC
         "${CMAKE_CURRENT_SOURCE_DIR}/src/lib/*.cpp")
 
 file(GLOB_RECURSE LIBTEST_SRC
-        "${CMAKE_CURRENT_SOURCE_DIR}/src/tests/*.cpp")
+        "${CMAKE_CURRENT_SOURCE_DIR}/tests/cpp/*.cpp")
 
 set(LIBXMSSALT_SRC
-        ${CMAKE_CURRENT_SOURCE_DIR}/xmss-alt/algsxmss_fast.c
-        ${CMAKE_CURRENT_SOURCE_DIR}/xmss-alt/algsxmss.c
-        ${CMAKE_CURRENT_SOURCE_DIR}/xmss-alt/hash.c
-        ${CMAKE_CURRENT_SOURCE_DIR}/xmss-alt/hash_address.c
-        ${CMAKE_CURRENT_SOURCE_DIR}/xmss-alt/xmss_common.c
-        ${CMAKE_CURRENT_SOURCE_DIR}/xmss-alt/wots.c
-        #${CMAKE_CURRENT_SOURCE_DIR}/xmss-alt/xmss_core.c
-        ${CMAKE_CURRENT_SOURCE_DIR}/xmss-alt/fips202.c
+        ${CMAKE_CURRENT_SOURCE_DIR}/deps/xmss-alt/algsxmss_fast.c
+        ${CMAKE_CURRENT_SOURCE_DIR}/deps/xmss-alt/algsxmss.c
+        ${CMAKE_CURRENT_SOURCE_DIR}/deps/xmss-alt/hash.c
+        ${CMAKE_CURRENT_SOURCE_DIR}/deps/xmss-alt/hash_address.c
+        ${CMAKE_CURRENT_SOURCE_DIR}/deps/xmss-alt/xmss_common.c
+        ${CMAKE_CURRENT_SOURCE_DIR}/deps/xmss-alt/wots.c
+        #${CMAKE_CURRENT_SOURCE_DIR}/deps/xmss-alt/fips202.c
+        )
+
+file(GLOB LIBDILITHIUM_SRC
+        ${CMAKE_CURRENT_SOURCE_DIR}/deps/dilithium/ref/sign.c
+        ${CMAKE_CURRENT_SOURCE_DIR}/deps/dilithium/ref/polyvec.c
+        ${CMAKE_CURRENT_SOURCE_DIR}/deps/dilithium/ref/packing.c
+        ${CMAKE_CURRENT_SOURCE_DIR}/deps/dilithium/ref/poly.c
+        ${CMAKE_CURRENT_SOURCE_DIR}/deps/dilithium/ref/reduce.c
+        ${CMAKE_CURRENT_SOURCE_DIR}/deps/dilithium/ref/ntt.c
+        ${CMAKE_CURRENT_SOURCE_DIR}/deps/dilithium/ref/rounding.c
+        ${CMAKE_CURRENT_SOURCE_DIR}/deps/dilithium/ref/fips202.c
+        ${CMAKE_CURRENT_SOURCE_DIR}/deps/dilithium/ref/randombytes.c
         )
 
 # Forcing XMSS to be compiled as C++
 SET_SOURCE_FILES_PROPERTIES(${LIB_SRC} PROPERTIES LANGUAGE CXX)
 SET_SOURCE_FILES_PROPERTIES(${LIBTEST_SRC} PROPERTIES LANGUAGE CXX)
 SET_SOURCE_FILES_PROPERTIES(${LIBXMSSALT_SRC} PROPERTIES LANGUAGE CXX)
+SET_SOURCE_FILES_PROPERTIES(${LIBDILITHIUM_SRC} PROPERTIES LANGUAGE CXX)
 
 
 if (BUILD_TESTS)
-    message(STATUS "Python wrapper enabled")
+    message(STATUS "GTests enabled")
 
     ##############################
     # Google Test
@@ -85,8 +96,10 @@ if (BUILD_TESTS)
 
     # Add googletest directly to our build. This defines
     # the gtest and gtest_main targets.
-    add_subdirectory(${CMAKE_BINARY_DIR}/googletest-src
-            ${CMAKE_BINARY_DIR}/googletest-build)
+    add_subdirectory(
+            ${CMAKE_BINARY_DIR}/googletest-src
+            ${CMAKE_BINARY_DIR}/googletest-build
+    )
 
     # The gtest/gtest_main targets carry header search path
     # dependencies automatically when using CMake 2.8.11 or
@@ -95,11 +108,12 @@ if (BUILD_TESTS)
         include_directories("${gtest_SOURCE_DIR}/include")
     endif ()
 
-    # Google tests
+    # Google cpp
     add_executable(qrllib_test
             ${LIBTEST_SRC}
             ${LIB_SRC}
             ${LIBXMSSALT_SRC}
+            ${LIBDILITHIUM_SRC}
             )
 
     target_link_libraries(qrllib_test gtest_main)
@@ -143,6 +157,7 @@ if (BUILD_PYTHON)
             src/api/api.cxx
             ${LIB_SRC}
             ${LIBXMSSALT_SRC}
+            ${LIBDILITHIUM_SRC}
             )
 
     SWIG_LINK_LIBRARIES(pyqrllib ${SWIG_LANG_LIBRARIES} )
@@ -150,7 +165,9 @@ if (BUILD_PYTHON)
     add_custom_command(TARGET ${SWIG_MODULE_pyqrllib_REAL_NAME}
             POST_BUILD
             COMMENT "Moving SWIG files to output dir"
-            COMMAND ${CMAKE_COMMAND} -E copy_if_different $<TARGET_FILE:${SWIG_MODULE_pyqrllib_REAL_NAME}> ${CMAKE_CURRENT_SOURCE_DIR}/pyqrllib/$<TARGET_LINKER_FILE_NAME:${SWIG_MODULE_pyqrllib_REAL_NAME}>
+            COMMAND ${CMAKE_COMMAND} -E
+                copy_if_different $<TARGET_FILE:${SWIG_MODULE_pyqrllib_REAL_NAME}>
+                                  ${CMAKE_CURRENT_SOURCE_DIR}/pyqrllib/$<TARGET_LINKER_FILE_NAME:${SWIG_MODULE_pyqrllib_REAL_NAME}>
             )
 
     add_custom_command(TARGET ${SWIG_MODULE_pyqrllib_REAL_NAME}
@@ -186,6 +203,7 @@ if (BUILD_GO)
             src/api/api.cxx
             ${LIB_SRC}
             ${LIBXMSSALT_SRC}
+            ${LIBDILITHIUM_SRC}
             )
 
     SWIG_LINK_LIBRARIES(goqrllib ${SWIG_LANG_LIBRARIES} )
@@ -208,6 +226,7 @@ if (BUILD_WEBASSEMBLY)
             ${JS_INTERFACE}
             ${LIB_SRC}
             ${LIBXMSSALT_SRC}
+            ${LIBDILITHIUM_SRC}
     )
 
     target_link_libraries(jsqrl)

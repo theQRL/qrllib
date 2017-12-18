@@ -1,10 +1,10 @@
 // Distributed under the MIT software license, see the accompanying
 // file LICENSE or http://www.opensource.org/licenses/mit-license.php.
 #include <iostream>
-#include <stdexcept>
-#include <xmss_common.h>
+#include <xmss-alt/xmss_common.h>
 #include "xmss.h"
-#include "algsxmss.h"
+#include "xmss-alt/algsxmss.h"
+#include <stdexcept>
 
 Xmss::Xmss(const TSEED &seed, unsigned char height): XmssBase(seed, height)
 {

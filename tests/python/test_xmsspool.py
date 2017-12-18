@@ -22,17 +22,21 @@ class TestXmssPool(TestCase):
         self.assertEqual(pool.getCurrentIndex(), 0)
 
         xmss = pool.getNextTree()
-        self.assertEqual( "2dcc3803df4475334b29eaa2516d1a9b36bc19eed0542cfbb501bf8de95d939b25510d9876c7845b4694441bdc0e2be51f3d3f87f0c7775893845f25d49f9ef1",
-                          pyqrllib.bin2hstr(xmss.getPK()))
+        self.assertEqual("2dcc3803df4475334b29eaa2516d1a9b36bc19eed0542cfbb501bf8de95d939b"
+                         "25510d9876c7845b4694441bdc0e2be51f3d3f87f0c7775893845f25d49f9ef1",
+                         pyqrllib.bin2hstr(xmss.getPK()))
 
         xmss = pool.getNextTree()
-        self.assertEqual( "be9caeafe11fa52edf722063c18616d6d0c6c30dba3e2c9369a6d9260f76818bc424a1b6db5f26ef01ffa4aac8a08440d6a569bc56180b06f51b6ff6e4cc1b2e",
-                          pyqrllib.bin2hstr(xmss.getPK()))
+        self.assertEqual("be9caeafe11fa52edf722063c18616d6d0c6c30dba3e2c9369a6d9260f76818b"
+                         "c424a1b6db5f26ef01ffa4aac8a08440d6a569bc56180b06f51b6ff6e4cc1b2e",
+                         pyqrllib.bin2hstr(xmss.getPK()))
 
         xmss = pool.getNextTree()
-        self.assertEqual( "5deb91b1d311ecc8c6954e22f3e140ff3e6c04e40cad50c940e60abba3cf766a5db9f39f58e532bea6765e4530cb581db1d6afbb7c05da3261ca4db21177afc5",
-                          pyqrllib.bin2hstr(xmss.getPK()))
+        self.assertEqual("5deb91b1d311ecc8c6954e22f3e140ff3e6c04e40cad50c940e60abba3cf766a"
+                         "5db9f39f58e532bea6765e4530cb581db1d6afbb7c05da3261ca4db21177afc5",
+                         pyqrllib.bin2hstr(xmss.getPK()))
 
         xmss = pool.getNextTree()
-        self.assertEqual( "ea15c686e7b9691b8bac52ee4d0ed33bd75ec600f55b4476b857858460c2c98390712040a5e03bca7a46715a90270ac2f8db8694ffa943091edb9018fa1dda04",
-                          pyqrllib.bin2hstr(xmss.getPK()))
+        self.assertEqual("ea15c686e7b9691b8bac52ee4d0ed33bd75ec600f55b4476b857858460c2c983"
+                         "90712040a5e03bca7a46715a90270ac2f8db8694ffa943091edb9018fa1dda04",
+                         pyqrllib.bin2hstr(xmss.getPK()))

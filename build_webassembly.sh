@@ -13,5 +13,5 @@ emcc --bind libjsqrl.so -O3 -s WASM=1 -o web-libjsqrl.js
 echo "QRLLIB=Module;" >> web-libjsqrl.js
 
 echo "Running test"
-cp ../../src/tests_js/test.js .
+cp ../../tests/js/test.js .
 node test.js

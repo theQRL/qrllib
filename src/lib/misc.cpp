@@ -6,7 +6,7 @@
 #include "wordlist.h"
 #include <sstream>
 #include <iomanip>
-#include <picosha2.h>
+#include <PicoSHA2/picosha2.h>
 #include <iostream>
 #include <unordered_map>
 #include <fstream>
