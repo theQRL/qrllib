@@ -11,9 +11,9 @@ curl -O https://s3.amazonaws.com/mozilla-games/emscripten/releases/emsdk-portabl
 tar -xvzf emsdk-portable.tar.gz
 cd emsdk-portable
 
-./emsdk update
-./emsdk install latest
-./emsdk activate latest
+./emsdk update &> /dev/null
+./emsdk install latest &> /dev/null
+./emsdk activate latest &> /dev/null
 
 source ./emsdk_env.sh
 
