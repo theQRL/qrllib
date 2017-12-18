@@ -18,29 +18,29 @@ class TestHash(TestCase):
         seed = pyqrllib.ucharVector(48, 0)
         xmss = pyqrllib.Xmss(seed=seed, height=HEIGHT)
 
-        print("Seed", len(seed))
-        print(pyqrllib.bin2hstr(seed, 48))
-
-        print("PK  ", len(xmss.getPK()))
-        print(pyqrllib.bin2hstr(xmss.getPK(), 48))
-
-        print("SK  ", len(xmss.getSK()))
-        print(pyqrllib.bin2hstr(xmss.getSK(), 48))
+        # print("Seed", len(seed))
+        # print(pyqrllib.bin2hstr(seed, 48))
+        #
+        # print("PK  ", len(xmss.getPK()))
+        # print(pyqrllib.bin2hstr(xmss.getPK(), 48))
+        #
+        # print("SK  ", len(xmss.getSK()))
+        # print(pyqrllib.bin2hstr(xmss.getSK(), 48))
 
         self.assertIsNotNone(xmss)
         self.assertEqual(xmss.getHeight(), HEIGHT)
 
         message = pyqrllib.ucharVector([i for i in range(32)])
-        print("Msg ", len(message))
-        print(pyqrllib.bin2hstr(message, 48))
+        # print("Msg ", len(message))
+        # print(pyqrllib.bin2hstr(message, 48))
 
         # Sign message
         signature = bytearray(xmss.sign(message))
 
-        print("Sig ", len(signature))
-        print(pyqrllib.bin2hstr(signature, 128))
-
-        print('----------------------------------------------------------------------')
+        # print("Sig ", len(signature))
+        # print(pyqrllib.bin2hstr(signature, 128))
+        #
+        # print('----------------------------------------------------------------------')
         # Verify signature
         start = time()
         for i in range(1000):
@@ -48,7 +48,7 @@ class TestHash(TestCase):
                                                  signature,
                                                  xmss.getPK()))
         end = time()
-        print(end - start)
+        # print(end - start)
 
         # Touch the signature
         signature[100] += 1
