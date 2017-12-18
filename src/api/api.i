@@ -34,18 +34,24 @@ namespace std {
 %module pyqrllib
 %{
     #include "api.h"
-    #include "xmss.h"
     #include "misc.h"
     #include "hashing.h"
+
+    #include "xmss.h"
     #include "xmssBase.h"
     #include "xmssFast.h"
     #include "xmssPool.h"
+
+    #include "dilithium.h"
 %}
 
 %include "api.h"
 %include "misc.h"
 %include "hashing.h"
+
 %include "xmss.h"
 %include "xmssBase.h"
 %include "xmssFast.h"
 %include "xmssPool.h"
+
+%include "dilithium.h"

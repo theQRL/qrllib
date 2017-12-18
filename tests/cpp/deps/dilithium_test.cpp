@@ -6,8 +6,6 @@
 #include <dilithium/ref/randombytes.h>
 
 namespace {
-    #define XMSS_HEIGHT 8
-
     TEST(DilithumReferenceTest, sign_keypair) {
         std::vector<unsigned char> message(100);
 

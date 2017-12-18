@@ -5,15 +5,15 @@
 #include <vector>
 #include "xmss-alt/xmss_params.h"
 
-#define TSIGNATURE std::vector<unsigned char>
-#define TMESSAGE std::vector<unsigned char>
-#define TSEED std::vector<unsigned char>
-#define TKEY std::vector<unsigned char>
+#define TSIGNATURE std::vector<uint8_t>
+#define TMESSAGE std::vector<uint8_t>
+#define TSEED std::vector<uint8_t>
+#define TKEY std::vector<uint8_t>
 
 class XmssBase {
 public:
     // TODO: Fix constness / passing by value, etc. This might require changes in the underlying lib
-    XmssBase(const TSEED &seed, unsigned char height);
+    XmssBase(const TSEED &seed, uint8_t height);
     virtual ~XmssBase()=default;
 
     virtual TSIGNATURE sign(const TMESSAGE &message) = 0;
@@ -33,7 +33,7 @@ public:
     std::string getAddress(const std::string &prefix);
 
     unsigned int getIndex();
-    virtual unsigned int setIndex(unsigned int new_index);
+    virtual unsigned int setIndex(uint32_t new_index);
 
     unsigned int getSignatureSize();
     static uint8_t getHeightFromSigSize(size_t sigSize);
