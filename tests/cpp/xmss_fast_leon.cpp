@@ -1,11 +1,9 @@
 // Distributed under the MIT software license, see the accompanying
 // file LICENSE or http://www.opensource.org/licenses/mit-license.php.
-#include <algsxmss.h>
+#include <xmss-alt/algsxmss.h>
 #include <xmss.h>
-#include <iostream>
 #include "gtest/gtest.h"
-#include <algsxmss_fast.h>
-#include <xmss_common.h>
+#include <xmss-alt/algsxmss_fast.h>
 
 namespace {
     TEST(Leon, LeonsTest) {

@@ -35,7 +35,7 @@ echo "QRLLIB=Module;" >> web-libjsqrl.js
 
 if [ -n "${TEST:+1}" ]; then
   echo "Running Tests"
-  cp ./travis/src/tests_js/test.js .
+  cp ./travis/tests_js/test.js .
   node test.js
 fi
 

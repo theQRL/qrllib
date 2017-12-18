@@ -1,8 +1,7 @@
 // Distributed under the MIT software license, see the accompanying
 // file LICENSE or http://www.opensource.org/licenses/mit-license.php.
-#include <algsxmss.h>
+#include <xmss-alt/algsxmss.h>
 #include <xmss.h>
-#include <vector>
 #include <iostream>
 #include "gtest/gtest.h"
 #include <misc.h>

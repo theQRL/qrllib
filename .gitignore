@@ -21,7 +21,7 @@ goqrllib/pyqrllib_gc\.c
 goqrllib/pyqrllib\.go
 
 \.cache/v/cache/lastfailed
-src/tests_python/\.cache/v/cache/lastfailed
+tests/tests_python/\.cache/v/cache/lastfailed
 
 benchmark/keygen\.png
 benchmark/sign\.png

@@ -4,11 +4,10 @@
 #include "xmssBase.h"
 #include <sstream>
 #include <iomanip>
-#include <fips202.h>
-#include <picosha2.h>
+#include <dilithium/ref/fips202.h>
+#include <PicoSHA2/picosha2.h>
 #include <iostream>
 #include <unordered_map>
-#include <stdexcept>
 
 std::vector<unsigned char> shake128(size_t hash_size, std::vector<unsigned char> input)
 {

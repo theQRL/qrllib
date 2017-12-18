@@ -6,7 +6,7 @@
 #define QRLLIB_XMSS_FAST_H
 
 #include "xmssBase.h"
-#include <algsxmss_fast.h>
+#include <xmss-alt/algsxmss_fast.h>
 
 class XmssFast : public XmssBase {
 public:

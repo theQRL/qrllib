@@ -4,7 +4,6 @@
 
 #include <misc.h>
 #include <hashing.h>
-#include <wordlist.h>
 
 namespace {
     #define XMSS_HEIGHT 8

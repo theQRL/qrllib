@@ -1,20 +1,18 @@
 // Distributed under the MIT software license, see the accompanying
 // file LICENSE or http://www.opensource.org/licenses/mit-license.php.
-#include <algsxmss.h>
+#include <xmss-alt/algsxmss.h>
 #include <xmss.h>
-#include <vector>
 #include <iostream>
 #include "gtest/gtest.h"
 #include <misc.h>
-#include <xmssFast.h>
 
 namespace {
-#define XMSS_HEIGHT 8
+#define XMSS_HEIGHT 4
 
-    TEST(XMSSFAST, Instantiation) {
+    TEST(XMSS, Instantiation) {
         std::vector<unsigned char> seed(48, 0);
 
-        XmssFast xmss(seed, XMSS_HEIGHT);
+        Xmss xmss(seed, XMSS_HEIGHT);
 
         auto pk = xmss.getPK();
         auto sk = xmss.getSK();
@@ -28,20 +26,20 @@ namespace {
         EXPECT_EQ(seed, xmss.getSeed());
     }
 
-    TEST(XMSSFAST, SignatureLen) {
+    TEST(XMSS, SignatureLen) {
         std::vector<unsigned char> seed(48, 0);
 
-        XmssFast xmss4(seed, 4);
+        Xmss xmss4(seed, 4);
         EXPECT_EQ(2308, xmss4.getSignatureSize());
 
-        XmssFast xmss6(seed, 6);
+        Xmss xmss6(seed, 6);
         EXPECT_EQ(2372, xmss6.getSignatureSize());
     }
 
-    TEST(XMSSFAST, Sign) {
+    TEST(XMSS, Sign) {
         std::vector<unsigned char> seed(48, 0);
 
-        XmssFast xmss(seed, XMSS_HEIGHT);
+        Xmss xmss(seed, XMSS_HEIGHT);
 
         std::string message = "This is a test message";
         std::vector<unsigned char> data(message.begin(), message.end());
@@ -67,8 +65,10 @@ namespace {
     }
 
 
-    TEST(XMSSFAST, Verify) {
-        std::vector<unsigned char> seed(48, 0);
+    TEST(XMSS, Verify) {
+        std::vector<unsigned char> seed;
+        for(unsigned char i=0; i<48; i++)
+            seed.push_back(i);
 
         Xmss xmss(seed, XMSS_HEIGHT);
 
@@ -97,27 +97,4 @@ namespace {
         signature[1] += 1;
         EXPECT_FALSE(Xmss::verify(data, signature, xmss.getPK()));
     }
-
-    TEST(XMSSFAST, SignIndexShift) {
-        std::vector<unsigned char> seed(48, 0);
-
-        Xmss xmss1(seed, 4);
-        XmssFast xmss2(seed, 4);
-
-        std::string message = "This is a test message";
-        std::vector<unsigned char> data(message.begin(), message.end());
-
-        xmss1.setIndex(1);
-        xmss2.setIndex(1);
-
-        auto signature1 = xmss1.sign(data);
-        auto signature2 = xmss2.sign(data);
-
-        auto hstr_sig1 = bin2hstr(signature1);
-        auto hstr_sig2 = bin2hstr(signature2);
-
-        EXPECT_EQ(hstr_sig1, hstr_sig2);
-//    EXPECT_EQ(signature1, signature2);
-    }
-
 }

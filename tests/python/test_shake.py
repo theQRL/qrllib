@@ -5,6 +5,7 @@ from unittest import TestCase
 
 from pyqrllib import pyqrllib
 
+
 class TestShake128(TestCase):
     # Values obtained from https://emn178.github.io/online-tools/shake_128.html
     shake128_input1 = 'hello'

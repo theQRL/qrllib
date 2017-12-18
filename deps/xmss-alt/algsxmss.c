@@ -7,7 +7,6 @@
 #include <cstring>
 
 #include "hash.h"
-#include "xmss_common.h"
 #include "hash_address.h"
 #include "fips202.h"
 

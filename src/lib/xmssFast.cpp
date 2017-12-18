@@ -1,10 +1,8 @@
 // Distributed under the MIT software license, see the accompanying
 // file LICENSE or http://www.opensource.org/licenses/mit-license.php.
 #include <iostream>
-#include <xmss_params.h>
+#include <xmss-alt/xmss_params.h>
 #include "xmssFast.h"
-#include "algsxmss_fast.h"
-#include "xmss_common.h"
 
 XmssFast::XmssFast(const TSEED &seed, unsigned char height): XmssBase(seed, height)
 {

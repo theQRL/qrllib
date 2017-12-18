@@ -1,8 +1,6 @@
-#include "algsxmss.h"
+#include "xmss-alt/algsxmss.h"
 #include "xmss.h"
 #include <iostream>
-#include <xmss_common.h>
-#include "xmssBase.h"
 #include "misc.h"
 
 XmssBase::XmssBase(const TSEED &seed, unsigned char height): _seed(seed), _height(height)

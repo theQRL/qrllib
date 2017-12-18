@@ -10,14 +10,10 @@ Public domain.
 */
 
 #include "algsxmss_fast.h"
-#include <cstdlib>
 #include <cstring>
-#include <cmath>
 #include "fips202.h"
 #include "hash.h"
-#include "xmss_common.h"
 #include "hash_address.h"
-#include "wots.h"
 #include <cstdio>
 
 /**

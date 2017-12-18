@@ -3,7 +3,7 @@
 
 #include <string>
 #include <vector>
-#include "xmss_params.h"
+#include "xmss-alt/xmss_params.h"
 
 #define TSIGNATURE std::vector<unsigned char>
 #define TMESSAGE std::vector<unsigned char>
