@@ -25,6 +25,9 @@ public:
                           const std::vector<uint8_t> &message_signed,
                           const std::vector<uint8_t> &pk);
 
+    static std::vector<uint8_t> extract_message(std::vector<uint8_t> &message_output);
+    static std::vector<uint8_t> extract_signature(std::vector<uint8_t> &message_output);
+
 protected:
     std::vector<uint8_t> _pk;
     std::vector<uint8_t> _sk;

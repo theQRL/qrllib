@@ -53,3 +53,13 @@ bool Dilithium::sign_open(std::vector<uint8_t> &message_output,
     // TODO Leon: message_out has size()+CRYPTO_BYTES. Should we return just the message?
     return ret == 0;
 }
+
+std::vector<uint8_t> Dilithium::extract_message(std::vector<uint8_t> &message_output)
+{
+    return std::vector<uint8_t>(message_output.begin(), message_output.end() - CRYPTO_BYTES);
+}
+
+std::vector<uint8_t> Dilithium::extract_signature(std::vector<uint8_t> &message_output)
+{
+    return std::vector<uint8_t>(message_output.end() - CRYPTO_BYTES, message_output.end());
+}
