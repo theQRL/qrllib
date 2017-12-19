@@ -4,6 +4,8 @@
 cmake_minimum_required(VERSION 3.5)
 project(qrllib)
 
+#set(CMAKE_VERBOSE_MAKEFILE ON)
+
 set(CMAKE_CXX_STANDARD 14)
 #set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++14 -Wall -Wextra -pedantic")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIC")
@@ -19,9 +21,10 @@ set(BUILD_PYTHON OFF CACHE BOOL "Enables python wrapper")
 set(BUILD_PYTHON_LOCALDEPLOY OFF CACHE BOOL "Deploys python locally")
 set(BUILD_WEBASSEMBLY OFF CACHE BOOL "Enables emscripten build")
 
+message(STATUS "BUILD_TESTS    " ${BUILD_TESTS})
 message(STATUS "GOLANG WRAPPER " ${BUILD_GO})
 message(STATUS "PYTHON WRAPPER " ${BUILD_PYTHON})
-message(STATUS "WEBASSEMBLY " ${BUILD_WEBASSEMBLY})
+message(STATUS "WEBASSEMBLY    " ${BUILD_WEBASSEMBLY})
 
 if (BUILD_PYTHON OR BUILD_GO)
     find_package(SWIG REQUIRED)
@@ -32,7 +35,9 @@ endif()
 include_directories(
         ${CMAKE_CURRENT_SOURCE_DIR}/src/api
         ${CMAKE_CURRENT_SOURCE_DIR}/src/lib
-        ${CMAKE_CURRENT_SOURCE_DIR}/deps/
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/deps
+        ${CMAKE_CURRENT_SOURCE_DIR}/deps/xmss-alt
+        ${CMAKE_CURRENT_SOURCE_DIR}/deps
 )
 
 file(GLOB_RECURSE LIB_SRC
@@ -48,10 +53,11 @@ set(LIBXMSSALT_SRC
         ${CMAKE_CURRENT_SOURCE_DIR}/deps/xmss-alt/hash_address.c
         ${CMAKE_CURRENT_SOURCE_DIR}/deps/xmss-alt/xmss_common.c
         ${CMAKE_CURRENT_SOURCE_DIR}/deps/xmss-alt/wots.c
-        #${CMAKE_CURRENT_SOURCE_DIR}/deps/xmss-alt/fips202.c
+        ${CMAKE_CURRENT_SOURCE_DIR}/deps/xmss-alt/fips202.c
         )
 
 file(GLOB LIBDILITHIUM_SRC
+        ${CMAKE_CURRENT_SOURCE_DIR}/deps/dilithium/ref/randombytes.c
         ${CMAKE_CURRENT_SOURCE_DIR}/deps/dilithium/ref/sign.c
         ${CMAKE_CURRENT_SOURCE_DIR}/deps/dilithium/ref/polyvec.c
         ${CMAKE_CURRENT_SOURCE_DIR}/deps/dilithium/ref/packing.c
@@ -60,15 +66,41 @@ file(GLOB LIBDILITHIUM_SRC
         ${CMAKE_CURRENT_SOURCE_DIR}/deps/dilithium/ref/ntt.c
         ${CMAKE_CURRENT_SOURCE_DIR}/deps/dilithium/ref/rounding.c
         ${CMAKE_CURRENT_SOURCE_DIR}/deps/dilithium/ref/fips202.c
-        ${CMAKE_CURRENT_SOURCE_DIR}/deps/dilithium/ref/randombytes.c
+        )
+
+file(GLOB LIBKYBER_SRC
+        ${CMAKE_CURRENT_SOURCE_DIR}/deps/kyber/ref/kem.c
+        ${CMAKE_CURRENT_SOURCE_DIR}/deps/kyber/ref/poly.c
+        ${CMAKE_CURRENT_SOURCE_DIR}/deps/kyber/ref/polyvec.c
+        ${CMAKE_CURRENT_SOURCE_DIR}/deps/kyber/ref/reduce.c
+        ${CMAKE_CURRENT_SOURCE_DIR}/deps/kyber/ref/cbd.c
+        ${CMAKE_CURRENT_SOURCE_DIR}/deps/kyber/ref/precomp.c
+        ${CMAKE_CURRENT_SOURCE_DIR}/deps/kyber/ref/ntt.c
+        ${CMAKE_CURRENT_SOURCE_DIR}/deps/kyber/ref/verify.c
+        ${CMAKE_CURRENT_SOURCE_DIR}/deps/kyber/ref/indcpa.c
+        ${CMAKE_CURRENT_SOURCE_DIR}/deps/kyber/ref/kex.c
+        ${CMAKE_CURRENT_SOURCE_DIR}/deps/kyber/ref/fips202.c
         )
 
 # Forcing XMSS to be compiled as C++
 SET_SOURCE_FILES_PROPERTIES(${LIB_SRC} PROPERTIES LANGUAGE CXX)
 SET_SOURCE_FILES_PROPERTIES(${LIBTEST_SRC} PROPERTIES LANGUAGE CXX)
 SET_SOURCE_FILES_PROPERTIES(${LIBXMSSALT_SRC} PROPERTIES LANGUAGE CXX)
-SET_SOURCE_FILES_PROPERTIES(${LIBDILITHIUM_SRC} PROPERTIES LANGUAGE CXX)
 
+# Build C shared libraries + stripping
+add_library(dilithium SHARED
+        ${LIBDILITHIUM_SRC}
+        )
+
+target_link_libraries(dilithium PRIVATE
+        -Wl,--retain-symbols-file=${CMAKE_CURRENT_SOURCE_DIR}/src/deps/libdilithium.sym)
+
+add_library(kyber SHARED
+        ${LIBKYBER_SRC}
+        )
+
+target_link_libraries(kyber PRIVATE
+        -Wl,--retain-symbols-file=${CMAKE_CURRENT_SOURCE_DIR}/src/deps/libkyber.sym)
 
 if (BUILD_TESTS)
     message(STATUS "GTests enabled")
@@ -113,13 +145,15 @@ if (BUILD_TESTS)
             ${LIBTEST_SRC}
             ${LIB_SRC}
             ${LIBXMSSALT_SRC}
-            ${LIBDILITHIUM_SRC}
             )
 
-    target_link_libraries(qrllib_test gtest_main)
+    target_link_libraries(qrllib_test
+            gtest_main
+            dilithium
+            kyber)
 
-    include(CTest)
-    enable_testing()
+#    include(CTest)
+#    enable_testing()
 
     add_test(gtest ${PROJECT_BINARY_DIR}/qrllib_test)
 endif()
@@ -157,10 +191,12 @@ if (BUILD_PYTHON)
             src/api/api.cxx
             ${LIB_SRC}
             ${LIBXMSSALT_SRC}
-            ${LIBDILITHIUM_SRC}
             )
 
-    SWIG_LINK_LIBRARIES(pyqrllib ${SWIG_LANG_LIBRARIES} )
+    SWIG_LINK_LIBRARIES(pyqrllib
+            ${SWIG_LANG_LIBRARIES}
+            dilithium
+            kyber)
 
     add_custom_command(TARGET ${SWIG_MODULE_pyqrllib_REAL_NAME}
             POST_BUILD
@@ -203,10 +239,12 @@ if (BUILD_GO)
             src/api/api.cxx
             ${LIB_SRC}
             ${LIBXMSSALT_SRC}
-            ${LIBDILITHIUM_SRC}
             )
 
-    SWIG_LINK_LIBRARIES(goqrllib ${SWIG_LANG_LIBRARIES} )
+    SWIG_LINK_LIBRARIES(goqrllib
+            ${SWIG_LANG_LIBRARIES}
+            dilithium
+            kyber)
 
     add_custom_command(TARGET ${SWIG_MODULE_goqrllib_REAL_NAME}
             POST_BUILD
@@ -226,9 +264,10 @@ if (BUILD_WEBASSEMBLY)
             ${JS_INTERFACE}
             ${LIB_SRC}
             ${LIBXMSSALT_SRC}
-            ${LIBDILITHIUM_SRC}
     )
 
-    target_link_libraries(jsqrl)
+    target_link_libraries(jsqrl
+            dilithium
+            kyber)
 
 endif ()

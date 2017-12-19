@@ -7,3 +7,6 @@
 [submodule "dilithium"]
 	path = deps/dilithium
 	url = https://github.com/pq-crystals/dilithium.git
+[submodule "kyber"]
+	path = deps/kyber
+	url = https://github.com/pq-crystals/kyber.git

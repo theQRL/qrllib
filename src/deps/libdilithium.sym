@@ -1,0 +1,4 @@
+crypto_sign_keypair
+crypto_sign
+crypto_sign_open
+randombytes
