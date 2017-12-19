@@ -4,7 +4,7 @@
 cmake_minimum_required(VERSION 3.5)
 project(qrllib)
 
-set(CMAKE_VERBOSE_MAKEFILE ON)
+#set(CMAKE_VERBOSE_MAKEFILE ON)
 
 set(CMAKE_CXX_STANDARD 14)
 #set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++14 -Wall -Wextra -pedantic")
@@ -21,9 +21,10 @@ set(BUILD_PYTHON OFF CACHE BOOL "Enables python wrapper")
 set(BUILD_PYTHON_LOCALDEPLOY OFF CACHE BOOL "Deploys python locally")
 set(BUILD_WEBASSEMBLY OFF CACHE BOOL "Enables emscripten build")
 
+message(STATUS "BUILD_TESTS    " ${BUILD_TESTS})
 message(STATUS "GOLANG WRAPPER " ${BUILD_GO})
 message(STATUS "PYTHON WRAPPER " ${BUILD_PYTHON})
-message(STATUS "WEBASSEMBLY " ${BUILD_WEBASSEMBLY})
+message(STATUS "WEBASSEMBLY    " ${BUILD_WEBASSEMBLY})
 
 if (BUILD_PYTHON OR BUILD_GO)
     find_package(SWIG REQUIRED)
@@ -86,20 +87,20 @@ SET_SOURCE_FILES_PROPERTIES(${LIB_SRC} PROPERTIES LANGUAGE CXX)
 SET_SOURCE_FILES_PROPERTIES(${LIBTEST_SRC} PROPERTIES LANGUAGE CXX)
 SET_SOURCE_FILES_PROPERTIES(${LIBXMSSALT_SRC} PROPERTIES LANGUAGE CXX)
 
-# Build C static libraries
-add_library(dilithium STATIC
+# Build C shared libraries + stripping
+add_library(dilithium SHARED
         ${LIBDILITHIUM_SRC}
         )
 
 target_link_libraries(dilithium PRIVATE
-        -Wl,--no-undefined,--retain-symbols-file=${CMAKE_CURRENT_SOURCE_DIR}/src/deps/libdilithium.sym)
+        -Wl,--retain-symbols-file=${CMAKE_CURRENT_SOURCE_DIR}/src/deps/libdilithium.sym)
 
-add_library(kyber STATIC
+add_library(kyber SHARED
         ${LIBKYBER_SRC}
         )
 
 target_link_libraries(kyber PRIVATE
-        -Wl,--no-undefined,--retain-symbols-file=${CMAKE_CURRENT_SOURCE_DIR}/src/deps/libkyber.sym)
+        -Wl,--retain-symbols-file=${CMAKE_CURRENT_SOURCE_DIR}/src/deps/libkyber.sym)
 
 if (BUILD_TESTS)
     message(STATUS "GTests enabled")

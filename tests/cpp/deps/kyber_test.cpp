@@ -4,7 +4,7 @@
 #include <libkyber.h>
 
 namespace {
-    TEST(KyberReferenceTest, check_keys) {
+    TEST(DISABLED_KyberReferenceTest, check_keys) {
         // Based on reference implementation
         std::vector<uint8_t> key_a(KYBER_SYMBYTES);
         std::vector<uint8_t> key_b(KYBER_SYMBYTES);
