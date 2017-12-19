@@ -6,7 +6,8 @@
 
 #include <string>
 #include <vector>
-#include <libdilithium.h>
+#include <dilithium/ref/api.h>
+#include <dilithium/ref/randombytes.h>
 #include "xmss-alt/xmss_params.h"
 
 class Dilithium {
@@ -21,8 +22,8 @@ public:
     std::vector<uint8_t> getSK() {  return _sk; }
     std::vector<uint8_t> getPK() {  return _pk; }
 
-    unsigned int getSecretKeySize() { return DILITHIUM_SECRETKEYBYTES; }
-    unsigned int getPublicKeySize() { return DILITHIUM_PUBLICKEYBYTES; }
+    unsigned int getSecretKeySize() { return CRYPTO_SECRETKEYBYTES; }
+    unsigned int getPublicKeySize() { return CRYPTO_PUBLICKEYBYTES; }
 
     static bool sign_open(std::vector<uint8_t> &message_output,
                           const std::vector<uint8_t> &message_signed,
