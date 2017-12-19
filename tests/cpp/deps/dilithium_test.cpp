@@ -2,18 +2,17 @@
 // file LICENSE or http://www.opensource.org/licenses/mit-license.php.
 #include "gtest/gtest.h"
 
-#include <dilithium/ref/api.h>
-#include <dilithium/ref/randombytes.h>
+#include <libdilithium.h>
 
 namespace {
     TEST(DilithumReferenceTest, sign_keypair) {
         std::vector<unsigned char> message(100);
 
-        std::vector<unsigned char> pk(CRYPTO_PUBLICKEYBYTES);
-        std::vector<unsigned char> sk(CRYPTO_SECRETKEYBYTES);
+        std::vector<unsigned char> pk(DILITHIUM_PUBLICKEYBYTES);
+        std::vector<unsigned char> sk(DILITHIUM_SECRETKEYBYTES);
 
-        std::vector<unsigned char> message_signed(message.size() + CRYPTO_BYTES);
-        std::vector<unsigned char> message2(message.size() + CRYPTO_BYTES);
+        std::vector<unsigned char> message_signed(message.size() + DILITHIUM_BYTES);
+        std::vector<unsigned char> message2(message.size() + DILITHIUM_BYTES);
 
         // Generate a random message
         randombytes(message.data(), message.size());
