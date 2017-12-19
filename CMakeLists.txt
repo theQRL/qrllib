@@ -255,9 +255,9 @@ if (BUILD_GO)
 endif ()
 
 if (BUILD_WEBASSEMBLY)
-    set(JS_INTERFACE
-            ${CMAKE_CURRENT_SOURCE_DIR}/src/jswrapper/jswrapper.cpp
-            )
+    set(JS_QRLINTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/src/jswrapper/jsqrlwrapper.cpp )
+    set(JS_DILINTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/src/jswrapper/jsdilwrapper.cpp )
+    set(JS_KYBINTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/src/jswrapper/jskybwrapper.cpp )
 
     message(STATUS "webassembly enabled")
     add_library(jsqrl SHARED
@@ -266,8 +266,16 @@ if (BUILD_WEBASSEMBLY)
             ${LIBXMSSALT_SRC}
     )
 
-    target_link_libraries(jsqrl
-            dilithium
-            kyber)
+    add_library(jsdilithium SHARED
+            ${JS_INTERFACE}
+            ${LIB_SRC}
+            ${LIBDILITHIUM_SRC}
+            )
+
+    add_library(jskyber SHARED
+            ${JS_INTERFACE}
+            ${LIB_SRC}
+            ${LIBKYBER_SRC}
+            )
 
 endif ()
