@@ -3,4 +3,5 @@ global-include CMakeLists.txt CMakeLists.txt.gtest.in *.cmake
 recursive-include src *
 recursive-include deps/xmss-alt *
 recursive-include deps/dilithium *
+recursive-include deps/kyber *
 recursive-include deps/PicoSHA2 *
