@@ -1,10 +1,10 @@
 // Distributed under the MIT software license, see the accompanying
 // file LICENSE or http://www.opensource.org/licenses/mit-license.php.
 #include "gtest/gtest.h"
-#include <dilithium.h>
+#include "../../../src/dilithium/dilithium.h"
 
 namespace {
-    TEST(DilithumReferenceTest, sign_keypair) {
+    TEST(DilithumTest, sign_keypair) {
         std::vector<unsigned char> message {0, 1, 2, 4, 6, 9, 1};
 
         Dilithium dilithium;
@@ -19,7 +19,7 @@ namespace {
         EXPECT_TRUE(ret);
     }
 
-    TEST(DilithumReferenceTest, sign_keypair_fail) {
+    TEST(DilithumTest, sign_keypair_fail) {
         std::vector<unsigned char> message {0, 1, 2, 4, 6, 9, 1};
 
         Dilithium dilithium;

@@ -1,14 +1,17 @@
+// Distributed under the MIT software license, see the accompanying
+// file LICENSE or http://www.opensource.org/licenses/mit-license.php.
+
 #ifndef QRLLIB_DILITHIUM_H
 #define QRLLIB_DILITHIUM_H
 
 #include <string>
 #include <vector>
 #include <dilithium/ref/api.h>
-#include "xmss-alt/xmss_params.h"
+#include <dilithium/ref/randombytes.h>
+
 
 class Dilithium {
 public:
-    // TODO: Fix constness / passing by value, etc. This might require changes in the underlying lib
     Dilithium();
     Dilithium(const std::vector<uint8_t> &pk, const std::vector<uint8_t> &sk);
     virtual ~Dilithium()=default;
