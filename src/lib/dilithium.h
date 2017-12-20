@@ -1,9 +1,12 @@
+// Distributed under the MIT software license, see the accompanying
+// file LICENSE or http://www.opensource.org/licenses/mit-license.php.
+
 #ifndef QRLLIB_DILITHIUM_H
 #define QRLLIB_DILITHIUM_H
 
 #include <string>
 #include <vector>
-#include <dilithium/ref/api.h>
+#include <libdilithium.h>
 #include "xmss-alt/xmss_params.h"
 
 class Dilithium {
@@ -18,8 +21,8 @@ public:
     std::vector<uint8_t> getSK() {  return _sk; }
     std::vector<uint8_t> getPK() {  return _pk; }
 
-    unsigned int getSecretKeySize() { return CRYPTO_SECRETKEYBYTES; }
-    unsigned int getPublicKeySize() { return CRYPTO_PUBLICKEYBYTES; }
+    unsigned int getSecretKeySize() { return DILITHIUM_SECRETKEYBYTES; }
+    unsigned int getPublicKeySize() { return DILITHIUM_PUBLICKEYBYTES; }
 
     static bool sign_open(std::vector<uint8_t> &message_output,
                           const std::vector<uint8_t> &message_signed,
