@@ -4,8 +4,6 @@
 cmake_minimum_required(VERSION 3.5)
 project(qrllib)
 
-set(CMAKE_VERBOSE_MAKEFILE ON)
-
 set(CMAKE_CXX_STANDARD 14)
 #set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++14 -Wall -Wextra -pedantic")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIC")
@@ -34,7 +32,7 @@ endif ()
 
 include_directories(
         ${CMAKE_CURRENT_SOURCE_DIR}/src/api
-        ${CMAKE_CURRENT_SOURCE_DIR}/src/deps
+        ${CMAKE_CURRENT_SOURCE_DIR}/src
         ${CMAKE_CURRENT_SOURCE_DIR}/deps
 )
 
@@ -206,22 +204,18 @@ if (BUILD_PYTHON)
         set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
     endif ()
 
-    set(SWIG_INTERFACE
-            ${CMAKE_CURRENT_SOURCE_DIR}/src/api/api.i)
-
     set(language python)
     find_package(PythonLibs 3.4 REQUIRED)
-    include_directories(${PYTHON_INCLUDE_PATH})
-
-    set(SWIG_LANG_LIBRARIES ${PYTHON_LIBRARIES})
-
+    include_directories(
+          ${PYTHON_INCLUDE_PATH}
+    )
     set(CMAKE_SWIG_OUTDIR ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/pyqrllib)
-
-    set_source_files_properties(${SWIG_INTERFACE} PROPERTIES CPLUSPLUS ON)
-    set_property(SOURCE ${SWIG_INTERFACE} PROPERTY SWIG_FLAGS "-includeall" "-ignoremissing")
-
     set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/pyqrllib)
 
+    set(SWIG_INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/src/api/qrl.i)
+    set(SWIG_LANG_LIBRARIES ${PYTHON_LIBRARIES})
+    set_source_files_properties(${SWIG_INTERFACE} PROPERTIES CPLUSPLUS ON)
+    set_property(SOURCE ${SWIG_INTERFACE} PROPERTY SWIG_FLAGS "-includeall" "-ignoremissing")
     message(STATUS "CMAKE_SWIG_OUTDIR: " ${CMAKE_SWIG_OUTDIR})
     message(STATUS "CMAKE_LIBRARY_OUTPUT_DIRECTORY: " ${CMAKE_LIBRARY_OUTPUT_DIRECTORY})
 
@@ -230,13 +224,17 @@ if (BUILD_PYTHON)
     SWIG_ADD_MODULE(pyqrllib
             ${language}
             ${SWIG_INTERFACE}
-            src/api/api.cxx
-            ${LIB_SRC}
+            ${LIB_QRL_SRC}
             ${LIBXMSSALT_SRC}
             )
 
     SWIG_LINK_LIBRARIES(pyqrllib
             ${SWIG_LANG_LIBRARIES})
+
+    include_directories(
+            ${PYTHON_INCLUDE_PATH}
+            ${LIB_QRL_INCLUDES}
+    )
 
     add_custom_command(TARGET ${SWIG_MODULE_pyqrllib_REAL_NAME}
             POST_BUILD
@@ -252,30 +250,78 @@ if (BUILD_PYTHON)
             COMMAND ${CMAKE_COMMAND} -E copy_if_different ${swig_extra_generated_files} ${CMAKE_CURRENT_SOURCE_DIR}/pyqrllib/pyqrllib.py
             )
 
-    # Basic kyber
-    SWIG_ADD_MODULE(pykyber
+    ###################################################
+    # Dilithium
+    set(SWIG_INTERFACE src/api/dilithium.i)
+    set(SWIG_LANG_LIBRARIES ${PYTHON_LIBRARIES})
+    set_source_files_properties(${SWIG_INTERFACE} PROPERTIES CPLUSPLUS ON)
+    set_property(SOURCE ${SWIG_INTERFACE} PROPERTY SWIG_FLAGS "-includeall" "-ignoremissing")
+    message(STATUS "CMAKE_SWIG_OUTDIR: " ${CMAKE_SWIG_OUTDIR})
+    message(STATUS "CMAKE_LIBRARY_OUTPUT_DIRECTORY: " ${CMAKE_LIBRARY_OUTPUT_DIRECTORY})
+
+    set(SWIG_INTERFACE
+            src/api/dilithium.i)
+
+    include_directories(
+            ${PYTHON_INCLUDE_PATH}
+            ${LIB_DILITHIUM_INCLUDES}
+    )
+
+    SWIG_ADD_MODULE(dilithium
             ${language}
             ${SWIG_INTERFACE}
-            src/api/api.cxx
-            ${LIB_SRC}
-            ${LIBKYBER_SRC}
+            ${LIB_DILITHIUM_SRC}
+            ${REF_DILITHIUM_SRC}
             )
 
-    SWIG_LINK_LIBRARIES(pykyber
+    SWIG_LINK_LIBRARIES(dilithium
             ${SWIG_LANG_LIBRARIES})
 
-    add_custom_command(TARGET ${SWIG_MODULE_pykyber_REAL_NAME}
+    add_custom_command(TARGET ${SWIG_MODULE_dilithium_REAL_NAME}
             POST_BUILD
             COMMENT "Moving SWIG files to output dir"
             COMMAND ${CMAKE_COMMAND} -E
-            copy_if_different $<TARGET_FILE:${SWIG_MODULE_pyqrllib_REAL_NAME}>
-            ${CMAKE_CURRENT_SOURCE_DIR}/pykyber/$<TARGET_LINKER_FILE_NAME:${SWIG_MODULE_pyqrllib_REAL_NAME}>
+            copy_if_different $<TARGET_FILE:${SWIG_MODULE_dilithium_REAL_NAME}>
+            ${CMAKE_CURRENT_SOURCE_DIR}/pyqrllib/$<TARGET_LINKER_FILE_NAME:${SWIG_MODULE_dilithium_REAL_NAME}>
             )
 
-    add_custom_command(TARGET ${SWIG_MODULE_pykyber_REAL_NAME}
+    add_custom_command(TARGET ${SWIG_MODULE_dilithium_REAL_NAME}
             POST_BUILD
             COMMENT ${swig_extra_generated_files}
-            COMMAND ${CMAKE_COMMAND} -E copy_if_different ${swig_extra_generated_files} ${CMAKE_CURRENT_SOURCE_DIR}/pykyber/pykyber.py
+            COMMAND ${CMAKE_COMMAND} -E copy_if_different ${swig_extra_generated_files} ${CMAKE_CURRENT_SOURCE_DIR}/pyqrllib/dilithium.py
+            )
+
+
+    # Kyber
+    set(SWIG_INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/src/api/kyber.i)
+    set(SWIG_LANG_LIBRARIES ${PYTHON_LIBRARIES})
+    set_source_files_properties(${SWIG_INTERFACE} PROPERTIES CPLUSPLUS ON)
+    set_property(SOURCE ${SWIG_INTERFACE} PROPERTY SWIG_FLAGS "-includeall" "-ignoremissing")
+    message(STATUS "CMAKE_SWIG_OUTDIR: " ${CMAKE_SWIG_OUTDIR})
+    message(STATUS "CMAKE_LIBRARY_OUTPUT_DIRECTORY: " ${CMAKE_LIBRARY_OUTPUT_DIRECTORY})
+
+    SWIG_ADD_MODULE(kyber
+            ${language}
+            ${SWIG_INTERFACE}
+            ${LIB_KYBER_SRC}
+            ${REF_KYBER_SRC}
+            )
+
+    SWIG_LINK_LIBRARIES(kyber
+            ${SWIG_LANG_LIBRARIES})
+
+    add_custom_command(TARGET ${SWIG_MODULE_kyber_REAL_NAME}
+            POST_BUILD
+            COMMENT "Moving SWIG files to output dir"
+            COMMAND ${CMAKE_COMMAND} -E
+            copy_if_different $<TARGET_FILE:${SWIG_MODULE_kyber_REAL_NAME}>
+            ${CMAKE_CURRENT_SOURCE_DIR}/pyqrllib/$<TARGET_LINKER_FILE_NAME:${SWIG_MODULE_kyber_REAL_NAME}>
+            )
+
+    add_custom_command(TARGET ${SWIG_MODULE_kyber_REAL_NAME}
+            POST_BUILD
+            COMMENT ${swig_extra_generated_files}
+            COMMAND ${CMAKE_COMMAND} -E copy_if_different ${swig_extra_generated_files} ${CMAKE_CURRENT_SOURCE_DIR}/pyqrllib/kyber.py
             )
 
 endif ()
@@ -283,7 +329,7 @@ endif ()
 # SWIG + API - Golang related stuff
 if (BUILD_GO)
     set(SWIG_INTERFACE
-            ${CMAKE_CURRENT_SOURCE_DIR}/src/api/api.i)
+            ${CMAKE_CURRENT_SOURCE_DIR}/src/api/qrl.i)
 
     message(STATUS "golang wrapper enabled")
     set(language go)
@@ -315,27 +361,33 @@ if (BUILD_GO)
 endif ()
 
 if (BUILD_WEBASSEMBLY)
-    set(JS_QRLINTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/src/jswrapper/jsqrlwrapper.cpp)
-    set(JS_DILINTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/src/jswrapper/jsdilwrapper.cpp)
+    set(JS_QRL_INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/src/jswrapper/jsqrlwrapper.cpp)
+    set(JS_DILITHIUM_INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/src/jswrapper/jsdilwrapper.cpp)
     set(JS_KYBINTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/src/jswrapper/jskybwrapper.cpp)
 
     message(STATUS "webassembly enabled")
     add_library(jsqrl SHARED
-            ${JS_INTERFACE}
-            ${LIB_SRC}
+            ${JS_QRL_INTERFACE}
+            ${LIB_QRL_SRC}
             ${LIBXMSSALT_SRC}
             )
+    target_include_directories( jsqrl PRIVATE
+            ${LIB_QRL_INCLUDES} )
 
     add_library(jsdilithium SHARED
-            ${JS_INTERFACE}
-            ${LIB_SRC}
+            ${JS_DILITHIUM_INTERFACE}
+            ${LIB_KYBER_SRC}
             ${LIBDILITHIUM_SRC}
             )
+    target_include_directories( jsdilithium PRIVATE
+            ${LIB_DILITHIUM_INCLUDES} )
 
     add_library(jskyber SHARED
-            ${JS_INTERFACE}
-            ${LIB_SRC}
+            ${JS_KYBER_INTERFACE}
+            ${LIB_KYBER_SRC}
             ${LIBKYBER_SRC}
             )
+    target_include_directories( jskyber PRIVATE
+            ${LIB_KYBER_INCLUDES} )
 
 endif ()

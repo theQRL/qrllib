@@ -4,12 +4,13 @@ from __future__ import print_function
 
 from unittest import TestCase
 
-from pyqrllib.pyqrllib import Dilithium, ucharVector, bin2hstr, hstr2bin
+from pyqrllib.pyqrllib import ucharVector, bin2hstr, hstr2bin
+from pyqrllib.dilithium import Dilithium
 
 
-class TestHash(TestCase):
+class TestDilithium(TestCase):
     def __init__(self, *args, **kwargs):
-        super(TestHash, self).__init__(*args, **kwargs)
+        super(TestDilithium, self).__init__(*args, **kwargs)
 
     PK1_HSTR = "6080a00cb958ed2dfe03e33c72a0ab60e76f341bf730d08922cfe9dbb0a4ac9b" \
                "2cb47d7adc0e38671fce3bcd4683da331b513666ff5d8adf28576fef7cb474cb" \
@@ -181,8 +182,6 @@ class TestHash(TestCase):
 
         Dilithium.sign_open(data_out, message_signed, dilithium.getPK())
 
-        print(data_out)
-
         message_out = Dilithium.extract_message(data_out)
         signature_out = Dilithium.extract_signature(data_out)
 
@@ -196,7 +195,8 @@ class TestHash(TestCase):
         print(bin2hstr(dilithium.getPK()))
         print(bin2hstr(dilithium.getSK()))
 
-    def test_dilithium_reference(self):
+
+    def test_dilithium_reference2(self):
         pk = bytes(hstr2bin(self.PK1_HSTR))
         sk = bytes(hstr2bin(self.SK1_HSTR))
 
@@ -210,8 +210,6 @@ class TestHash(TestCase):
         data_out = ucharVector(len(message_signed))
 
         Dilithium.sign_open(data_out, message_signed, dilithium.getPK())
-
-        print(data_out)
 
         message_out = Dilithium.extract_message(data_out)
         signature_out = Dilithium.extract_signature(data_out)

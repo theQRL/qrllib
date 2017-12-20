@@ -17,7 +17,7 @@ Dilithium::Dilithium(const std::vector<uint8_t> &pk, const std::vector<uint8_t> 
     _pk(pk),
     _sk(sk)
 {
-    // TODO: Verify sizes - DILITHIUM_SECRETKEYBYTES / DILITHIUM_PUBLICKEYBYTES
+    // TODO: Verify sizes - CRYPTO_SECRETKEYBYTES / CRYPTO_PUBLICKEYBYTES
 }
 
 std::vector<uint8_t> Dilithium::sign(const std::vector<uint8_t> &message)
@@ -53,7 +53,7 @@ bool Dilithium::sign_open(std::vector<uint8_t> &message_output,
                      message_signed.size(),
                      pk.data());
 
-    // TODO Leon: message_out has size()+DILITHIUM_BYTES. Should we return just the message?
+    // TODO Leon: message_out has size()+CRYPTO_BYTES. Should we return just the message?
     return ret == 0;
 }
 

@@ -4,7 +4,7 @@
 #include "../../../src/dilithium/dilithium.h"
 
 namespace {
-    TEST(DilithumReferenceTest, sign_keypair) {
+    TEST(DilithumTest, sign_keypair) {
         std::vector<unsigned char> message {0, 1, 2, 4, 6, 9, 1};
 
         Dilithium dilithium;
@@ -19,7 +19,7 @@ namespace {
         EXPECT_TRUE(ret);
     }
 
-    TEST(DilithumReferenceTest, sign_keypair_fail) {
+    TEST(DilithumTest, sign_keypair_fail) {
         std::vector<unsigned char> message {0, 1, 2, 4, 6, 9, 1};
 
         Dilithium dilithium;
