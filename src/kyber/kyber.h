@@ -15,6 +15,9 @@
 class Kyber {
 public:
     Kyber();
+    Kyber(const std::vector<uint8_t> &pk,
+          const std::vector<uint8_t> &sk);
+
     virtual ~Kyber()=default;
 
     std::vector<uint8_t> getPK() {  return _pk; }
