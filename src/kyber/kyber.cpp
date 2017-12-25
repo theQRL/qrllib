@@ -3,7 +3,25 @@
 
 #include <string>
 #include <vector>
+#include <stdexcept>
 #include "kyber.h"
+
+Kyber::Kyber(const std::vector<uint8_t> &pk,
+             const std::vector<uint8_t> &sk)
+{
+    if (pk.size()!=KYBER_PUBLICKEYBYTES)
+    {
+        throw std::invalid_argument("pk. Invalid size");
+    }
+
+    if (sk.size()!=KYBER_SECRETKEYBYTES)
+    {
+        throw std::invalid_argument("sk. Invalid size");
+    }
+
+    _pk = pk;
+    _sk = sk;
+}
 
 Kyber::Kyber()
 {
