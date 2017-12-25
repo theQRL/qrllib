@@ -21,6 +21,8 @@ public:
     virtual ~Kyber()=default;
 
     std::vector<uint8_t> getPK() {  return _pk; }
+    std::vector<uint8_t> getSK() {  return _sk; }
+
     std::vector<uint8_t> getMyKey() {  return _key; }
     std::vector<uint8_t> getCypherText() {  return _ct; }
 
