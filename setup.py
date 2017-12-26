@@ -40,7 +40,7 @@ class CMakeBuild(build_ext):
             subprocess.check_call(cmake_call, cwd=self.build_temp, env=env)
 
             subprocess.check_call(['cmake', '--build', '.',
-                                   '--config', 'Release', '--', '-j4'], cwd=self.build_temp)
+                                   '--config', 'Release', '--', '-j2'], cwd=self.build_temp)
 
 
 class CMakeExtension(Extension):
