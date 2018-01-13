@@ -32,6 +32,8 @@ emcc --bind libjsqrl.so -O3 --memory-init-file 0  -o libjsqrl.js
 emcc --bind libjsqrl.so -O3 -s WASM=1 -o web-libjsqrl.js
 echo "QRLLIB=Module;" >> web-libjsqrl.js
 
+# Fix pathing of web-libjsqrl.wasm for web clients
+sed -i 's/web-libjsqrl\.wasm/\/web-libjsqrl\.wasm/g' web-libjsqrl.js
 
 if [ -n "${TEST:+1}" ]; then
   echo "Running Tests"
