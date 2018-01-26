@@ -1,26 +1,14 @@
 sudo: required
 dist: trusty
 services: docker
-language: cpp
-python:
-- '3.4'
+language: python
+python: 3.5
 cache:
   timeout: 600
 
 cache:
   directories:
     - $HOME/Library/Caches/Homebrew
-
-cache:
-  - pip
-  - apt
-
-addons:
-  apt:
-    packages:
-    - git
-    - python3
-    - python3-pip
 
 notifications:
   webhooks:
@@ -31,18 +19,6 @@ notifications:
 ########################
 jobs:
   include:
-  ########################
-  - stage: prepare cache
-    os: linux
-    script:
-    - echo
-
-#  - stage: prepare cache
-#    os: osx
-#    if: branch = master
-#    script: "./travis/prepare.sh"
-
-
   ######################## XENIAL - OLD COMPILER (Useful for Raspberry Pi)
   - stage: build+test
     os: linux
@@ -98,10 +74,6 @@ jobs:
     - CMAKE_ARGS='-DBUILD_PYTHON=ON'
     script:
     - "./travis/build.sh"
-
-#  ########################
-#  - stage: test_deployment
-#    script: echo "TODO..."
 
   ########################
   - stage: publish
