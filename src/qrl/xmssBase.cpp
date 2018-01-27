@@ -3,7 +3,8 @@
 #include <iostream>
 #include "misc.h"
 
-XmssBase::XmssBase(const TSEED &seed, unsigned char height): _seed(seed), _height(height)
+XmssBase::XmssBase(const TSEED &seed, unsigned char height) throw(std::invalid_argument)
+    : _seed(seed), _height(height)
 {
     if (seed.size() != 48)
     {
@@ -114,14 +115,20 @@ std::string XmssBase::getAddress(const std::string &prefix)
 
 bool XmssBase::verify(const TMESSAGE &message,
                       const TSIGNATURE &signature,
-                      const TKEY &pk)
+                      const TKEY &pk) throw(std::invalid_argument)
 {
     const auto height = static_cast<const unsigned char>(XmssBase::getHeightFromSigSize(signature.size()));
 
-    xmss_params params;
-    xmss_set_params(&params, 32, height, 16, 2 );
+    xmss_params params{};
+    const uint32_t k = 2;
+    const uint32_t w = 16;
+    const uint32_t n = 32;
 
-    // Estimate height
+    if (k >= height || (height - k) % 2) {
+        throw std::invalid_argument("For BDS traversal, H - K must be even, with H > K >= 2!");
+    }
+
+    xmss_set_params(&params, n, height, w, k );
 
     // TODO: Fix constness in library
     auto tmp = static_cast<TSIGNATURE>(signature);

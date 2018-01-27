@@ -6,7 +6,8 @@
 #include "xmss-alt/algsxmss.h"
 #include <stdexcept>
 
-Xmss::Xmss(const TSEED &seed, unsigned char height): XmssBase(seed, height)
+Xmss::Xmss(const TSEED &seed, unsigned char height)throw(std::invalid_argument)
+    : XmssBase(seed, height)
 {
 //    PK format
 //    32 root address
@@ -28,7 +29,15 @@ Xmss::Xmss(const TSEED &seed, unsigned char height): XmssBase(seed, height)
         throw std::invalid_argument("Seed should be 48 bytes. Other values are not currently supported");
     }
 
-    xmss_set_params(&params, 32, height, 16, 2 );
+    const uint32_t k = 2;
+    const uint32_t w = 16;
+    const uint32_t n = 32;
+
+    if (k >= height || (height - k) % 2) {
+        throw std::invalid_argument("For BDS traversal, H - K must be even, with H > K >= 2!");
+    }
+
+    xmss_set_params(&params, n, height, w, k );
 
     xmss_Genkeypair(&params,
                     tmp.data(),
