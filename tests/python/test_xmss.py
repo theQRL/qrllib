@@ -5,6 +5,8 @@ from __future__ import print_function
 from time import sleep, time
 from unittest import TestCase
 
+import pytest
+
 from pyqrllib import pyqrllib
 
 
@@ -69,3 +71,18 @@ class TestHash(TestCase):
         self.assertTrue(pyqrllib.Xmss.verify(message,
                                              signature,
                                              xmss.getPK()))
+
+    def test_xmss_exception_constructor(self):
+        HEIGHT = 7
+        seed = pyqrllib.ucharVector(48, 0)
+
+        with pytest.raises(ValueError):
+            xmss = pyqrllib.XmssFast(seed=seed, height=HEIGHT)
+
+    def test_xmss_exception_verify(self):
+        message = pyqrllib.ucharVector(48, 0)
+        signature = pyqrllib.ucharVector(2287, 0)
+        pk = pyqrllib.ucharVector(48, 0)
+
+        with pytest.raises(ValueError):
+            pyqrllib.XmssFast.verify(message, signature, pk)

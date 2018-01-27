@@ -3,6 +3,7 @@
 
 #include <string>
 #include <vector>
+#include <stdexcept>
 #include "xmss-alt/xmss_params.h"
 
 #define TSIGNATURE std::vector<uint8_t>
@@ -13,7 +14,7 @@
 class XmssBase {
 public:
     // TODO: Fix constness / passing by value, etc. This might require changes in the underlying lib
-    XmssBase(const TSEED &seed, uint8_t height);
+    XmssBase(const TSEED &seed, uint8_t height) throw(std::invalid_argument);
     virtual ~XmssBase()=default;
 
     virtual TSIGNATURE sign(const TMESSAGE &message) = 0;
@@ -43,7 +44,7 @@ public:
 
     static bool verify(const TMESSAGE &message,
                        const TSIGNATURE &signature,
-                       const TKEY &pk);
+                       const TKEY &pk) throw(std::invalid_argument);
 
 protected:
     xmss_params params;

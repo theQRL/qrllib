@@ -116,7 +116,25 @@ namespace {
         auto hstr_sig2 = bin2hstr(signature2);
 
         EXPECT_EQ(hstr_sig1, hstr_sig2);
-//    EXPECT_EQ(signature1, signature2);
+    }
+
+    TEST(XMSSFAST, BadInputConstructor) {
+        std::vector<unsigned char> seed(48, 0);
+
+        EXPECT_THROW(XmssFast xmss(seed, 3), std::invalid_argument);
+    }
+
+    TEST(XMSSFAST, BadInputVerify) {
+        TMESSAGE message(2, 0);
+        TSIGNATURE signature(48, 0);
+        TKEY pk(48, 0);
+
+        EXPECT_THROW(XmssFast::verify(message, signature, pk),
+                     std::invalid_argument);
+
+        TSIGNATURE signature2(2287, 0);
+        EXPECT_THROW(XmssFast::verify(message, signature2, pk),
+                     std::invalid_argument);
     }
 
 }

@@ -6,12 +6,13 @@
 #define QRLLIB_XMSS_FAST_H
 
 #include "xmssBase.h"
+#include <stdexcept>
 #include <xmss-alt/algsxmss_fast.h>
 
 class XmssFast : public XmssBase {
 public:
     // TODO: Fix constness / passing by copy, this requires changes in the underlying lib
-    XmssFast(const TSEED &seed, unsigned char height);
+    XmssFast(const TSEED &seed, unsigned char height) throw(std::invalid_argument);
 
     TSIGNATURE sign(const TMESSAGE &message) override;
 

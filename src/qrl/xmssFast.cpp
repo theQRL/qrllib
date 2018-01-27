@@ -4,7 +4,8 @@
 #include <xmss-alt/xmss_params.h>
 #include "xmssFast.h"
 
-XmssFast::XmssFast(const TSEED &seed, unsigned char height): XmssBase(seed, height)
+XmssFast::XmssFast(const TSEED &seed, unsigned char height) throw(std::invalid_argument)
+        : XmssBase(seed, height)
 {
 //    PK format
 //    32 root address
@@ -21,27 +22,27 @@ XmssFast::XmssFast(const TSEED &seed, unsigned char height): XmssBase(seed, heig
     // FIXME: Inconsistency here
     _sk = TKEY(132, 0);
     auto tmp = TKEY(64, 0);
-    xmss_set_params(&params,
-                    32,
-                    _height,
-                    16,
-                    2 );
 
-    // FIXME: This needs refactoring
-    const uint32_t n = params.n;
-    const uint32_t h = params.h;
-    const uint32_t k = params.k;
+    const uint32_t k = 2;
+    const uint32_t w = 16;
+    const uint32_t n = 32;
+
+    if (k >= height || (height - k) % 2) {
+        throw std::invalid_argument("For BDS traversal, H - K must be even, with H > K >= 2!");
+    }
+
+    xmss_set_params(&params, n, height, w, k );
 
     _stackoffset = 0;
-    _stack = std::vector<unsigned char>((h+1)*n);
-    _stacklevels = std::vector<unsigned char>(h+1);
-    _auth = std::vector<unsigned char>(h*n);
-    _keep = std::vector<unsigned char>((h >> 1)*n);
-    _treehash = std::vector<treehash_inst>(h-k);
-    _th_nodes = std::vector<unsigned char>((h-k)*n);
+    _stack = std::vector<unsigned char>((height+1)*n);
+    _stacklevels = std::vector<unsigned char>(height+1);
+    _auth = std::vector<unsigned char>(height*n);
+    _keep = std::vector<unsigned char>((height >> 1)*n);
+    _treehash = std::vector<treehash_inst>(height-k);
+    _th_nodes = std::vector<unsigned char>((height-k)*n);
     _retain = std::vector<unsigned char>(((1 << k) - k - 1)*n);
 
-    for (int i = 0; i < h-k; i++)
+    for (int i = 0; i < height-k; i++)
     {
         _treehash[i].node = &_th_nodes[n*i];
     }
