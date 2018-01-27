@@ -84,7 +84,7 @@ jobs:
     - PLATFORM='xenial'
     - DEPLOY='TRUE'
     script:
-    - sudo pip3 install -U pip setuptools twine
+    - sudo pip install -U pip setuptools twine
     - "./travis/build.sh"
 
     deploy:
