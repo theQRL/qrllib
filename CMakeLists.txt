@@ -116,6 +116,24 @@ SET_SOURCE_FILES_PROPERTIES(${LIBXMSSALT_SRC} PROPERTIES LANGUAGE CXX)
 SET_SOURCE_FILES_PROPERTIES(${REF_DILITHIUM_SRC} PROPERTIES LANGUAGE CXX)
 SET_SOURCE_FILES_PROPERTIES(${REF_KYBER_SRC} PROPERTIES LANGUAGE CXX)
 
+add_library(qrllib STATIC
+        ${LIB_QRL_SRC}
+        ${LIBXMSSALT_SRC})
+target_include_directories(qrllib PRIVATE ${LIB_QRL_INCLUDES} )
+
+add_library(dilithium STATIC
+        ${LIB_DILITHIUM_SRC}
+        ${REF_DILITHIUM_SRC})
+target_include_directories(dilithium PRIVATE
+        ${LIB_DILITHIUM_INCLUDES} )
+
+add_library(kyber STATIC
+        ${LIB_KYBER_SRC}
+        ${REF_KYBER_SRC})
+target_include_directories(kyber PRIVATE
+        ${LIB_KYBER_INCLUDES} )
+
+
 if (BUILD_TESTS)
     message(STATUS "GTests enabled")
 
@@ -159,39 +177,33 @@ if (BUILD_TESTS)
     enable_testing()
 
     add_executable(qrllib_test
-            ${TEST_QRL_SRC}
-            ${LIB_QRL_SRC}
-            ${LIBXMSSALT_SRC})
+            ${TEST_QRL_SRC})
 
     target_include_directories( qrllib_test PRIVATE
             ${LIB_QRL_INCLUDES} )
-    target_link_libraries(qrllib_test gtest_main)
+    target_link_libraries(qrllib_test qrllib gtest_main)
     add_test(gtest ${PROJECT_BINARY_DIR}/qrllib_test)
 
     ###########################
 
     add_executable(dilithium_test
-            ${TEST_DILITHIUM_SRC}
-            ${LIB_DILITHIUM_SRC}
-            ${REF_DILITHIUM_SRC})
+            ${TEST_DILITHIUM_SRC})
 
     target_include_directories( dilithium_test PRIVATE
             ${LIB_DILITHIUM_INCLUDES} )
 
-    target_link_libraries(dilithium_test gtest_main)
+    target_link_libraries(dilithium_test dilithium gtest_main)
     add_test(gtest ${PROJECT_BINARY_DIR}/dilithium_test)
 
     ###########################
 
     add_executable(kyber_test
-            ${TEST_KYBER_SRC}
-            ${LIB_KYBER_SRC}
-            ${REF_KYBER_SRC})
+            ${TEST_KYBER_SRC})
 
     target_include_directories( kyber_test PRIVATE
             ${LIB_KYBER_INCLUDES} )
 
-    target_link_libraries(kyber_test gtest_main)
+    target_link_libraries(kyber_test kyber gtest_main)
     add_test(gtest ${PROJECT_BINARY_DIR}/kyber_test)
 
 endif ()
