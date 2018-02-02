@@ -4,9 +4,10 @@
 #include <xmss-alt/xmss_params.h>
 #include "xmssFast.h"
 
-XmssFast::XmssFast(const TSEED &seed, unsigned char height) throw(std::invalid_argument)
-        : XmssBase(seed, height)
-{
+XmssFast::XmssFast(const TSEED &seed,
+                   unsigned char height,
+                   eHashFunction hashFunction) throw(std::invalid_argument)
+        : XmssBase(seed, height, hashFunction) {
 //    PK format
 //    32 root address
 //    32 pub_seed
@@ -31,20 +32,19 @@ XmssFast::XmssFast(const TSEED &seed, unsigned char height) throw(std::invalid_a
         throw std::invalid_argument("For BDS traversal, H - K must be even, with H > K >= 2!");
     }
 
-    xmss_set_params(&params, n, height, w, k );
+    xmss_set_params(&params, n, height, w, k);
 
     _stackoffset = 0;
-    _stack = std::vector<unsigned char>((height+1)*n);
-    _stacklevels = std::vector<unsigned char>(height+1);
-    _auth = std::vector<unsigned char>(height*n);
-    _keep = std::vector<unsigned char>((height >> 1)*n);
-    _treehash = std::vector<treehash_inst>(height-k);
-    _th_nodes = std::vector<unsigned char>((height-k)*n);
-    _retain = std::vector<unsigned char>(((1 << k) - k - 1)*n);
+    _stack = std::vector<unsigned char>((height + 1) * n);
+    _stacklevels = std::vector<unsigned char>(height + 1);
+    _auth = std::vector<unsigned char>(height * n);
+    _keep = std::vector<unsigned char>((height >> 1) * n);
+    _treehash = std::vector<treehash_inst>(height - k);
+    _th_nodes = std::vector<unsigned char>((height - k) * n);
+    _retain = std::vector<unsigned char>(((1 << k) - k - 1) * n);
 
-    for (int i = 0; i < height-k; i++)
-    {
-        _treehash[i].node = &_th_nodes[n*i];
+    for (int i = 0; i < height - k; i++) {
+        _treehash[i].node = &_th_nodes[n * i];
     }
 
     xmss_set_bds_state(&_state,
@@ -57,16 +57,17 @@ XmssFast::XmssFast(const TSEED &seed, unsigned char height) throw(std::invalid_a
                        _retain.data(),
                        0);
 
-    xmssfast_Genkeypair(&params,
+    xmssfast_Genkeypair(_hashFunction,
+                        &params,
                         tmp.data(),
                         _sk.data(),
                         &_state,
                         _seed.data());
 }
 
-unsigned int XmssFast::setIndex(unsigned int new_index)
-{
-    xmssfast_update(&params,
+unsigned int XmssFast::setIndex(unsigned int new_index) {
+    xmssfast_update(_hashFunction,
+                    &params,
                     _sk.data(),
                     &_state,
                     new_index);
@@ -74,15 +75,15 @@ unsigned int XmssFast::setIndex(unsigned int new_index)
     return new_index;
 }
 
-TSIGNATURE XmssFast::sign(const TMESSAGE &message)
-{
+TSIGNATURE XmssFast::sign(const TMESSAGE &message) {
     // TODO: Fix constness in library
     auto signature = TSIGNATURE(getSignatureSize(), 0);
 
     auto index = getIndex();
-    setIndex( index );
+    setIndex(index);
 
-    xmssfast_Signmsg(&params,
+    xmssfast_Signmsg(_hashFunction,
+                     &params,
                      _sk.data(),
                      &_state,
                      signature.data(),

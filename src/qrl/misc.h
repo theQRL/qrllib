@@ -21,8 +21,6 @@ std::vector<unsigned char> mnemonic2bin(const std::string &mnemonic);
 
 std::vector<unsigned char> getRandomSeed(uint32_t seed_size, const std::string &entropy);
 
-std::string getAddress(const std::string &prefix, const std::vector<unsigned char> &key);
-
 std::vector<std::vector<unsigned char>> getHashChainSeed(const std::vector<unsigned char> &seed, uint32_t seed_shift, uint32_t count);
 
 #endif //QRLLIB_MISC_H

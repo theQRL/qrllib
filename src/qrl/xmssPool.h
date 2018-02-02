@@ -15,17 +15,17 @@
 class XmssPool {
 public:
     XmssPool(const TSEED &base_seed,
-                 unsigned char height,
-                 size_t starting_index,
-                 size_t pool_size);
+             unsigned char height,
+             size_t starting_index,
+             size_t pool_size);
 
     ~XmssPool() = default;
 
     std::shared_ptr<XmssFast> getNextTree();
+
     bool isAvailable();
 
-    size_t getCurrentIndex()
-    {
+    size_t getCurrentIndex() {
         return _current_index;
     }
 
@@ -37,6 +37,7 @@ private:
     std::deque<std::future<std::shared_ptr<XmssFast>>> _cache;
 
     void fillCache();
+
     std::shared_ptr<XmssFast> prepareTree(size_t index);
 };
 

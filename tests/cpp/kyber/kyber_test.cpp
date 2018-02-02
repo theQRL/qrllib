@@ -23,8 +23,7 @@ namespace {
         auto aliceKey = alice.getMyKey();
         auto bobKey = bob.getMyKey();
 
-        for(int i=0; i < aliceKey.size(); i++)
-        {
+        for (int i = 0; i < aliceKey.size(); i++) {
             EXPECT_EQ(aliceKey[i], bobKey[i]);
         }
     }

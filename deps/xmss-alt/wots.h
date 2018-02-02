@@ -13,6 +13,7 @@ Public domain.
 #define WOTS_H
 
 #include <cstdint>
+#include "eHashFunctions.h"
 
 /**
  * WOTS parameter set
@@ -47,7 +48,8 @@ void wots_set_params(wots_params *params, int n, int w);
  * 
  * Places the computed public key at address pk.
  */
-void wots_pkgen(unsigned char *pk,
+void wots_pkgen(eHashFunction hash_func,
+                unsigned char *pk,
                 const unsigned char *sk,
                 const wots_params *params,
                 const unsigned char *pub_seed,
@@ -57,7 +59,8 @@ void wots_pkgen(unsigned char *pk,
  * Takes a m-byte message and the 32-byte seed for the secret key to compute a signature that is placed at "sig".
  *  
  */
-void wots_sign(unsigned char *sig,
+void wots_sign(eHashFunction hash_func,
+               unsigned char *sig,
                const unsigned char *msg,
                const unsigned char *sk,
                const wots_params *params,
@@ -68,7 +71,8 @@ void wots_sign(unsigned char *sig,
  * Takes a WOTS signature, a m-byte message and computes a WOTS public key that it places at pk.
  * 
  */
-void wots_pkFromSig(unsigned char *pk,
+void wots_pkFromSig(eHashFunction hash_func,
+                    unsigned char *pk,
                     const unsigned char *sig,
                     const unsigned char *msg,
                     const wots_params *wotsParams,

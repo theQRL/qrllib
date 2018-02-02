@@ -40,8 +40,7 @@ namespace {
                          pk.data());
 
 
-        for(int i = 0; i<message.size(); i++)
-        {
+        for (int i = 0; i < message.size(); i++) {
             EXPECT_EQ(message[i], message2[i]);
         }
     }

@@ -60,13 +60,13 @@ file(GLOB_RECURSE LIB_DILITHIUM_SRC
 file(GLOB_RECURSE LIB_KYBER_SRC
         "${CMAKE_CURRENT_SOURCE_DIR}/src/kyber/*.cpp")
 
-file(GLOB TEST_QRL_SRC
+file(GLOB_RECURSE TEST_QRL_SRC
         "${CMAKE_CURRENT_SOURCE_DIR}/tests/cpp/qrl/*.cpp")
 
-file(GLOB TEST_DILITHIUM_SRC
+file(GLOB_RECURSE TEST_DILITHIUM_SRC
         "${CMAKE_CURRENT_SOURCE_DIR}/tests/cpp/dilithium/*.cpp")
 
-file(GLOB TEST_KYBER_SRC
+file(GLOB_RECURSE TEST_KYBER_SRC
         "${CMAKE_CURRENT_SOURCE_DIR}/tests/cpp/kyber/*.cpp")
 
 set(LIBXMSSALT_SRC
@@ -232,7 +232,7 @@ if (BUILD_PYTHON)
     message(STATUS "CMAKE_LIBRARY_OUTPUT_DIRECTORY: " ${CMAKE_LIBRARY_OUTPUT_DIRECTORY})
 
     # Intentionally use a deprecated version to provide support for the raspberry pi
-    # Basic pyqrllib - Xmss, etc.
+    # Basic pyqrllib - XmssBasic, etc.
     SWIG_ADD_MODULE(pyqrllib
             ${language}
             ${SWIG_INTERFACE}

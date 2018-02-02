@@ -4,6 +4,7 @@
 #include <string>
 #include <vector>
 #include <stdexcept>
+#include "xmss-alt/eHashFunctions.h"
 #include "xmss-alt/xmss_params.h"
 
 #define TSIGNATURE std::vector<uint8_t>
@@ -13,42 +14,59 @@
 
 class XmssBase {
 public:
-    // TODO: Fix constness / passing by value, etc. This might require changes in the underlying lib
-    XmssBase(const TSEED &seed, uint8_t height) throw(std::invalid_argument);
-    virtual ~XmssBase()=default;
+    XmssBase(const TSEED &seed,
+             uint8_t height,
+             eHashFunction hashFunction = eHashFunction::SHA3) throw(std::invalid_argument);
+
+    virtual ~XmssBase() = default;
 
     virtual TSIGNATURE sign(const TMESSAGE &message) = 0;
 
+    static bool verify(const TMESSAGE &message,
+                       const TSIGNATURE &signature,
+                       const TKEY &pk,
+                       eHashFunction hashFunction = eHashFunction::SHA3) throw(std::invalid_argument);
+
     // TODO: Differentiate between XMSS and WOTS+ keys
-    TKEY getSK() {  return _sk; }
+    TKEY getSK();
+
     TKEY getPK();
-    int getHeight() {  return _height; }
-    TSEED getSeed() {  return _seed; }
+
+    int getHeight() { return _height; }
+
+    TSEED getSeed() { return _seed; }
 
     // TODO: Maybe improve this using a union down into the original code?
     TKEY getRoot();
+
     TKEY getPKSeed();
+
     TKEY getSKSeed();
+
     TKEY getSKPRF();
 
     std::string getAddress(const std::string &prefix);
 
+    uint32_t getNumberSignatures() { return ((uint32_t) 1) << _height; }
+
+    uint32_t getRemainingSignatures() { return getNumberSignatures() - getIndex(); }
+
     unsigned int getIndex();
+
     virtual unsigned int setIndex(uint32_t new_index);
 
     unsigned int getSignatureSize();
+
     static uint8_t getHeightFromSigSize(size_t sigSize);
 
     unsigned int getSecretKeySize();
-    unsigned int getPublicKeySize();
 
-    static bool verify(const TMESSAGE &message,
-                       const TSIGNATURE &signature,
-                       const TKEY &pk) throw(std::invalid_argument);
+    unsigned int getPublicKeySize();
 
 protected:
     xmss_params params;
 
+    eHashFunction _hashFunction;
     unsigned char _height;
     TKEY _sk;
     TSEED _seed;

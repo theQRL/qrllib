@@ -1,18 +1,20 @@
 // Distributed under the MIT software license, see the accompanying
 // file LICENSE or http://www.opensource.org/licenses/mit-license.php.
 #include <xmss-alt/algsxmss.h>
-#include <xmss.h>
+#include <xmssBasic.h>
 #include <iostream>
 #include "gtest/gtest.h"
 #include <misc.h>
+#include <xmssFast.h>
+
+//FIXME: Unify with XmssFast tests
 
 namespace {
-#define XMSS_HEIGHT 4
-
-    TEST(XMSS, Instantiation) {
+#define XMSS_HEIGHT 8
+    TEST(XmssFastSHA2, Instantiation) {
         std::vector<unsigned char> seed(48, 0);
 
-        Xmss xmss(seed, XMSS_HEIGHT);
+        XmssFast xmss(seed, XMSS_HEIGHT, eHashFunction::SHA2);
 
         auto pk = xmss.getPK();
         auto sk = xmss.getSK();
@@ -26,20 +28,20 @@ namespace {
         EXPECT_EQ(seed, xmss.getSeed());
     }
 
-    TEST(XMSS, SignatureLen) {
+    TEST(XmssFastSHA2, SignatureLen) {
         std::vector<unsigned char> seed(48, 0);
 
-        Xmss xmss4(seed, 4);
+        XmssFast xmss4(seed, 4, eHashFunction::SHA2);
         EXPECT_EQ(2308, xmss4.getSignatureSize());
 
-        Xmss xmss6(seed, 6);
+        XmssFast xmss6(seed, 6, eHashFunction::SHA2);
         EXPECT_EQ(2372, xmss6.getSignatureSize());
     }
 
-    TEST(XMSS, Sign) {
+    TEST(XmssFastSHA2, Sign) {
         std::vector<unsigned char> seed(48, 0);
 
-        Xmss xmss(seed, XMSS_HEIGHT);
+        XmssFast xmss(seed, XMSS_HEIGHT, eHashFunction::SHA2);
 
         std::string message = "This is a test message";
         std::vector<unsigned char> data(message.begin(), message.end());
@@ -65,12 +67,10 @@ namespace {
     }
 
 
-    TEST(XMSS, Verify) {
-        std::vector<unsigned char> seed;
-        for(unsigned char i=0; i<48; i++)
-            seed.push_back(i);
+    TEST(XmssFastSHA2, Verify) {
+        std::vector<unsigned char> seed(48, 0);
 
-        Xmss xmss(seed, XMSS_HEIGHT);
+        XmssBasic xmss(seed, XMSS_HEIGHT, eHashFunction::SHA2);
 
         std::string message = "This is a test message";
         std::vector<unsigned char> data_ref(message.begin(), message.end());
@@ -92,9 +92,50 @@ namespace {
         std::cout << "data       :" << data.size() << " bytes\n" << bin2hstr(data, 64) << std::endl;
         std::cout << "signature  :" << signature.size() << " bytes\n" << bin2hstr(signature, 64) << std::endl;
 
-        EXPECT_TRUE(Xmss::verify(data, signature, pk));
+        EXPECT_TRUE(XmssBasic::verify(data, signature, pk));
 
         signature[1] += 1;
-        EXPECT_FALSE(Xmss::verify(data, signature, xmss.getPK()));
+        EXPECT_FALSE(XmssBasic::verify(data, signature, xmss.getPK()));
     }
+
+    TEST(XmssFastSHA2, SignIndexShift) {
+        std::vector<unsigned char> seed(48, 0);
+
+        XmssBasic xmss1(seed, 4, eHashFunction::SHA2);
+        XmssFast xmss2(seed, 4, eHashFunction::SHA2);
+
+        std::string message = "This is a test message";
+        std::vector<unsigned char> data(message.begin(), message.end());
+
+        xmss1.setIndex(1);
+        xmss2.setIndex(1);
+
+        auto signature1 = xmss1.sign(data);
+        auto signature2 = xmss2.sign(data);
+
+        auto hstr_sig1 = bin2hstr(signature1);
+        auto hstr_sig2 = bin2hstr(signature2);
+
+        EXPECT_EQ(hstr_sig1, hstr_sig2);
+    }
+
+    TEST(XmssFastSHA2, BadInputConstructor) {
+        std::vector<unsigned char> seed(48, 0);
+
+        EXPECT_THROW(XmssFast xmss(seed, 3, eHashFunction::SHA2), std::invalid_argument);
+    }
+
+    TEST(XmssFastSHA2, BadInputVerify) {
+        TMESSAGE message(2, 0);
+        TSIGNATURE signature(48, 0);
+        TKEY pk(48, 0);
+
+        EXPECT_THROW(XmssFast::verify(message, signature, pk, eHashFunction::SHA2),
+                     std::invalid_argument);
+
+        TSIGNATURE signature2(2287, 0);
+        EXPECT_THROW(XmssFast::verify(message, signature2, pk, eHashFunction::SHA2),
+                     std::invalid_argument);
+    }
+
 }

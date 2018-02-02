@@ -6,7 +6,7 @@
 #include <hashing.h>
 
 namespace {
-    #define XMSS_HEIGHT 8
+#define XMSS_HEIGHT 8
 
     TEST(Misc, bin2hstr) {
         std::vector<unsigned char> data;
@@ -24,8 +24,8 @@ namespace {
     }
 
     TEST(Misc, hstr2bin) {
-        EXPECT_EQ( hstr2bin("10"), std::vector<unsigned char>({0x10}));
-        EXPECT_EQ( hstr2bin("102aAB"), std::vector<unsigned char>({0x10, 0x2a, 0xab}));
+        EXPECT_EQ(hstr2bin("10"), std::vector<unsigned char>({0x10}));
+        EXPECT_EQ(hstr2bin("102aAB"), std::vector<unsigned char>({0x10, 0x2a, 0xab}));
     }
 
 
@@ -93,13 +93,13 @@ namespace {
 
     TEST(Misc, mnemonic2bin_long) {
         std::string input = "law bruise screen lunar than loft but franc strike asleep dwarf tavern dragon alarm "
-                            "snack queen meadow thing far cotton add emblem strive probe zurich edge peer alight "
-                            "libel won corn medal";
+                "snack queen meadow thing far cotton add emblem strive probe zurich edge peer alight "
+                "libel won corn medal";
 
         auto data = mnemonic2bin(input);
 
-        EXPECT_EQ( bin2hstr(data),
-                   "7ad1e6c1083de2081221056dd8b0c142cdfa3fd053cd4ae288ee324cd30e027462d8eaaffff445a1105b7e4fc1302894");
+        EXPECT_EQ(bin2hstr(data),
+                  "7ad1e6c1083de2081221056dd8b0c142cdfa3fd053cd4ae288ee324cd30e027462d8eaaffff445a1105b7e4fc1302894");
     }
 
     TEST(Misc, mnemonic2bin_wrongword) {

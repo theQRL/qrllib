@@ -12,7 +12,9 @@
 class XmssFast : public XmssBase {
 public:
     // TODO: Fix constness / passing by copy, this requires changes in the underlying lib
-    XmssFast(const TSEED &seed, unsigned char height) throw(std::invalid_argument);
+    XmssFast(const TSEED &seed,
+             unsigned char height,
+             eHashFunction hashFunction = eHashFunction::SHA3) throw(std::invalid_argument);
 
     TSIGNATURE sign(const TMESSAGE &message) override;
 

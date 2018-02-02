@@ -35,8 +35,8 @@ namespace std {
 %{
     #include "qrl/misc.h"
     #include "qrl/hashing.h"
-    #include "qrl/xmss.h"
-    #include "qrl/xmssBase.h"
+    #include "qrl/xmssBasic.h"
+#include "qrl/xmssBase.h"
     #include "qrl/xmssFast.h"
     #include "qrl/xmssPool.h"
 %}

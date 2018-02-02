@@ -31,14 +31,15 @@ void wots_set_params(wots_params *params, int n, int w) {
  * Expands an n-byte array into a len*n byte array
  * this is done using PRF
  */
-static void expand_seed(unsigned char *outseeds,
+static void expand_seed(eHashFunction hash_func,
+                        unsigned char *outseeds,
                         const unsigned char *inseed,
                         const uint32_t n,
                         const uint32_t len) {
     unsigned char ctr[32];
     for (uint32_t i = 0; i < len; i++) {
         to_byte(ctr, i, 32);
-        prf((outseeds + (i * n)), ctr, inseed, n);
+        prf(hash_func, (outseeds + (i * n)), ctr, inseed, n);
     }
 }
 
@@ -49,7 +50,8 @@ static void expand_seed(unsigned char *outseeds,
  * interpretes in as start-th value of the chain
  * addr has to contain the address of the chain
  */
-static void gen_chain(unsigned char *out,
+static void gen_chain(eHashFunction hash_func,
+                      unsigned char *out,
                       const unsigned char *in,
                       unsigned int start,
                       unsigned int steps,
@@ -62,7 +64,7 @@ static void gen_chain(unsigned char *out,
 
     for (i = start; i < (start + steps) && i < params->w; i++) {
         setHashADRS(addr, i);
-        hash_f(out, out, pub_seed, addr, params->n);
+        hash_f(hash_func, out, out, pub_seed, addr, params->n);
     }
 }
 
@@ -90,18 +92,20 @@ static void base_w(int *output, const int out_len, const unsigned char *input, c
     }
 }
 
-void wots_pkgen(unsigned char *pk, const unsigned char *sk, const wots_params *params, const unsigned char *pub_seed,
+void wots_pkgen(eHashFunction hash_func,
+                unsigned char *pk, const unsigned char *sk, const wots_params *params, const unsigned char *pub_seed,
                 uint32_t addr[8]) {
     uint32_t i;
-    expand_seed(pk, sk, params->n, params->len);
+    expand_seed(hash_func, pk, sk, params->n, params->len);
     for (i = 0; i < params->len; i++) {
         setChainADRS(addr, i);
-        gen_chain(pk + i * params->n, pk + i * params->n, 0, params->w - 1, params, pub_seed, addr);
+        gen_chain(hash_func, pk + i * params->n, pk + i * params->n, 0, params->w - 1, params, pub_seed, addr);
     }
 }
 
 
-void wots_sign(unsigned char *sig, const unsigned char *msg, const unsigned char *sk, const wots_params *params,
+void wots_sign(eHashFunction hash_func,
+               unsigned char *sig, const unsigned char *msg, const unsigned char *sk, const wots_params *params,
                const unsigned char *pub_seed, uint32_t addr[8]) {
     int basew[params->len];
     int csum = 0;
@@ -128,21 +132,21 @@ void wots_sign(unsigned char *sig, const unsigned char *msg, const unsigned char
         basew[params->len_1 + i] = csum_basew[i];
     }
 
-    expand_seed(sig, sk, params->n, params->len);
+    expand_seed(hash_func, sig, sk, params->n, params->len);
 
     for (i = 0; i < params->len; i++) {
         setChainADRS(addr, i);
-        gen_chain(sig + i * params->n, sig + i * params->n, 0, basew[i], params, pub_seed, addr);
+        gen_chain(hash_func, sig + i * params->n, sig + i * params->n, 0, basew[i], params, pub_seed, addr);
     }
 }
 
-void wots_pkFromSig(unsigned char *pk,
+void wots_pkFromSig(eHashFunction hash_func,
+                    unsigned char *pk,
                     const unsigned char *sig,
                     const unsigned char *msg,
                     const wots_params *wotsParams,
                     const unsigned char *pub_seed,
-                    uint32_t addr[8])
-{
+                    uint32_t addr[8]) {
     uint32_t XMSS_WOTS_LEN = wotsParams->len;
     uint32_t XMSS_WOTS_LEN1 = wotsParams->len_1;
     uint32_t XMSS_WOTS_LEN2 = wotsParams->len_2;
@@ -172,7 +176,8 @@ void wots_pkFromSig(unsigned char *pk,
     }
     for (i = 0; i < XMSS_WOTS_LEN; i++) {
         setChainADRS(addr, i);
-        gen_chain(pk + i * XMSS_N, sig + i * XMSS_N,
+        gen_chain(hash_func,
+                  pk + i * XMSS_N, sig + i * XMSS_N,
                   basew[i], XMSS_WOTS_W - 1 - basew[i], wotsParams, pub_seed, addr);
     }
 }

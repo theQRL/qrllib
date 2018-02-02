@@ -22,7 +22,8 @@ Public domain.
  *
  * takes n byte sk_seed and returns n byte seed using 32 byte address addr.
  */
-static void get_seed(unsigned char *seed,
+static void get_seed(eHashFunction hash_func,
+                     unsigned char *seed,
                      const unsigned char *sk_seed,
                      int n,
                      uint32_t addr[8]) {
@@ -35,7 +36,7 @@ static void get_seed(unsigned char *seed,
 
     // Generate pseudorandom value
     addr_to_byte(bytes, addr);
-    prf(seed, bytes, sk_seed, n);
+    prf(hash_func, seed, bytes, sk_seed, n);
 }
 
 /**
@@ -64,7 +65,8 @@ void xmss_set_bds_state(bds_state *state,
 /**
  * Computes the leaf at a given address. First generates the WOTS key pair, then computes leaf using l_tree. As this happens position independent, we only require that addr encodes the right ltree-address.
  */
-static void gen_leaf_wots(unsigned char *leaf,
+static void gen_leaf_wots(eHashFunction hash_func,
+                          unsigned char *leaf,
                           const unsigned char *sk_seed,
                           const xmss_params *params,
                           const unsigned char *pub_seed,
@@ -74,10 +76,10 @@ static void gen_leaf_wots(unsigned char *leaf,
     unsigned char seed[params->n];
     unsigned char pk[params->wots_par.keysize];
 
-    get_seed(seed, sk_seed, params->n, ots_addr);
-    wots_pkgen(pk, seed, &(params->wots_par), pub_seed, ots_addr);
+    get_seed(hash_func, seed, sk_seed, params->n, ots_addr);
+    wots_pkgen(hash_func, pk, seed, &(params->wots_par), pub_seed, ots_addr);
 
-    l_tree(&params->wots_par, leaf, pk, pub_seed, ltree_addr);
+    l_tree(hash_func, &params->wots_par, leaf, pk, pub_seed, ltree_addr);
 }
 
 static int treehash_minheight_on_stack(bds_state *state, const xmss_params *params, const treehash_inst *treehash) {
@@ -95,8 +97,15 @@ static int treehash_minheight_on_stack(bds_state *state, const xmss_params *para
  * Currently only used for key generation.
  *
  */
-static void treehash_setup(unsigned char *node, int height, int index, bds_state *state, const unsigned char *sk_seed,
-                           const xmss_params *params, const unsigned char *pub_seed, const uint32_t addr[8]) {
+static void treehash_setup(eHashFunction hash_func,
+                           unsigned char *node,
+                           int height,
+                           int index,
+                           bds_state *state,
+                           const unsigned char *sk_seed,
+                           const xmss_params *params,
+                           const unsigned char *pub_seed,
+                           const uint32_t addr[8]) {
     unsigned int idx = index;
     unsigned int n = params->n;
     unsigned int h = params->h;
@@ -132,7 +141,7 @@ static void treehash_setup(unsigned char *node, int height, int index, bds_state
     for (; idx < lastnode; idx++) {
         setLtreeADRS(ltree_addr, idx);
         setOTSADRS(ots_addr, idx);
-        gen_leaf_wots(stack + stackoffset * n, sk_seed, params, pub_seed, ltree_addr, ots_addr);
+        gen_leaf_wots(hash_func, stack + stackoffset * n, sk_seed, params, pub_seed, ltree_addr, ots_addr);
         stacklevels[stackoffset] = 0;
         stackoffset++;
         if (h - k > 0 && i == 3) {
@@ -152,7 +161,7 @@ static void treehash_setup(unsigned char *node, int height, int index, bds_state
             }
             setTreeHeight(node_addr, stacklevels[stackoffset - 1]);
             setTreeIndex(node_addr, (idx >> (stacklevels[stackoffset - 1] + 1)));
-            hash_h(stack + (stackoffset - 2) * n, stack + (stackoffset - 2) * n, pub_seed,
+            hash_h(hash_func, stack + (stackoffset - 2) * n, stack + (stackoffset - 2) * n, pub_seed,
                    node_addr, n);
             stacklevels[stackoffset - 2]++;
             stackoffset--;
@@ -165,7 +174,8 @@ static void treehash_setup(unsigned char *node, int height, int index, bds_state
 }
 
 static void
-treehash_update(treehash_inst *treehash, bds_state *state, const unsigned char *sk_seed, const xmss_params *params,
+treehash_update(eHashFunction hash_func,
+                treehash_inst *treehash, bds_state *state, const unsigned char *sk_seed, const xmss_params *params,
                 const unsigned char *pub_seed, const uint32_t addr[8]) {
     int n = params->n;
 
@@ -186,13 +196,13 @@ treehash_update(treehash_inst *treehash, bds_state *state, const unsigned char *
 
     unsigned char nodebuffer[2 * n];
     unsigned int nodeheight = 0;
-    gen_leaf_wots(nodebuffer, sk_seed, params, pub_seed, ltree_addr, ots_addr);
+    gen_leaf_wots(hash_func, nodebuffer, sk_seed, params, pub_seed, ltree_addr, ots_addr);
     while (treehash->stackusage > 0 && state->stacklevels[state->stackoffset - 1] == nodeheight) {
         memcpy(nodebuffer + n, nodebuffer, n);
         memcpy(nodebuffer, state->stack + (state->stackoffset - 1) * n, n);
         setTreeHeight(node_addr, nodeheight);
         setTreeIndex(node_addr, (treehash->next_idx >> (nodeheight + 1)));
-        hash_h(nodebuffer, nodebuffer, pub_seed, node_addr, n);
+        hash_h(hash_func, nodebuffer, nodebuffer, pub_seed, node_addr, n);
         nodeheight++;
         treehash->stackusage--;
         state->stackoffset--;
@@ -213,7 +223,8 @@ treehash_update(treehash_inst *treehash, bds_state *state, const unsigned char *
  * Computes a root node given a leaf and an authapth
  */
 static void
-validate_authpath(unsigned char *root, const unsigned char *leaf, unsigned long leafidx, const unsigned char *authpath,
+validate_authpath(eHashFunction hash_func,
+                  unsigned char *root, const unsigned char *leaf, unsigned long leafidx, const unsigned char *authpath,
                   const xmss_params *params, const unsigned char *pub_seed, uint32_t addr[8]) {
     unsigned int n = params->n;
 
@@ -240,11 +251,11 @@ validate_authpath(unsigned char *root, const unsigned char *leaf, unsigned long 
         leafidx >>= 1;
         setTreeIndex(addr, leafidx);
         if (leafidx & 1) {
-            hash_h(buffer + n, buffer, pub_seed, addr, n);
+            hash_h(hash_func, buffer + n, buffer, pub_seed, addr, n);
             for (j = 0; j < n; j++)
                 buffer[j] = authpath[j];
         } else {
-            hash_h(buffer, buffer, pub_seed, addr, n);
+            hash_h(hash_func, buffer, buffer, pub_seed, addr, n);
             for (j = 0; j < n; j++)
                 buffer[j + n] = authpath[j];
         }
@@ -253,7 +264,7 @@ validate_authpath(unsigned char *root, const unsigned char *leaf, unsigned long 
     setTreeHeight(addr, (params->h - 1));
     leafidx >>= 1;
     setTreeIndex(addr, leafidx);
-    hash_h(root, buffer, pub_seed, addr, n);
+    hash_h(hash_func, root, buffer, pub_seed, addr, n);
 }
 
 /**
@@ -261,7 +272,8 @@ validate_authpath(unsigned char *root, const unsigned char *leaf, unsigned long 
  * Returns 1 if such an instance was not found
  **/
 static char
-bds_treehash_update(bds_state *state, unsigned int updates, const unsigned char *sk_seed, const xmss_params *params,
+bds_treehash_update(eHashFunction hash_func,
+                    bds_state *state, unsigned int updates, const unsigned char *sk_seed, const xmss_params *params,
                     unsigned char *pub_seed, const uint32_t addr[8]) {
     uint32_t i, j;
     unsigned int level, l_min, low;
@@ -288,7 +300,7 @@ bds_treehash_update(bds_state *state, unsigned int updates, const unsigned char 
         if (level == h - k) {
             break;
         }
-        treehash_update(&(state->treehash[level]), state, sk_seed, params, pub_seed, addr);
+        treehash_update(hash_func, &(state->treehash[level]), state, sk_seed, params, pub_seed, addr);
         used++;
     }
     return updates - used;
@@ -298,7 +310,8 @@ bds_treehash_update(bds_state *state, unsigned int updates, const unsigned char 
  * Updates the state (typically NEXT_i) by adding a leaf and updating the stack
  * Returns 1 if all leaf nodes have already been processed
  **/
-static char bds_state_update(bds_state *state,
+static char bds_state_update(eHashFunction hash_func,
+                             bds_state *state,
                              const unsigned char *sk_seed,
                              const xmss_params *params,
                              const unsigned char *pub_seed,
@@ -330,12 +343,14 @@ static char bds_state_update(bds_state *state,
     setOTSADRS(ots_addr, idx);
     setLtreeADRS(ltree_addr, idx);
 
-    gen_leaf_wots(state->stack+state->stackoffset*XMSS_N,
-                  sk_seed,
-                  params,
-                  pub_seed,
-                  ltree_addr,
-                  ots_addr);
+    gen_leaf_wots(
+            hash_func,
+            state->stack+state->stackoffset*XMSS_N,
+            sk_seed,
+            params,
+            pub_seed,
+            ltree_addr,
+            ots_addr);
 
     state->stacklevels[state->stackoffset] = 0;
     state->stackoffset++;
@@ -359,11 +374,12 @@ static char bds_state_update(bds_state *state,
         setTreeHeight(node_addr, state->stacklevels[state->stackoffset-1]);
         setTreeIndex(node_addr, (idx >> (state->stacklevels[state->stackoffset-1]+1)));
 
-        hash_h(state->stack+(state->stackoffset-2)*XMSS_N,
-               state->stack+(state->stackoffset-2)*XMSS_N,
-               pub_seed,
-               node_addr,
-               XMSS_N);
+        hash_h(hash_func,
+                state->stack+(state->stackoffset-2)*XMSS_N,
+                state->stack+(state->stackoffset-2)*XMSS_N,
+                pub_seed,
+                node_addr,
+                XMSS_N);
 
         state->stacklevels[state->stackoffset-2]++;
         state->stackoffset--;
@@ -377,7 +393,8 @@ static char bds_state_update(bds_state *state,
  * in "Post Quantum Cryptography", Springer 2009.
  */
 static void
-bds_round(bds_state *state, const unsigned long leaf_idx, const unsigned char *sk_seed, const xmss_params *params,
+bds_round(eHashFunction hash_func,
+          bds_state *state, const unsigned long leaf_idx, const unsigned char *sk_seed, const xmss_params *params,
           unsigned char *pub_seed, uint32_t addr[8]) {
     unsigned int i;
     unsigned int n = params->n;
@@ -419,11 +436,11 @@ bds_round(bds_state *state, const unsigned long leaf_idx, const unsigned char *s
     if (tau == 0) {
         setLtreeADRS(ltree_addr, leaf_idx);
         setOTSADRS(ots_addr, leaf_idx);
-        gen_leaf_wots(state->auth, sk_seed, params, pub_seed, ltree_addr, ots_addr);
+        gen_leaf_wots(hash_func, state->auth, sk_seed, params, pub_seed, ltree_addr, ots_addr);
     } else {
         setTreeHeight(node_addr, (tau - 1));
         setTreeIndex(node_addr, leaf_idx >> tau);
-        hash_h(state->auth + tau * n, buf, pub_seed, node_addr, n);
+        hash_h(hash_func, state->auth + tau * n, buf, pub_seed, node_addr, n);
         for (i = 0; i < tau; i++) {
             if (i < h - k) {
                 memcpy(state->auth + i * n, state->treehash[i].node, n);
@@ -451,7 +468,8 @@ bds_round(bds_state *state, const unsigned long leaf_idx, const unsigned char *s
  * Format sk: [(32bit) idx || SK_SEED || SK_PRF || PUB_SEED || root]
  * Format pk: [root || PUB_SEED] omitting algo oid.
  */
-int xmssfast_Genkeypair(xmss_params *params,            // TODO: Refactor this. Remove params, etc.
+int xmssfast_Genkeypair(eHashFunction hash_func,
+                        xmss_params *params,            // TODO: Refactor this. Remove params, etc.
                         unsigned char *pk,
                         unsigned char *sk,
                         bds_state *state,
@@ -481,13 +499,14 @@ int xmssfast_Genkeypair(xmss_params *params,            // TODO: Refactor this. 
     uint32_t addr[8] = {0, 0, 0, 0, 0, 0, 0, 0};
 
     // Compute root
-    treehash_setup(pk, params->h, 0, state, sk + 4, params, sk + 4 + 2 * n, addr);
+    treehash_setup(hash_func, pk, params->h, 0, state, sk + 4, params, sk + 4 + 2 * n, addr);
     // copy root to sk
     memcpy(sk + 4 + 3 * n, pk, pks);
     return 0;
 }
 
-int xmssfast_update(xmss_params *params,
+int xmssfast_update(eHashFunction hash_func,
+                    xmss_params *params,
                     unsigned char *sk,
                     bds_state *state,
                     unsigned long new_idx)
@@ -523,15 +542,16 @@ int xmssfast_update(xmss_params *params,
 
     for (int j = idxkey; j < new_idx; j++) {
         if (j < (1U << params->h) - 1) {
-            bds_round(state, j, sk_seed, params, pub_seed, ots_addr);
-            bds_treehash_update(state, (params->h - k) >> 1, sk_seed, params, pub_seed, ots_addr);
+            bds_round(hash_func, state, j, sk_seed, params, pub_seed, ots_addr);
+            bds_treehash_update(hash_func, state, (params->h - k) >> 1, sk_seed, params, pub_seed, ots_addr);
         }
     }
 
     return 0;
 }
 
-int xmssfast_Signmsg(xmss_params *params,
+int xmssfast_Signmsg(eHashFunction hash_func,
+                     xmss_params *params,
                      unsigned char *sk,
                      bds_state *state,
                      unsigned char *sig_msg,
@@ -577,13 +597,13 @@ int xmssfast_Signmsg(xmss_params *params,
 
     // Message Hash:
     // First compute pseudorandom value
-    prf(R, idx_bytes_32, sk_prf, n);
+    prf(hash_func, R, idx_bytes_32, sk_prf, n);
     // Generate hash key (R || root || idx)
     memcpy(hash_key, R, n);
     memcpy(hash_key + n, sk + 4 + 3 * n, n);
     to_byte(hash_key + 2 * n, idx, n);
     // Then use it for message digest
-    h_msg(msg_h, msg, msglen, hash_key, 3 * n, n);
+    h_msg(hash_func, msg_h, msg, msglen, hash_key, 3 * n, n);
 
     // Start collecting signature
     sig_msg_len = 0;
@@ -613,10 +633,10 @@ int xmssfast_Signmsg(xmss_params *params,
     setOTSADRS(ots_addr, idx);
 
     // Compute seed for OTS key pair
-    get_seed(ots_seed, sk_seed, n, ots_addr);
+    get_seed(hash_func, ots_seed, sk_seed, n, ots_addr);
 
     // Compute WOTS signature
-    wots_sign(sig_msg, msg_h, ots_seed, &(params->wots_par), pub_seed, ots_addr);
+    wots_sign(hash_func, sig_msg, msg_h, ots_seed, &(params->wots_par), pub_seed, ots_addr);
     sig_msg += params->wots_par.keysize;
     sig_msg_len += params->wots_par.keysize;
 
@@ -624,8 +644,8 @@ int xmssfast_Signmsg(xmss_params *params,
     memcpy(sig_msg, state->auth, params->h * params->n);
 
     if (idx < (1U << params->h) - 1) {
-        bds_round(state, idx, sk_seed, params, pub_seed, ots_addr);
-        bds_treehash_update(state, (params->h - params->k) >> 1, sk_seed, params, pub_seed, ots_addr);
+        bds_round(hash_func, state, idx, sk_seed, params, pub_seed, ots_addr);
+        bds_treehash_update(hash_func, state, (params->h - params->k) >> 1, sk_seed, params, pub_seed, ots_addr);
     }
 
     sig_msg += params->h * params->n;

@@ -5,7 +5,7 @@
 
 namespace {
     TEST(DilithumTest, sign_keypair) {
-        std::vector<unsigned char> message {0, 1, 2, 4, 6, 9, 1};
+        std::vector<unsigned char> message{0, 1, 2, 4, 6, 9, 1};
 
         Dilithium dilithium;
 
@@ -20,7 +20,7 @@ namespace {
     }
 
     TEST(DilithumTest, sign_keypair_fail) {
-        std::vector<unsigned char> message {0, 1, 2, 4, 6, 9, 1};
+        std::vector<unsigned char> message{0, 1, 2, 4, 6, 9, 1};
 
         Dilithium dilithium;
 
@@ -29,7 +29,7 @@ namespace {
         std::vector<unsigned char> message_out(message.size());
         auto pk = dilithium.getPK();
 
-        message_signed[3]^=1;
+        message_signed[3] ^= 1;
 
         auto ret = Dilithium::sign_open(message_out, message_signed, pk);
 
