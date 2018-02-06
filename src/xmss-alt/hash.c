@@ -62,7 +62,6 @@ int core_hash(eHashFunction hash_func,
 
     if (hash_func==eHashFunction::SHA2)
     {
-        
         if (n == 32) {
             sha2_256(out, buf, inlen + keylen + n);
             return 0;
