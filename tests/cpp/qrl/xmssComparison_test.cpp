@@ -1,7 +1,7 @@
 // Distributed under the MIT software license, see the accompanying
 // file LICENSE or http://www.opensource.org/licenses/mit-license.php.
 #include <xmss-alt/algsxmss.h>
-#include <xmss.h>
+#include <xmssBasic.h>
 #include <iostream>
 #include "gtest/gtest.h"
 #include <xmssFast.h>
@@ -28,7 +28,7 @@ struct TypePAIR
 };
 
 typedef ::testing::Types<
-        TypePAIR<Xmss, XmssFast>
+        TypePAIR<XmssBasic, XmssFast>
 > xmssTypes;
 
 TYPED_TEST_CASE(XmssComparisonTest, xmssTypes);

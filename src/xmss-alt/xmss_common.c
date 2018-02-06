@@ -23,12 +23,6 @@ void to_byte(unsigned char *out, unsigned long long in, uint32_t bytes) {
     }
 }
 
-void hexdump(const unsigned char *a, size_t len) {
-    size_t i;
-    for (i = 0; i < len; i++)
-        printf("%02x", a[i]);
-}
-
 /**
  * Initialize xmss params struct
  * parameter names are the same as in the draft
@@ -48,12 +42,12 @@ void xmss_set_params(xmss_params *params, uint32_t n, uint32_t h, uint32_t w, ui
     params->wots_par = wots_par;
 }
 
-void l_tree(const wots_params *params,
+void l_tree(eHashFunction hash_func,
+            const wots_params *params,
             unsigned char *leaf,
             unsigned char *wots_pk,
             const unsigned char *pub_seed,
-            uint32_t addr[8])
-{
+            uint32_t addr[8]) {
     unsigned int l = params->len;
     unsigned int n = params->n;
     uint32_t i = 0;
@@ -62,12 +56,11 @@ void l_tree(const wots_params *params,
 
     setTreeHeight(addr, height);
 
-    while (l > 1)
-    {
+    while (l > 1) {
         bound = l >> 1;
         for (i = 0; i < bound; i++) {
             setTreeIndex(addr, i);
-            hash_h(wots_pk + i * n, wots_pk + i * 2 * n, pub_seed, addr, n);
+            hash_h(hash_func, wots_pk + i * n, wots_pk + i * 2 * n, pub_seed, addr, n);
         }
         if (l & 1) {
             memcpy(wots_pk + (l >> 1) * n, wots_pk + (l - 1) * n, n);
@@ -85,15 +78,15 @@ void l_tree(const wots_params *params,
  * Computes a root node given a leaf and an authapth
  */
 static void
-validate_authpath(unsigned char *root,
+validate_authpath(eHashFunction hash_func,
+                  unsigned char *root,
                   const unsigned char *leaf,
                   unsigned long leafidx,
                   const unsigned char *authpath,
                   const uint32_t n,
                   const uint32_t h,
                   const unsigned char *pub_seed,
-                  uint32_t addr[8])
-{
+                  uint32_t addr[8]) {
     uint32_t i, j;
     unsigned char buffer[2 * n];
 
@@ -117,11 +110,11 @@ validate_authpath(unsigned char *root,
         leafidx >>= 1;
         setTreeIndex(addr, leafidx);
         if (leafidx & 1) {
-            hash_h(buffer + n, buffer, pub_seed, addr, n);
+            hash_h(hash_func, buffer + n, buffer, pub_seed, addr, n);
             for (j = 0; j < n; j++)
                 buffer[j] = authpath[j];
         } else {
-            hash_h(buffer, buffer, pub_seed, addr, n);
+            hash_h(hash_func, buffer, buffer, pub_seed, addr, n);
             for (j = 0; j < n; j++)
                 buffer[j + n] = authpath[j];
         }
@@ -130,20 +123,20 @@ validate_authpath(unsigned char *root,
     setTreeHeight(addr, (h - 1));
     leafidx >>= 1;
     setTreeIndex(addr, leafidx);
-    hash_h(root, buffer, pub_seed, addr, n);
+    hash_h(hash_func, root, buffer, pub_seed, addr, n);
 }
 
 
 /**
  * Verifies a given message signature pair under a given public key.
  */
-int xmss_Verifysig(wots_params *wotsParams,
+int xmss_Verifysig(eHashFunction hash_func,
+                   wots_params *wotsParams,
                    unsigned char *msg,
                    const size_t msglen,
                    unsigned char *sig_msg,
                    const unsigned char *pk,
-                   unsigned char h)
-{
+                   unsigned char h) {
 
     auto sig_msg_len = static_cast<unsigned long long int>(4 + 32 + 67 * 32 + h * 32);
 
@@ -189,7 +182,7 @@ int xmss_Verifysig(wots_params *wotsParams,
     unsigned long long tmp_sig_len = wotsParams->keysize + h * n;
     m_len = sig_msg_len - tmp_sig_len;
     //h_msg(msg_h, sig_msg + tmp_sig_len, m_len, hash_key, 3*n, n);
-    h_msg(msg_h, msg, msglen, hash_key, 3 * n, n);
+    h_msg(hash_func, msg_h, msg, msglen, hash_key, 3 * n, n);
     //-----------------------
     // Verify signature
     //-----------------------
@@ -197,17 +190,17 @@ int xmss_Verifysig(wots_params *wotsParams,
     // Prepare Address
     setOTSADRS(ots_addr, idx);
     // Check WOTS signature
-    wots_pkFromSig(wots_pk, sig_msg, msg_h, wotsParams, pub_seed, ots_addr);
+    wots_pkFromSig(hash_func, wots_pk, sig_msg, msg_h, wotsParams, pub_seed, ots_addr);
 
     sig_msg += wotsParams->keysize;
     sig_msg_len -= wotsParams->keysize;
 
     // Compute Ltree
     setLtreeADRS(ltree_addr, idx);
-    l_tree(wotsParams, pkhash, wots_pk, pub_seed, ltree_addr);
+    l_tree(hash_func, wotsParams, pkhash, wots_pk, pub_seed, ltree_addr);
 
     // Compute root
-    validate_authpath(root, pkhash, idx, sig_msg, n, h, pub_seed, node_addr);
+    validate_authpath(hash_func, root, pkhash, idx, sig_msg, n, h, pub_seed, node_addr);
 
     sig_msg += h * n;
     sig_msg_len -= h * n;

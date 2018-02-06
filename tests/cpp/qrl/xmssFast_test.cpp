@@ -1,7 +1,7 @@
 // Distributed under the MIT software license, see the accompanying
 // file LICENSE or http://www.opensource.org/licenses/mit-license.php.
 #include <xmss-alt/algsxmss.h>
-#include <xmss.h>
+#include <xmssBasic.h>
 #include <iostream>
 #include "gtest/gtest.h"
 #include <misc.h>
@@ -10,7 +10,7 @@
 namespace {
 #define XMSS_HEIGHT 8
 
-    TEST(XMSSFAST, Instantiation) {
+    TEST(XmssFast, Instantiation) {
         std::vector<unsigned char> seed(48, 0);
 
         XmssFast xmss(seed, XMSS_HEIGHT);
@@ -27,7 +27,7 @@ namespace {
         EXPECT_EQ(seed, xmss.getSeed());
     }
 
-    TEST(XMSSFAST, SignatureLen) {
+    TEST(XmssFast, SignatureLen) {
         std::vector<unsigned char> seed(48, 0);
 
         XmssFast xmss4(seed, 4);
@@ -37,7 +37,7 @@ namespace {
         EXPECT_EQ(2372, xmss6.getSignatureSize());
     }
 
-    TEST(XMSSFAST, Sign) {
+    TEST(XmssFast, Sign) {
         std::vector<unsigned char> seed(48, 0);
 
         XmssFast xmss(seed, XMSS_HEIGHT);
@@ -66,10 +66,10 @@ namespace {
     }
 
 
-    TEST(XMSSFAST, Verify) {
+    TEST(XmssFast, Verify) {
         std::vector<unsigned char> seed(48, 0);
 
-        Xmss xmss(seed, XMSS_HEIGHT);
+        XmssBasic xmss(seed, XMSS_HEIGHT);
 
         std::string message = "This is a test message";
         std::vector<unsigned char> data_ref(message.begin(), message.end());
@@ -91,16 +91,16 @@ namespace {
         std::cout << "data       :" << data.size() << " bytes\n" << bin2hstr(data, 64) << std::endl;
         std::cout << "signature  :" << signature.size() << " bytes\n" << bin2hstr(signature, 64) << std::endl;
 
-        EXPECT_TRUE(Xmss::verify(data, signature, pk));
+        EXPECT_TRUE(XmssBasic::verify(data, signature, pk));
 
         signature[1] += 1;
-        EXPECT_FALSE(Xmss::verify(data, signature, xmss.getPK()));
+        EXPECT_FALSE(XmssBasic::verify(data, signature, xmss.getPK()));
     }
 
-    TEST(XMSSFAST, SignIndexShift) {
+    TEST(XmssFast, SignIndexShift) {
         std::vector<unsigned char> seed(48, 0);
 
-        Xmss xmss1(seed, 4);
+        XmssBasic xmss1(seed, 4);
         XmssFast xmss2(seed, 4);
 
         std::string message = "This is a test message";
@@ -118,13 +118,13 @@ namespace {
         EXPECT_EQ(hstr_sig1, hstr_sig2);
     }
 
-    TEST(XMSSFAST, BadInputConstructor) {
+    TEST(XmssFast, BadInputConstructor) {
         std::vector<unsigned char> seed(48, 0);
 
         EXPECT_THROW(XmssFast xmss(seed, 3), std::invalid_argument);
     }
 
-    TEST(XMSSFAST, BadInputVerify) {
+    TEST(XmssFast, BadInputVerify) {
         TMESSAGE message(2, 0);
         TSIGNATURE signature(48, 0);
         TKEY pk(48, 0);

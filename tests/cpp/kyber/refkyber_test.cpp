@@ -59,16 +59,14 @@ namespace {
 
         EXPECT_EQ(0, validation_error);
 
-        if (!validation_error)
-        {
+        if (!validation_error) {
             for (int i = 0; i < KYBER_SYMBYTES; i++) {
                 EXPECT_EQ(key_a[i], key_b[i]);
             }
         }
     }
 
-    TEST(KyberReferenceTest, original)
-    {
+    TEST(KyberReferenceTest, original) {
         unsigned char key_a[KYBER_SYMBYTES], key_b[KYBER_SYMBYTES];
         unsigned char pk[KYBER_PUBLICKEYBYTES];
         unsigned char sendb[KYBER_CIPHERTEXTBYTES];
@@ -81,10 +79,10 @@ namespace {
         crypto_kem_enc(sendb, key_b, pk);
 
         //Alice uses Bobs response to get her secret key
-        auto validation_error =  crypto_kem_dec(key_a, sendb, sk_a);
+        auto validation_error = crypto_kem_dec(key_a, sendb, sk_a);
         EXPECT_EQ(0, validation_error);
 
-        if(memcmp(key_a, key_b, KYBER_SYMBYTES))
+        if (memcmp(key_a, key_b, KYBER_SYMBYTES))
             printf("ERROR keys\n");
     }
 

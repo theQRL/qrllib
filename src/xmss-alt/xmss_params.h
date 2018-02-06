@@ -9,8 +9,9 @@
 #include <cstdint>
 #include "wots.h"
 
-typedef struct
-{
+// TODO: remove this if possible. use a context struct?
+
+typedef struct {
     wots_params wots_par;
     uint32_t n;
     uint32_t h;

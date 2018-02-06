@@ -26,7 +26,7 @@ namespace std {
 }
 
 %shared_ptr(XmssBase)
-%shared_ptr(Xmss)
+%shared_ptr(XmssBasic)
 %shared_ptr(XmssFast)
 
 // %array_functions(uint32_t, uint32ArrayRaw)
@@ -35,7 +35,7 @@ namespace std {
 %{
     #include "qrl/misc.h"
     #include "qrl/hashing.h"
-    #include "qrl/xmss.h"
+    #include "qrl/xmssBasic.h"
     #include "qrl/xmssBase.h"
     #include "qrl/xmssFast.h"
     #include "qrl/xmssPool.h"
@@ -43,9 +43,7 @@ namespace std {
 
 %include "qrl/misc.h"
 %include "qrl/hashing.h"
-%include "qrl/xmss.h"
+%include "qrl/xmssBasic.h"
 %include "qrl/xmssBase.h"
 %include "qrl/xmssFast.h"
 %include "qrl/xmssPool.h"
-
-

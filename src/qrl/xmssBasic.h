@@ -14,10 +14,11 @@
 
 // TODO: Add a namespace
 
-class Xmss : public ::XmssBase {
+class XmssBasic : public ::XmssBase {
 public:
-    // TODO: Fix constness / passing by copy, this requires changes in the underlying lib
-    Xmss(const TSEED &seed, unsigned char height) throw(std::invalid_argument);
+    XmssBasic(const TSEED &seed,
+              unsigned char height,
+              eHashFunction hashFunction = eHashFunction::SHA3) throw(std::invalid_argument);
 
     TSIGNATURE sign(const TMESSAGE &message) override;
 };

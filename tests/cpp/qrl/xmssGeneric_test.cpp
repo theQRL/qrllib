@@ -1,7 +1,7 @@
 // Distributed under the MIT software license, see the accompanying
 // file LICENSE or http://www.opensource.org/licenses/mit-license.php.
 #include <xmss-alt/algsxmss.h>
-#include <xmss.h>
+#include <xmssBasic.h>
 #include <iostream>
 #include "gtest/gtest.h"
 #include <misc.h>
@@ -17,7 +17,7 @@ namespace {
         using TXMSS = T;
     };
 
-    typedef ::testing::Types<Xmss, XmssFast> xmssTypes;
+    typedef ::testing::Types<XmssBasic, XmssFast> xmssTypes;
     TYPED_TEST_CASE(XmssGenericTest, xmssTypes);
 
     TYPED_TEST(XmssGenericTest, Instantiation) {
