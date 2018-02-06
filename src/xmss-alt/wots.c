@@ -31,11 +31,11 @@ void wots_set_params(wots_params *params, int n, int w) {
  * Expands an n-byte array into a len*n byte array
  * this is done using PRF
  */
-static void expand_seed(eHashFunction hash_func,
-                        unsigned char *outseeds,
-                        const unsigned char *inseed,
-                        const uint32_t n,
-                        const uint32_t len) {
+void expand_seed(eHashFunction hash_func,
+                 unsigned char *outseeds,
+                 const unsigned char *inseed,
+                 const uint32_t n,
+                 const uint32_t len) {
     unsigned char ctr[32];
     for (uint32_t i = 0; i < len; i++) {
         to_byte(ctr, i, 32);
@@ -50,14 +50,14 @@ static void expand_seed(eHashFunction hash_func,
  * interpretes in as start-th value of the chain
  * addr has to contain the address of the chain
  */
-static void gen_chain(eHashFunction hash_func,
-                      unsigned char *out,
-                      const unsigned char *in,
-                      unsigned int start,
-                      unsigned int steps,
-                      const wots_params *params,
-                      const unsigned char *pub_seed,
-                      uint32_t addr[8]) {
+void gen_chain(eHashFunction hash_func,
+               unsigned char *out,
+               const unsigned char *in,
+               unsigned int start,
+               unsigned int steps,
+               const wots_params *params,
+               const unsigned char *pub_seed,
+               uint32_t addr[8]) {
     uint32_t i, j;
     for (j = 0; j < params->n; j++)
         out[j] = in[j];
@@ -73,7 +73,10 @@ static void gen_chain(eHashFunction hash_func,
  *
  *
  */
-static void base_w(int *output, const int out_len, const unsigned char *input, const wots_params *params) {
+void base_w(int *output,
+            const int out_len,
+            const unsigned char *input,
+            const wots_params *params) {
     int in = 0;
     int out = 0;
     uint32_t total = 0;
@@ -93,20 +96,34 @@ static void base_w(int *output, const int out_len, const unsigned char *input, c
 }
 
 void wots_pkgen(eHashFunction hash_func,
-                unsigned char *pk, const unsigned char *sk, const wots_params *params, const unsigned char *pub_seed,
+                unsigned char *pk,
+                const unsigned char *sk,
+                const wots_params *params,
+                const unsigned char *pub_seed,
                 uint32_t addr[8]) {
     uint32_t i;
     expand_seed(hash_func, pk, sk, params->n, params->len);
     for (i = 0; i < params->len; i++) {
         setChainADRS(addr, i);
-        gen_chain(hash_func, pk + i * params->n, pk + i * params->n, 0, params->w - 1, params, pub_seed, addr);
+        gen_chain(hash_func,
+                  pk + i * params->n,
+                  pk + i * params->n,
+                  0,
+                  params->w - 1,
+                  params,
+                  pub_seed,
+                  addr);
     }
 }
 
 
 void wots_sign(eHashFunction hash_func,
-               unsigned char *sig, const unsigned char *msg, const unsigned char *sk, const wots_params *params,
-               const unsigned char *pub_seed, uint32_t addr[8]) {
+               unsigned char *sig,
+               const unsigned char *msg,
+               const unsigned char *sk,
+               const wots_params *params,
+               const unsigned char *pub_seed,
+               uint32_t addr[8]) {
     int basew[params->len];
     int csum = 0;
     uint32_t i = 0;
