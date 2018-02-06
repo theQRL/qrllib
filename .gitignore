@@ -55,3 +55,15 @@ cmake-build-minsizerel/
 cmake-build-debug wtests/
 
 \.idea/
+
+*.so
+
+pyqrllib/dilithium\.py
+
+pyqrllib/dilithiumPYTHON_wrap\.cxx
+
+pyqrllib/kyber\.py
+
+pyqrllib/kyberPYTHON_wrap\.cxx
+
+pyqrllib/qrlPYTHON_wrap\.cxx

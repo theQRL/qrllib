@@ -3,7 +3,6 @@
 import sys
 import os
 import subprocess
-import platform
 
 from setuptools import setup, Extension
 from setuptools.command.build_ext import build_ext
@@ -54,10 +53,12 @@ def setup_package():
     sphinx = ['sphinx'] if needs_sphinx else []
     cmake = []
 
-    setup(setup_requires=['six'] + sphinx + cmake,
+    setup(setup_requires=['six', 'pytest-runner'] + sphinx + cmake,
           packages=['pyqrllib', ],
+          tests_require=['pytest'],
           ext_modules=[CMakeExtension('pyqrllib')],
           cmdclass=dict(build_ext=CMakeBuild))
+
 
 if __name__ == "__main__":
     setup_package()
