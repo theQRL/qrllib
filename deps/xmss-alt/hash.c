@@ -65,7 +65,6 @@ int core_hash(eHashFunction hash_func,
     {
         
         if (n == 32) {
-            picosha2::hash256(input.begin(), input.end(), hashed_output.begin(), hashed_output.end());
             shake128(out, 32, buf, inlen + keylen + n);
             return 0;
         }

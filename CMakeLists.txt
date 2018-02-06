@@ -41,6 +41,10 @@ file(GLOB LIB_QRL_INCLUDES
         ${CMAKE_CURRENT_SOURCE_DIR}/src/qrl
         )
 
+file(GLOB LIB_SHASHA_INCLUDES
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/shasha
+        )
+
 file(GLOB LIB_DILITHIUM_INCLUDES
         ${CMAKE_CURRENT_SOURCE_DIR}/deps/dilithium
         ${CMAKE_CURRENT_SOURCE_DIR}/src/dilithium
@@ -60,15 +64,6 @@ file(GLOB_RECURSE LIB_DILITHIUM_SRC
 file(GLOB_RECURSE LIB_KYBER_SRC
         "${CMAKE_CURRENT_SOURCE_DIR}/src/kyber/*.cpp")
 
-file(GLOB_RECURSE TEST_QRL_SRC
-        "${CMAKE_CURRENT_SOURCE_DIR}/tests/cpp/qrl/*.cpp")
-
-file(GLOB_RECURSE TEST_DILITHIUM_SRC
-        "${CMAKE_CURRENT_SOURCE_DIR}/tests/cpp/dilithium/*.cpp")
-
-file(GLOB_RECURSE TEST_KYBER_SRC
-        "${CMAKE_CURRENT_SOURCE_DIR}/tests/cpp/kyber/*.cpp")
-
 set(LIBXMSSALT_SRC
         ${CMAKE_CURRENT_SOURCE_DIR}/deps/xmss-alt/algsxmss_fast.c
         ${CMAKE_CURRENT_SOURCE_DIR}/deps/xmss-alt/algsxmss.c
@@ -77,6 +72,10 @@ set(LIBXMSSALT_SRC
         ${CMAKE_CURRENT_SOURCE_DIR}/deps/xmss-alt/xmss_common.c
         ${CMAKE_CURRENT_SOURCE_DIR}/deps/xmss-alt/wots.c
         ${CMAKE_CURRENT_SOURCE_DIR}/deps/xmss-alt/fips202.c
+        )
+
+file(GLOB_RECURSE LIB_SHASHA_SRC
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/shasha/*.cpp
         )
 
 set(REF_DILITHIUM_SRC
@@ -106,13 +105,27 @@ set(REF_KYBER_SRC
         ${CMAKE_CURRENT_SOURCE_DIR}/deps/kyber/ref/fips202.c
         )
 
+file(GLOB_RECURSE TEST_QRL_SRC
+        "${CMAKE_CURRENT_SOURCE_DIR}/tests/cpp/qrl/*.cpp")
+
+file(GLOB_RECURSE TEST_SHASHA_SRC
+        "${CMAKE_CURRENT_SOURCE_DIR}/tests/cpp/shasha/*.cpp")
+
+file(GLOB_RECURSE TEST_DILITHIUM_SRC
+        "${CMAKE_CURRENT_SOURCE_DIR}/tests/cpp/dilithium/*.cpp")
+
+file(GLOB_RECURSE TEST_KYBER_SRC
+        "${CMAKE_CURRENT_SOURCE_DIR}/tests/cpp/kyber/*.cpp")
+
 # Forcing XMSS to be compiled as C++
 SET_SOURCE_FILES_PROPERTIES(${LIB_QRL_SRC} PROPERTIES LANGUAGE CXX)
+SET_SOURCE_FILES_PROPERTIES(${LIBXMSSALT_SRC} PROPERTIES LANGUAGE CXX)
+SET_SOURCE_FILES_PROPERTIES(${LIB_SHASHA_SRC} PROPERTIES LANGUAGE CXX)
+
 SET_SOURCE_FILES_PROPERTIES(${TEST_QRL_SRC} PROPERTIES LANGUAGE CXX)
 SET_SOURCE_FILES_PROPERTIES(${TEST_DILITHIUM_SRC} PROPERTIES LANGUAGE CXX)
 SET_SOURCE_FILES_PROPERTIES(${TEST_KYBER_SRC} PROPERTIES LANGUAGE CXX)
 
-SET_SOURCE_FILES_PROPERTIES(${LIBXMSSALT_SRC} PROPERTIES LANGUAGE CXX)
 SET_SOURCE_FILES_PROPERTIES(${REF_DILITHIUM_SRC} PROPERTIES LANGUAGE CXX)
 SET_SOURCE_FILES_PROPERTIES(${REF_KYBER_SRC} PROPERTIES LANGUAGE CXX)
 
@@ -133,6 +146,9 @@ add_library(kyber STATIC
 target_include_directories(kyber PRIVATE
         ${LIB_KYBER_INCLUDES} )
 
+add_library(shasha STATIC
+        ${LIB_SHASHA_SRC})
+target_include_directories(qrllib PRIVATE ${LIB_QRL_INCLUDES} )
 
 if (BUILD_TESTS)
     message(STATUS "GTests enabled")
@@ -183,6 +199,16 @@ if (BUILD_TESTS)
             ${LIB_QRL_INCLUDES} )
     target_link_libraries(qrllib_test qrllib gtest_main)
     add_test(gtest ${PROJECT_BINARY_DIR}/qrllib_test)
+
+    ###########################
+
+    add_executable(shasha_test
+            ${TEST_SHASHA_SRC})
+
+    target_include_directories( shasha_test PRIVATE
+            ${LIB_SHASHA_INCLUDES} )
+    target_link_libraries(shasha_test shasha qrllib gtest_main)
+    add_test(gtest ${PROJECT_BINARY_DIR}/shasha_test)
 
     ###########################
 
