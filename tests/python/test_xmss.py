@@ -18,7 +18,7 @@ class TestHash(TestCase):
         HEIGHT = 6
 
         seed = pyqrllib.ucharVector(48, 0)
-        xmss = pyqrllib.Xmss(seed=seed, height=HEIGHT)
+        xmss = pyqrllib.XmssBasic(seed, HEIGHT)
 
         # print("Seed", len(seed))
         # print(pyqrllib.bin2hstr(seed, 48))
@@ -77,7 +77,7 @@ class TestHash(TestCase):
         seed = pyqrllib.ucharVector(48, 0)
 
         with pytest.raises(ValueError):
-            xmss = pyqrllib.XmssFast(seed=seed, height=HEIGHT)
+            xmss = pyqrllib.XmssFast(seed, HEIGHT, pyqrllib.SHA3)
 
     def test_xmss_exception_verify(self):
         message = pyqrllib.ucharVector(48, 0)

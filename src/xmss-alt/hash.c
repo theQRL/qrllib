@@ -8,8 +8,7 @@ This code was taken from the XMSS reference implementation by Andreas Hülsing a
 #include "xmss_common.h"
 #include "hash.h"
 #include "fips202.h"
-#include <PicoSHA2/picosha2.h>
-
+#include "shasha.h"
 #include <cstdio>
 
 unsigned char *addr_to_byte(unsigned char *bytes, const uint32_t addr[8]) {
@@ -65,12 +64,7 @@ int core_hash(eHashFunction hash_func,
     {
         
         if (n == 32) {
-            shake128(out, 32, buf, inlen + keylen + n);
-            return 0;
-        }
-
-        if (n == 64) {
-            shake256(out, 64, buf, inlen + keylen + n);
+            sha2_256(out, buf, inlen + keylen + n);
             return 0;
         }
     }

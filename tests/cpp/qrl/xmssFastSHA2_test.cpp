@@ -92,7 +92,7 @@ namespace {
         std::cout << "data       :" << data.size() << " bytes\n" << bin2hstr(data, 64) << std::endl;
         std::cout << "signature  :" << signature.size() << " bytes\n" << bin2hstr(signature, 64) << std::endl;
 
-        EXPECT_TRUE(XmssBasic::verify(data, signature, pk));
+        EXPECT_TRUE(XmssBasic::verify(data, signature, pk, eHashFunction::SHA2));
 
         signature[1] += 1;
         EXPECT_FALSE(XmssBasic::verify(data, signature, xmss.getPK()));

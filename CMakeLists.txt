@@ -37,7 +37,7 @@ include_directories(
 )
 
 file(GLOB LIB_QRL_INCLUDES
-        ${CMAKE_CURRENT_SOURCE_DIR}/deps/xmss-alt
+        src/xmss-alt
         ${CMAKE_CURRENT_SOURCE_DIR}/src/qrl
         )
 
@@ -65,13 +65,13 @@ file(GLOB_RECURSE LIB_KYBER_SRC
         "${CMAKE_CURRENT_SOURCE_DIR}/src/kyber/*.cpp")
 
 set(LIBXMSSALT_SRC
-        ${CMAKE_CURRENT_SOURCE_DIR}/deps/xmss-alt/algsxmss_fast.c
-        ${CMAKE_CURRENT_SOURCE_DIR}/deps/xmss-alt/algsxmss.c
-        ${CMAKE_CURRENT_SOURCE_DIR}/deps/xmss-alt/hash.c
-        ${CMAKE_CURRENT_SOURCE_DIR}/deps/xmss-alt/hash_address.c
-        ${CMAKE_CURRENT_SOURCE_DIR}/deps/xmss-alt/xmss_common.c
-        ${CMAKE_CURRENT_SOURCE_DIR}/deps/xmss-alt/wots.c
-        ${CMAKE_CURRENT_SOURCE_DIR}/deps/xmss-alt/fips202.c
+        src/xmss-alt/algsxmss_fast.c
+        src/xmss-alt/algsxmss.c
+        src/xmss-alt/hash.c
+        src/xmss-alt/hash_address.c
+        src/xmss-alt/xmss_common.c
+        src/xmss-alt/wots.c
+        src/xmss-alt/fips202.c
         )
 
 file(GLOB_RECURSE LIB_SHASHA_SRC
@@ -129,10 +129,17 @@ SET_SOURCE_FILES_PROPERTIES(${TEST_KYBER_SRC} PROPERTIES LANGUAGE CXX)
 SET_SOURCE_FILES_PROPERTIES(${REF_DILITHIUM_SRC} PROPERTIES LANGUAGE CXX)
 SET_SOURCE_FILES_PROPERTIES(${REF_KYBER_SRC} PROPERTIES LANGUAGE CXX)
 
+add_library(shasha STATIC
+        ${LIB_SHASHA_SRC})
+target_include_directories(shasha PRIVATE ${LIB_SHASHA_INCLUDES} )
+
 add_library(qrllib STATIC
         ${LIB_QRL_SRC}
         ${LIBXMSSALT_SRC})
-target_include_directories(qrllib PRIVATE ${LIB_QRL_INCLUDES} )
+target_include_directories(qrllib PRIVATE
+        ${LIB_QRL_INCLUDES}
+        ${LIB_SHASHA_INCLUDES})
+target_link_libraries(qrllib shasha)
 
 add_library(dilithium STATIC
         ${LIB_DILITHIUM_SRC}
@@ -145,10 +152,6 @@ add_library(kyber STATIC
         ${REF_KYBER_SRC})
 target_include_directories(kyber PRIVATE
         ${LIB_KYBER_INCLUDES} )
-
-add_library(shasha STATIC
-        ${LIB_SHASHA_SRC})
-target_include_directories(qrllib PRIVATE ${LIB_QRL_INCLUDES} )
 
 if (BUILD_TESTS)
     message(STATUS "GTests enabled")
@@ -196,7 +199,8 @@ if (BUILD_TESTS)
             ${TEST_QRL_SRC})
 
     target_include_directories( qrllib_test PRIVATE
-            ${LIB_QRL_INCLUDES} )
+            ${LIB_QRL_INCLUDES}
+            ${LIB_SHASHA_INCLUDES})
     target_link_libraries(qrllib_test qrllib gtest_main)
     add_test(gtest ${PROJECT_BINARY_DIR}/qrllib_test)
 
@@ -267,11 +271,13 @@ if (BUILD_PYTHON)
             )
 
     SWIG_LINK_LIBRARIES(pyqrllib
+            shasha
             ${SWIG_LANG_LIBRARIES})
 
     include_directories(
             ${PYTHON_INCLUDE_PATH}
             ${LIB_QRL_INCLUDES}
+            ${LIB_SHASHA_INCLUDES}
     )
 
     add_custom_command(TARGET ${SWIG_MODULE_pyqrllib_REAL_NAME}
@@ -364,40 +370,6 @@ if (BUILD_PYTHON)
 
 endif ()
 
-# SWIG + API - Golang related stuff
-if (BUILD_GO)
-    set(SWIG_INTERFACE
-            ${CMAKE_CURRENT_SOURCE_DIR}/src/api/qrl.i)
-
-    message(STATUS "golang wrapper enabled")
-    set(language go)
-    #find_package(go 1.5 REQUIRED)
-    set(SWIG_LANG_LIBRARIES ${PYTHON_LIBRARIES})
-    set(CMAKE_SWIG_OUTDIR ${CMAKE_CURRENT_SOURCE_DIR}/goqrllib)
-    set_source_files_properties(${SWIG_INTERFACE} PROPERTIES CPLUSPLUS ON)
-    set_property(SOURCE ${SWIG_INTERFACE} PROPERTY SWIG_FLAGS "-includeall" "-ignoremissing" "-intgosize" "64")
-
-    SWIG_ADD_MODULE(goqrllib
-            ${language}
-            ${SWIG_INTERFACE}
-            src/api/api.cxx
-            ${LIB_SRC}
-            ${LIBXMSSALT_SRC}
-            )
-
-    SWIG_LINK_LIBRARIES(goqrllib
-            ${SWIG_LANG_LIBRARIES}
-            pyqrllib/dilithium
-            pyqrllib/kyber)
-
-    add_custom_command(TARGET ${SWIG_MODULE_goqrllib_REAL_NAME}
-            POST_BUILD
-            COMMAND ${CMAKE_COMMAND} -E cmake_echo_color --cyan $<TARGET_FILE:${SWIG_MODULE_goqrllib_REAL_NAME}>
-            COMMENT "Moving SWIG files to output dir"
-            COMMAND ${CMAKE_COMMAND} -E copy_if_different $<TARGET_FILE:${SWIG_MODULE_goqrllib_REAL_NAME}> ${CMAKE_CURRENT_SOURCE_DIR}/goqrllib
-            )
-endif ()
-
 if (BUILD_WEBASSEMBLY)
     set(JS_QRL_INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/src/jswrapper/jsqrlwrapper.cpp)
     set(JS_DILITHIUM_INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/src/jswrapper/jsdilwrapper.cpp)
@@ -407,10 +379,12 @@ if (BUILD_WEBASSEMBLY)
     add_library(jsqrl SHARED
             ${JS_QRL_INTERFACE}
             ${LIB_QRL_SRC}
+            ${LIB_SHASHA_SRC}
             ${LIBXMSSALT_SRC}
             )
     target_include_directories( jsqrl PRIVATE
-            ${LIB_QRL_INCLUDES} )
+            ${LIB_QRL_INCLUDES}
+            ${LIB_SHASHA_INCLUDES})
 
     add_library(jsdilithium SHARED
             ${JS_DILITHIUM_INTERFACE}

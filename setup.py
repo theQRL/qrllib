@@ -52,19 +52,12 @@ class CMakeExtension(Extension):
 def setup_package():
     needs_sphinx = {'build_sphinx', 'upload_docs'}.intersection(sys.argv)
     sphinx = ['sphinx'] if needs_sphinx else []
-
     cmake = []
-    # cmake = ['cmake']
-    # if 'arm' in platform.machine():
-    #     print("ARM platform detected. Skipping cmake")
-    #     cmake = []
 
-    setup(setup_requires=['six', 'pyscaffold>=2.5a0,<2.6a0'] + sphinx + cmake,
+    setup(setup_requires=['six'] + sphinx + cmake,
           packages=['pyqrllib', ],
           ext_modules=[CMakeExtension('pyqrllib')],
-          cmdclass=dict(build_ext=CMakeBuild),
-          use_pyscaffold=True)
-
+          cmdclass=dict(build_ext=CMakeBuild))
 
 if __name__ == "__main__":
     setup_package()
