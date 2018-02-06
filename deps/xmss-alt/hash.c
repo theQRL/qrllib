@@ -13,7 +13,7 @@ This code was taken from the XMSS reference implementation by Andreas Hülsing a
 #include <cstdio>
 
 unsigned char *addr_to_byte(unsigned char *bytes, const uint32_t addr[8]) {
-#if IS_LITTLE_ENDIAN == 1
+#if __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
     int i = 0;
     for (i = 0; i < 8; i++)
         to_byte(bytes + i * 4, addr[i], 4);

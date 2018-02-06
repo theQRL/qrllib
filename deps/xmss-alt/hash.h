@@ -17,8 +17,6 @@ This code was taken from the XMSS reference implementation by Andreas Hülsing a
 
 #include <cstdint>
 
-#define IS_LITTLE_ENDIAN 1          // TODO: This is not good. Hard coding endianness?
-
 unsigned char *addr_to_byte(unsigned char *bytes, const uint32_t addr[8]);
 
 int prf(eHashFunction hash_func,
