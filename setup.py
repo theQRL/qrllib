@@ -55,7 +55,7 @@ def setup_package():
 
     setup(setup_requires=['six', 'pytest-runner'] + sphinx + cmake,
           packages=['pyqrllib', ],
-          tests_require=['pytest'],
+          tests_require=['pytest', 'pytest-cov'],
           ext_modules=[CMakeExtension('pyqrllib')],
           cmdclass=dict(build_ext=CMakeBuild))
 
