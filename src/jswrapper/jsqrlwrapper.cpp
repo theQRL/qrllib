@@ -24,7 +24,7 @@ namespace {
         TKEY getSKSeed() {  return _xmss.getSKSeed(); }
         TKEY getSKPRF() {  return _xmss.getSKPRF(); }
 
-        std::string getAddress() {  return _xmss.getAddress("Q"); }
+        std::vector<uint8_t> getAddress() {  return _xmss.getAddress(); }
 
         unsigned int getIndex() {  return _xmss.getIndex(); }
         unsigned int setIndex(unsigned int new_index) {  return _xmss.setIndex(new_index); }

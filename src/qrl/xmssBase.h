@@ -16,7 +16,7 @@ class XmssBase {
 public:
     XmssBase(const TSEED &seed,
              uint8_t height,
-             eHashFunction hashFunction = eHashFunction::SHA3) throw(std::invalid_argument);
+             eHashFunction hashFunction = eHashFunction::SHAKE) throw(std::invalid_argument);
 
     virtual ~XmssBase() = default;
 
@@ -25,14 +25,16 @@ public:
     static bool verify(const TMESSAGE &message,
                        const TSIGNATURE &signature,
                        const TKEY &pk,
-                       eHashFunction hashFunction = eHashFunction::SHA3) throw(std::invalid_argument);
+                       eHashFunction hashFunction = eHashFunction::SHAKE) throw(std::invalid_argument);
 
     // TODO: Differentiate between XMSS and WOTS+ keys
     TKEY getSK();
 
     TKEY getPK();
 
-    int getHeight() { return _height; }
+    std::vector<uint8_t> getDescriptor();
+
+    uint8_t getHeight() { return _height; }
 
     TSEED getSeed() { return _seed; }
 
@@ -45,7 +47,7 @@ public:
 
     TKEY getSKPRF();
 
-    std::string getAddress(const std::string &prefix);
+    std::vector<uint8_t> getAddress();
 
     uint32_t getNumberSignatures() { return ((uint32_t) 1) << _height; }
 
@@ -67,7 +69,7 @@ protected:
     xmss_params params;
 
     eHashFunction _hashFunction;
-    unsigned char _height;
+    uint8_t _height;
     TKEY _sk;
     TSEED _seed;
 };

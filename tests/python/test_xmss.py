@@ -77,7 +77,7 @@ class TestXmssBasic(TestCase):
         seed = pyqrllib.ucharVector(48, 0)
 
         with pytest.raises(ValueError):
-            xmss = pyqrllib.XmssFast(seed, HEIGHT, pyqrllib.SHA3)
+            xmss = pyqrllib.XmssFast(seed, HEIGHT, pyqrllib.SHAKE)
 
     def test_xmss_exception_verify(self):
         message = pyqrllib.ucharVector(48, 0)

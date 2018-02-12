@@ -11,7 +11,7 @@
 namespace {
 #define XMSS_HEIGHT 4
 
-    TEST(XmssBasic, Instantiation) {
+    TEST(XmssBasicSHA2, Instantiation) {
         std::vector<unsigned char> seed(48, 0);
 
         XmssBasic xmss(seed, XMSS_HEIGHT, eHashFunction::SHA2);
@@ -25,10 +25,16 @@ namespace {
         std::cout << "pk  :" << pk.size() << " bytes\n" << bin2hstr(pk, 48) << std::endl;
         std::cout << "sk  :" << sk.size() << " bytes\n" << bin2hstr(sk, 48) << std::endl;
 
+        std::cout << "descr:" << bin2hstr(xmss.getDescriptor()) << std::endl;
+        std::cout << "addr :" << bin2hstr(xmss.getAddress()) << std::endl;
+
         EXPECT_EQ(seed, xmss.getSeed());
+        EXPECT_EQ("0002", bin2hstr(xmss.getDescriptor()));
+        EXPECT_EQ("000259d3414a5c481ef80c2608a1bf16c718b107b5d39619824cedf8f34bade455585f1d2a0c",
+                  bin2hstr(xmss.getAddress()));
     }
 
-    TEST(XmssBasic, SignatureLen) {
+    TEST(XmssBasicSHA2, SignatureLen) {
         std::vector<unsigned char> seed(48, 0);
 
         XmssBasic xmss4(seed, 4, eHashFunction::SHA2);
@@ -38,7 +44,7 @@ namespace {
         EXPECT_EQ(2372, xmss6.getSignatureSize());
     }
 
-    TEST(XmssBasic, Sign) {
+    TEST(XmssBasicSHA2, Sign) {
         std::vector<unsigned char> seed(48, 0);
 
         XmssBasic xmss(seed, XMSS_HEIGHT, eHashFunction::SHA2);
@@ -67,7 +73,7 @@ namespace {
     }
 
 
-    TEST(XmssBasic, Verify) {
+    TEST(XmssBasicSHA2, Verify) {
         std::vector<unsigned char> seed;
         for(unsigned char i=0; i<48; i++)
             seed.push_back(i);
