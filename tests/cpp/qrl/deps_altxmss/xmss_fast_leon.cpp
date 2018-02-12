@@ -38,7 +38,7 @@ namespace {
         xmss_params params;
         xmss_set_params(&params, 32, h, 16, 2);
 
-        xmssfast_Genkeypair(eHashFunction::SHA3, &params, pk, sk, state, seed);
+        xmssfast_Genkeypair(eHashFunction::SHAKE, &params, pk, sk, state, seed);
 
         unsigned char msg[32] = {0};
         unsigned char sign[10000];
@@ -46,27 +46,27 @@ namespace {
         printf("Sign / Verify");
 
         int x;
-        int y = xmssfast_update(eHashFunction::SHA3, &params, sk, state, 10);
+        int y = xmssfast_update(eHashFunction::SHAKE, &params, sk, state, 10);
 
-        x = xmssfast_Signmsg(eHashFunction::SHA3, &params, sk, state, sign, msg,32);
-        x = xmss_Verifysig(eHashFunction::SHA3, &params.wots_par, msg,32, sign,pk, h);
+        x = xmssfast_Signmsg(eHashFunction::SHAKE, &params, sk, state, sign, msg,32);
+        x = xmss_Verifysig(eHashFunction::SHAKE, &params.wots_par, msg,32, sign,pk, h);
 
         printf("\n%d\n",x);
 
         unsigned long long m = 32;
-        x = xmssfast_Signmsg(eHashFunction::SHA3, &params, sk, state, sign, msg,32);
+        x = xmssfast_Signmsg(eHashFunction::SHAKE, &params, sk, state, sign, msg,32);
 
         msg[10] ^= 1;
-        x = xmss_Verifysig(eHashFunction::SHA3, &params.wots_par, msg,32, sign,pk, h);
+        x = xmss_Verifysig(eHashFunction::SHAKE, &params.wots_par, msg,32, sign,pk, h);
 
         printf("\n%d\n",x);
 
         msg[0]^=1;
-        x = xmss_Verifysig(eHashFunction::SHA3, &params.wots_par, msg,32, sign,pk, h);
+        x = xmss_Verifysig(eHashFunction::SHAKE, &params.wots_par, msg,32, sign,pk, h);
         printf("\n%d\n",x);
         msg[0]^=1;
         sign[5*32]^=1;
-        x = xmss_Verifysig(eHashFunction::SHA3, &params.wots_par, msg,32, sign,pk, h);
+        x = xmss_Verifysig(eHashFunction::SHAKE, &params.wots_par, msg,32, sign,pk, h);
         printf("\n%d\n",x);
     }
 }

@@ -15,18 +15,22 @@
 class Kyber {
 public:
     Kyber();
+
     Kyber(const std::vector<uint8_t> &pk,
           const std::vector<uint8_t> &sk);
 
-    virtual ~Kyber()=default;
+    virtual ~Kyber() = default;
 
-    std::vector<uint8_t> getPK() {  return _pk; }
-    std::vector<uint8_t> getSK() {  return _sk; }
+    std::vector<uint8_t> getPK() { return _pk; }
 
-    std::vector<uint8_t> getMyKey() {  return _key; }
-    std::vector<uint8_t> getCypherText() {  return _ct; }
+    std::vector<uint8_t> getSK() { return _sk; }
+
+    std::vector<uint8_t> getMyKey() { return _key; }
+
+    std::vector<uint8_t> getCypherText() { return _ct; }
 
     bool kem_encode(const std::vector<uint8_t> &other_pk);
+
     bool kem_decode(const std::vector<uint8_t> &cyphertext);
 
 protected:
@@ -35,7 +39,5 @@ protected:
     std::vector<uint8_t> _key;
     std::vector<uint8_t> _ct;
 };
-
-#include <vector>
 
 #endif //QRLLIB_DILITHIUM_H

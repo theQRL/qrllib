@@ -5,7 +5,7 @@
 #include "misc.h"
 
 XmssBase::XmssBase(const TSEED &seed,
-                   unsigned char height,
+                   uint8_t height,
                    eHashFunction hashFunction) throw(std::invalid_argument)
         : _seed(seed), _height(height), _hashFunction(hashFunction) {
     if (seed.size() != 48) {
@@ -70,7 +70,6 @@ TKEY XmssBase::getRoot() {
     return TKEY(_sk.begin() + OFFSET_ROOT, _sk.begin() + OFFSET_ROOT + 32);
 }
 
-
 uint32_t XmssBase::getIndex() {
     return (_sk[0] << 24) +
            (_sk[1] << 16) +
@@ -79,13 +78,13 @@ uint32_t XmssBase::getIndex() {
 }
 
 uint32_t XmssBase::setIndex(uint32_t new_index) {
-    _sk[3] = static_cast<unsigned char>(new_index & 0xFF);
+    _sk[3] = static_cast<uint8_t>(new_index & 0xFF);
     new_index >>= 8;
-    _sk[2] = static_cast<unsigned char>(new_index & 0xFF);
+    _sk[2] = static_cast<uint8_t>(new_index & 0xFF);
     new_index >>= 8;
-    _sk[1] = static_cast<unsigned char>(new_index & 0xFF);
+    _sk[1] = static_cast<uint8_t>(new_index & 0xFF);
     new_index >>= 8;
-    _sk[0] = static_cast<unsigned char>(new_index & 0xFF);
+    _sk[0] = static_cast<uint8_t>(new_index & 0xFF);
 
     return getIndex();
 }
@@ -108,28 +107,50 @@ TKEY XmssBase::getPK() {
     return PK;
 }
 
-std::string XmssBase::getAddress(const std::string &prefix) {
-    std::vector<unsigned char> key = getPK();
+std::vector<uint8_t> XmssBase::getDescriptor()
+{
+    // descriptor
+    //  0.. 3   hash function    [ SHA2-256, SHA3, .. ]
+    //  4.. 7   signature scheme [ XMSS, XMSS^MT, .. ]
+    //  8..11   params:  i.e. Height / 2
+    // 12..15   params2: reserved
 
-    TKEY hashed_key(ADDRESS_HASH_SIZE, 0);
+    const uint8_t hash_type = _hashFunction;
+    const uint8_t sig_type = 0;
+    const uint8_t param1 = _height >> 1;
+    const uint8_t param2 = 0;
+
+    std::vector<uint8_t> descr{
+        static_cast<uint8_t>(sig_type << 4 | hash_type & 0x0F),
+        static_cast<uint8_t>(param2 << 4 | param1 & 0x0F),
+    };
+
+    return descr;
+}
+
+std::vector<uint8_t> XmssBase::getAddress() {
+    std::vector<uint8_t> key = getPK();
+
+    TKEY hashed_key(ADDRESS_HASH_SIZE+2, 0);
     TKEY hashed_key2(ADDRESS_HASH_SIZE, 0);
 
-    picosha2::hash256(key.begin(), key.end(), hashed_key.begin(), hashed_key.end());
+    auto descriptor = getDescriptor();
+    hashed_key[0] = descriptor[0];
+    hashed_key[1] = descriptor[1];
+
+    picosha2::hash256(key.begin(), key.end(), hashed_key.begin()+2, hashed_key.end());
     picosha2::hash256(hashed_key.begin(), hashed_key.end(), hashed_key2.begin(), hashed_key2.end());
 
-    std::stringstream ss;
-    ss << prefix;
-    ss << bin2hstr(hashed_key);
-    ss << bin2hstr(TKEY(hashed_key2.end() - 4, hashed_key2.end()));        // FIXME: Move to GSL
+    hashed_key.insert(hashed_key.end(), hashed_key2.cend() - 4, hashed_key2.cend());
 
-    return ss.str();
+    return hashed_key;
 }
 
 bool XmssBase::verify(const TMESSAGE &message,
                       const TSIGNATURE &signature,
                       const TKEY &pk,
                       eHashFunction hashFunction) throw(std::invalid_argument) {
-    const auto height = static_cast<const unsigned char>(XmssBase::getHeightFromSigSize(signature.size()));
+    const auto height = static_cast<const uint8_t>(XmssBase::getHeightFromSigSize(signature.size()));
 
     xmss_params params{};
     const uint32_t k = 2;

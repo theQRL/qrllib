@@ -23,7 +23,13 @@ namespace {
         std::cout << "pk  :" << pk.size() << " bytes\n" << bin2hstr(pk, 48) << std::endl;
         std::cout << "sk  :" << sk.size() << " bytes\n" << bin2hstr(sk, 48) << std::endl;
 
+        std::cout << "descr:" << bin2hstr(xmss.getDescriptor()) << std::endl;
+        std::cout << "addr :" << bin2hstr(xmss.getAddress()) << std::endl;
+
         EXPECT_EQ(seed, xmss.getSeed());
+        EXPECT_EQ("0102", bin2hstr(xmss.getDescriptor()));
+        EXPECT_EQ("01024cdc1bfe3c63ede58e01ea3d3d730e8ce860a5315c761de29aaf76de5eabf9aae73df295",
+                  bin2hstr(xmss.getAddress()));
     }
 
     TEST(XmssBasic, SignatureLen) {

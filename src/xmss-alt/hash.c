@@ -47,7 +47,7 @@ int core_hash(eHashFunction hash_func,
         buf[keylen + n + i] = in[i];
     }
 
-    if (hash_func==eHashFunction::SHA3)
+    if (hash_func==eHashFunction::SHAKE)
     {
         if (n == 32) {
             shake128(out, 32, buf, inlen + keylen + n);
