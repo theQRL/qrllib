@@ -53,12 +53,13 @@ def setup_package():
     sphinx = ['sphinx'] if needs_sphinx else []
     cmake = []
 
-    setup(setup_requires=['six', 'pytest-runner'] + sphinx + cmake,
+    # noinspection PyInterpreter
+    setup(setup_requires=['six', 'pytest-runner', 'pyscaffold'] + sphinx + cmake,
           packages=['pyqrllib', ],
           tests_require=['pytest', 'pytest-cov'],
           ext_modules=[CMakeExtension('pyqrllib')],
-          cmdclass=dict(build_ext=CMakeBuild))
-
+          cmdclass=dict(build_ext=CMakeBuild),
+          use_pyscaffold=True)
 
 if __name__ == "__main__":
     setup_package()
