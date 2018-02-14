@@ -5,6 +5,7 @@
 #include <iostream>
 #include "gtest/gtest.h"
 #include <misc.h>
+#include <qrl/qrlHelper.h>
 
 namespace {
 #define XMSS_HEIGHT 4
@@ -38,6 +39,10 @@ namespace {
                   bin2hstr(xmss.getExtendedSeed()));
         EXPECT_EQ("010274764b521b002b55c57fa182142310c0bd6f2be9b3d673bf2e7f731e86da45ed70fa3b21",
                   bin2hstr(xmss.getAddress()));
+
+        EXPECT_EQ("010274764b521b002b55c57fa182142310c0bd6f2be9b3d673bf2e7f731e86da45ed70fa3b21",
+                  bin2hstr(QRLHelper::getAddress( xmss.getPK())));
+
     }
 
     TEST(XmssBasic, SignatureLen) {

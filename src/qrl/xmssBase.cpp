@@ -2,8 +2,7 @@
 #include "xmssBasic.h"
 #include <iostream>
 #include <PicoSHA2/picosha2.h>
-#include "misc.h"
-#include "qrlDescriptor.h"
+#include "qrlHelper.h"
 
 XmssBase::XmssBase(const TSEED &seed,
                    uint8_t height,
@@ -127,19 +126,8 @@ std::vector<uint8_t> XmssBase::getDescriptorBytes() {
 }
 
 std::vector<uint8_t> XmssBase::getAddress() {
-    auto address = getDescriptorBytes();
 
-    TKEY pk = getPK();
-
-    TKEY hashed_key(ADDRESS_HASH_SIZE, 0);
-    picosha2::hash256(pk.begin(), pk.end(), hashed_key.begin(), hashed_key.end());
-    address.insert(address.end(), hashed_key.cbegin(), hashed_key.cend());
-
-    TKEY hashed_key2(ADDRESS_HASH_SIZE, 0);
-    picosha2::hash256(hashed_key.begin(), hashed_key.end(), hashed_key2.begin(), hashed_key2.end());
-    address.insert(address.end(), hashed_key2.cend() - 4, hashed_key2.cend());
-
-    return address;
+    return QRLHelper::getAddress(getPK());
 }
 
 bool XmssBase::verify(const TMESSAGE &message,

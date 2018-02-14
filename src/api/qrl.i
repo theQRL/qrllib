@@ -35,6 +35,7 @@ namespace std {
 %{
     #include "qrl/misc.h"
     #include "qrl/hashing.h"
+    #include "qrl/qrlHelper.h"
     #include "qrl/xmssBasic.h"
     #include "qrl/xmssBase.h"
     #include "qrl/xmssFast.h"
@@ -43,6 +44,7 @@ namespace std {
 
 %include "qrl/misc.h"
 %include "qrl/hashing.h"
+%include "qrl/qrlHelper.h"
 %include "qrl/xmssBasic.h"
 %include "qrl/xmssBase.h"
 %include "qrl/xmssFast.h"
