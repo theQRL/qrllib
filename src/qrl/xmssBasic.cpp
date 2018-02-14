@@ -48,7 +48,6 @@ XmssBasic::XmssBasic(const TSEED &seed,
 
 
 TSIGNATURE XmssBasic::sign(const TMESSAGE &message) {
-    // TODO: Fix constness in library
     auto signature = TSIGNATURE(getSignatureSize(), 0);
 
     xmss_Signmsg(_hashFunction,

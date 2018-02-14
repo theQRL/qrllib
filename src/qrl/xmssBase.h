@@ -4,8 +4,9 @@
 #include <string>
 #include <vector>
 #include <stdexcept>
-#include "xmss-alt/eHashFunctions.h"
-#include "xmss-alt/xmss_params.h"
+#include <xmss-alt/eHashFunctions.h>
+#include <xmss-alt/xmss_params.h>
+#include "qrlDescriptor.h"
 
 #define TSIGNATURE std::vector<uint8_t>
 #define TMESSAGE std::vector<uint8_t>
@@ -24,19 +25,21 @@ public:
 
     static bool verify(const TMESSAGE &message,
                        const TSIGNATURE &signature,
-                       const TKEY &pk,
-                       eHashFunction hashFunction = eHashFunction::SHAKE) throw(std::invalid_argument);
+                       const TKEY &pk) throw(std::invalid_argument);
 
     // TODO: Differentiate between XMSS and WOTS+ keys
     TKEY getSK();
 
     TKEY getPK();
 
-    std::vector<uint8_t> getDescriptor();
+    QRLDescriptor getDescriptor();
+    std::vector<uint8_t> getDescriptorBytes();
 
     uint8_t getHeight() { return _height; }
 
     TSEED getSeed() { return _seed; }
+
+    TSEED getExtendedSeed();
 
     // TODO: Maybe improve this using a union down into the original code?
     TKEY getRoot();
