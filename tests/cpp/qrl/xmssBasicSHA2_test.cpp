@@ -5,6 +5,7 @@
 #include <iostream>
 #include "gtest/gtest.h"
 #include <misc.h>
+#include <qrl/qrlHelper.h>
 
 //FIXME: Unify with XmssFast tests
 
@@ -37,9 +38,12 @@ namespace {
         EXPECT_EQ("00020000000000000000000000000000000000000000000000"
                   "00000000000000000000000000000000000000000000000000",
                 bin2hstr(xmss.getExtendedSeed()));
+
         EXPECT_EQ("0002e4b1da78e5bc64632506135301f67b22bebeea46f74c37eb5379bd7602a8e0d1a284d978",
                   bin2hstr(xmss.getAddress()));
 
+        EXPECT_EQ("0002e4b1da78e5bc64632506135301f67b22bebeea46f74c37eb5379bd7602a8e0d1a284d978",
+                  bin2hstr(QRLHelper::getAddress( xmss.getPK())));
     }
 
     TEST(XmssBasicSHA2, SignatureLen) {
