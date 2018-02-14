@@ -84,5 +84,4 @@ class TestXmssBasic(TestCase):
         signature = pyqrllib.ucharVector(2287, 0)
         pk = pyqrllib.ucharVector(48, 0)
 
-        with pytest.raises(ValueError):
-            pyqrllib.XmssFast.verify(message, signature, pk)
+        self.assertFalse(pyqrllib.XmssFast.verify(message, signature, pk))

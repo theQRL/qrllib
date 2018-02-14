@@ -19,16 +19,24 @@ namespace {
 
         std::cout << std::endl;
         std::cout << std::endl;
-        std::cout << "seed:" << seed.size() << " bytes\n" << bin2hstr(seed, 48) << std::endl;
-        std::cout << "pk  :" << pk.size() << " bytes\n" << bin2hstr(pk, 48) << std::endl;
-        std::cout << "sk  :" << sk.size() << " bytes\n" << bin2hstr(sk, 48) << std::endl;
-
-        std::cout << "descr:" << bin2hstr(xmss.getDescriptor()) << std::endl;
+        std::cout << "seed:" << seed.size() << " bytes\n" << bin2hstr(seed, 16) << std::endl;
+        std::cout << "pk  :" << pk.size() << " bytes\n" << bin2hstr(pk, 16) << std::endl;
+        std::cout << "sk  :" << sk.size() << " bytes\n" << bin2hstr(sk, 16) << std::endl;
+        std::cout << "descr:" << bin2hstr(xmss.getDescriptor().getBytes()) << std::endl;
         std::cout << "addr :" << bin2hstr(xmss.getAddress()) << std::endl;
 
         EXPECT_EQ(seed, xmss.getSeed());
-        EXPECT_EQ("0102", bin2hstr(xmss.getDescriptor()));
-        EXPECT_EQ("01024cdc1bfe3c63ede58e01ea3d3d730e8ce860a5315c761de29aaf76de5eabf9aae73df295",
+        EXPECT_EQ("000000000000000000000000000000000000000000000000"
+                  "000000000000000000000000000000000000000000000000",
+                  bin2hstr(xmss.getSeed()));
+
+        EXPECT_TRUE(xmss.getDescriptor().getHashFunction() == eHashFunction::SHAKE);
+
+        EXPECT_EQ("0102", bin2hstr(xmss.getDescriptor().getBytes()));
+        EXPECT_EQ("01020000000000000000000000000000000000000000000000"
+                  "00000000000000000000000000000000000000000000000000",
+                  bin2hstr(xmss.getExtendedSeed()));
+        EXPECT_EQ("010274764b521b002b55c57fa182142310c0bd6f2be9b3d673bf2e7f731e86da45ed70fa3b21",
                   bin2hstr(xmss.getAddress()));
     }
 

@@ -129,12 +129,10 @@ namespace {
         TSIGNATURE signature(48, 0);
         TKEY pk(48, 0);
 
-        EXPECT_THROW(XmssFast::verify(message, signature, pk),
-                     std::invalid_argument);
+        EXPECT_FALSE(XmssFast::verify(message, signature, pk));
 
         TSIGNATURE signature2(2287, 0);
-        EXPECT_THROW(XmssFast::verify(message, signature2, pk),
-                     std::invalid_argument);
+        EXPECT_FALSE(XmssFast::verify(message, signature2, pk));
     }
 
 }

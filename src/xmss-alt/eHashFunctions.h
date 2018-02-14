@@ -1,6 +1,6 @@
 #pragma once
 
 enum eHashFunction {
-    SHA2 = 0,
+    SHA2_256 = 0,
     SHAKE = 1,
 };

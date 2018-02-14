@@ -76,7 +76,6 @@ unsigned int XmssFast::setIndex(unsigned int new_index) {
 }
 
 TSIGNATURE XmssFast::sign(const TMESSAGE &message) {
-    // TODO: Fix constness in library
     auto signature = TSIGNATURE(getSignatureSize(), 0);
 
     auto index = getIndex();
