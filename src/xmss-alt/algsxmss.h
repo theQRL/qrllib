@@ -12,8 +12,7 @@ int xmss_Genkeypair(eHashFunction hash_func,
                     unsigned char *sk,
                     unsigned char *seed);
 
-int xmss_updateSK(eHashFunction hash_func,
-                  unsigned char *sk,
+int xmss_updateSK(unsigned char *sk,
                   unsigned long k);
 
 int xmss_Signmsg(eHashFunction hash_func,
