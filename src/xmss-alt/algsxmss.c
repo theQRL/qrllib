@@ -16,10 +16,10 @@
  *
  * takes n byte sk_seed and returns n byte seed using 32 byte address addr.
  */
-static void get_seed(eHashFunction hash_func,
-                     unsigned char *seed,
-                     const unsigned char *sk_seed,
-                     int n, uint32_t addr[8]) {
+void get_seed(eHashFunction hash_func,
+              unsigned char *seed,
+              const unsigned char *sk_seed,
+              int n, uint32_t addr[8]) {
     unsigned char bytes[32];
     // Make sure that chain addr, hash addr, and key bit are 0!
     setChainADRS(addr, 0);
