@@ -13,7 +13,7 @@ namespace {
                 10);
 
         EXPECT_TRUE(desc.getHashFunction() == eHashFunction::SHA2_256);
-        EXPECT_TRUE(desc.getHashFunction() != eHashFunction::SHAKE);
+        EXPECT_TRUE(desc.getHashFunction() != eHashFunction::SHAKE_128);
         EXPECT_TRUE(desc.getSignatureType() == eSignatureType::XMSS);
 
         EXPECT_EQ(10, desc.getHeight());
@@ -24,12 +24,12 @@ namespace {
 
     TEST(QRL_Descriptor, checkAttributes2) {
         QRLDescriptor desc(
-                eHashFunction::SHAKE,
+                eHashFunction::SHAKE_128,
                 eSignatureType::XMSS,
                 16);
 
         EXPECT_TRUE(desc.getHashFunction() != eHashFunction::SHA2_256);
-        EXPECT_TRUE(desc.getHashFunction() == eHashFunction::SHAKE);
+        EXPECT_TRUE(desc.getHashFunction() == eHashFunction::SHAKE_128);
         EXPECT_TRUE(desc.getSignatureType() == eSignatureType::XMSS);
         EXPECT_EQ(16, desc.getHeight());
 
@@ -41,7 +41,7 @@ namespace {
         QRLDescriptor desc = QRLDescriptor::fromBytes(0x01, 0x08);
 
         EXPECT_TRUE(desc.getHashFunction() != eHashFunction::SHA2_256);
-        EXPECT_TRUE(desc.getHashFunction() == eHashFunction::SHAKE);
+        EXPECT_TRUE(desc.getHashFunction() == eHashFunction::SHAKE_128);
         EXPECT_TRUE(desc.getSignatureType() == eSignatureType::XMSS);
         EXPECT_EQ(16, desc.getHeight());
 

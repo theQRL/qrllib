@@ -33,7 +33,7 @@ class TestXmssBasic(TestCase):
 
         descr = pyqrllib.QRLHelper.extractDescriptor(xmss.getPK())
         self.assertEqual(4, descr.getHeight())
-        self.assertEqual(pyqrllib.SHAKE, descr.getHashFunction())
+        self.assertEqual(pyqrllib.SHAKE_128, descr.getHashFunction())
 
     def test_xmss_creation_height6(self):
         HEIGHT = 6
@@ -54,7 +54,7 @@ class TestXmssBasic(TestCase):
 
         descr = pyqrllib.QRLHelper.extractDescriptor(xmss.getPK())
         self.assertEqual(6, descr.getHeight())
-        self.assertEqual(pyqrllib.SHAKE, descr.getHashFunction())
+        self.assertEqual(pyqrllib.SHAKE_128, descr.getHashFunction())
 
     def test_xmss(self):
         HEIGHT = 6
@@ -119,7 +119,7 @@ class TestXmssBasic(TestCase):
         seed = pyqrllib.ucharVector(48, 0)
 
         with pytest.raises(ValueError):
-            xmss = pyqrllib.XmssFast(seed, HEIGHT, pyqrllib.SHAKE)
+            xmss = pyqrllib.XmssFast(seed, HEIGHT, pyqrllib.SHAKE_128)
 
     def test_xmss_exception_verify(self):
         message = pyqrllib.ucharVector(48, 0)
