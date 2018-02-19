@@ -49,8 +49,8 @@ public:
         // 12..15   params2: reserved
 
         std::vector<uint8_t> descr{
-                static_cast<uint8_t>(_signatureType << 4 | _hashFunction & 0x0F),
-                static_cast<uint8_t>(_params2 << 4 | (_height >> 1) & 0x0F),
+                static_cast<uint8_t>( (_signatureType << 4) | (_hashFunction & 0x0F)),
+                static_cast<uint8_t>( (_params2 << 4) | ((_height >> 1) & 0x0F)),
         };
 
         return descr;

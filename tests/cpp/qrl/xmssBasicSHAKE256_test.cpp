@@ -7,18 +7,19 @@
 #include <misc.h>
 #include <qrl/qrlHelper.h>
 
+//FIXME: Unify with XmssFast tests
+
 namespace {
 #define XMSS_HEIGHT 4
 
-    TEST(XmssBasic_Default, Instantiation) {
+    TEST(XmssBasicSHAKE256, Instantiation) {
         std::vector<unsigned char> seed(48, 0);
 
-        XmssBasic xmss(seed, XMSS_HEIGHT);
+        XmssBasic xmss(seed, XMSS_HEIGHT, eHashFunction::SHAKE_256);
 
         auto pk = xmss.getPK();
         auto sk = xmss.getSK();
 
-        std::cout << std::endl;
         std::cout << std::endl;
         std::cout << "seed:" << seed.size() << " bytes\n" << bin2hstr(seed, 16) << std::endl;
         std::cout << "pk  :" << pk.size() << " bytes\n" << bin2hstr(pk, 16) << std::endl;
@@ -31,34 +32,34 @@ namespace {
                   "000000000000000000000000000000000000000000000000",
                   bin2hstr(xmss.getSeed()));
 
-        EXPECT_TRUE(xmss.getDescriptor().getHashFunction() == eHashFunction::SHAKE_128);
+        EXPECT_TRUE(xmss.getDescriptor().getHashFunction() == eHashFunction::SHA2_256);
 
-        EXPECT_EQ("0102", bin2hstr(xmss.getDescriptor().getBytes()));
-        EXPECT_EQ("01020000000000000000000000000000000000000000000000"
+        EXPECT_EQ("0202", bin2hstr(xmss.getDescriptor().getBytes()));
+        EXPECT_EQ("02020000000000000000000000000000000000000000000000"
                   "00000000000000000000000000000000000000000000000000",
-                  bin2hstr(xmss.getExtendedSeed()));
-        EXPECT_EQ("010274764b521b002b55c57fa182142310c0bd6f2be9b3d673bf2e7f731e86da45ed70fa3b21",
+                bin2hstr(xmss.getExtendedSeed()));
+
+        EXPECT_EQ("02020329a5705fbf196fe3ee034aa37fa64e73c86ebf33ffcda31a98a0cbf7ea076c16acbbb5",
                   bin2hstr(xmss.getAddress()));
 
-        EXPECT_EQ("010274764b521b002b55c57fa182142310c0bd6f2be9b3d673bf2e7f731e86da45ed70fa3b21",
+        EXPECT_EQ("02020329a5705fbf196fe3ee034aa37fa64e73c86ebf33ffcda31a98a0cbf7ea076c16acbbb5",
                   bin2hstr(QRLHelper::getAddress( xmss.getPK())));
-
     }
 
-    TEST(XmssBasic_Default, SignatureLen) {
+    TEST(XmssBasicSHAKE256, SignatureLen) {
         std::vector<unsigned char> seed(48, 0);
 
-        XmssBasic xmss4(seed, 4);
+        XmssBasic xmss4(seed, 4, eHashFunction::SHAKE_256);
         EXPECT_EQ(2308, xmss4.getSignatureSize());
 
-        XmssBasic xmss6(seed, 6);
+        XmssBasic xmss6(seed, 6, eHashFunction::SHAKE_256);
         EXPECT_EQ(2372, xmss6.getSignatureSize());
     }
 
-    TEST(XmssBasic_Default, Sign) {
+    TEST(XmssBasicSHAKE256, Sign) {
         std::vector<unsigned char> seed(48, 0);
 
-        XmssBasic xmss(seed, XMSS_HEIGHT);
+        XmssBasic xmss(seed, XMSS_HEIGHT, eHashFunction::SHAKE_256);
 
         std::string message = "This is a test message";
         std::vector<unsigned char> data(message.begin(), message.end());
@@ -84,12 +85,12 @@ namespace {
     }
 
 
-    TEST(XmssBasic_Default, Verify) {
+    TEST(XmssBasicSHAKE256, Verify) {
         std::vector<unsigned char> seed;
         for(unsigned char i=0; i<48; i++)
             seed.push_back(i);
 
-        XmssBasic xmss(seed, XMSS_HEIGHT);
+        XmssBasic xmss(seed, XMSS_HEIGHT, eHashFunction::SHAKE_256);
 
         std::string message = "This is a test message";
         std::vector<unsigned char> data_ref(message.begin(), message.end());
