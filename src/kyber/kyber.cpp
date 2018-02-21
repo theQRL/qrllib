@@ -38,9 +38,11 @@ bool Kyber::kem_encode(const std::vector<uint8_t> &other_pk)
     _key.resize(KYBER_SYMBYTES);
     _ct.resize(KYBER_CIPHERTEXTBYTES);
 
-    crypto_kem_enc(_ct.data(),
-                   _key.data(),
-                   other_pk.data());
+    auto validation_error = crypto_kem_enc(_ct.data(),
+                                           _key.data(),
+                                           other_pk.data());
+
+    return validation_error == 0;
 }
 
 bool Kyber::kem_decode(const std::vector<uint8_t> &cyphertext)
