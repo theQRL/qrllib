@@ -17,7 +17,7 @@ class XmssBase {
 public:
     XmssBase(const TSEED &seed,
              uint8_t height,
-             eHashFunction hashFunction = eHashFunction::SHAKE) throw(std::invalid_argument);
+             eHashFunction hashFunction = eHashFunction::SHAKE_128) throw(std::invalid_argument);
 
     virtual ~XmssBase() = default;
 
