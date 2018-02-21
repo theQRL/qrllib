@@ -25,6 +25,10 @@ message(STATUS "PYTHON WRAPPER " ${BUILD_PYTHON})
 message(STATUS "WEBASSEMBLY    " ${BUILD_WEBASSEMBLY})
 
 if (BUILD_PYTHON OR BUILD_GO)
+    set(Python_ADDITIONAL_VERSIONS 3 3.6 3.5)
+    find_package(PythonLibs REQUIRED)
+    find_package(PythonInterp REQUIRED)
+
     find_package(SWIG REQUIRED)
     INCLUDE(${SWIG_USE_FILE})
     unset(SWIG_LANG_TYPE)
@@ -247,7 +251,7 @@ if (BUILD_PYTHON)
     endif ()
 
     set(language python)
-    find_package(PythonLibs 3.4 REQUIRED)
+
     include_directories(
           ${PYTHON_INCLUDE_PATH}
     )
