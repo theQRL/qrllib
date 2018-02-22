@@ -37,10 +37,10 @@ namespace {
         EXPECT_EQ("01020000000000000000000000000000000000000000000000"
                   "00000000000000000000000000000000000000000000000000",
                   bin2hstr(xmss.getExtendedSeed()));
-        EXPECT_EQ("010274764b521b002b55c57fa182142310c0bd6f2be9b3d673bf2e7f731e86da45ed70fa3b21",
+        EXPECT_EQ("010274764b521b002b55c57fa182142310c0bd6f2be9b3d673bf2e7f731e86da45edac082a29",
                   bin2hstr(xmss.getAddress()));
 
-        EXPECT_EQ("010274764b521b002b55c57fa182142310c0bd6f2be9b3d673bf2e7f731e86da45ed70fa3b21",
+        EXPECT_EQ("010274764b521b002b55c57fa182142310c0bd6f2be9b3d673bf2e7f731e86da45edac082a29",
                   bin2hstr(QRLHelper::getAddress( xmss.getPK())));
 
     }

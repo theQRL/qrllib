@@ -32,17 +32,17 @@ namespace {
                   "000000000000000000000000000000000000000000000000",
                   bin2hstr(xmss.getSeed()));
 
-        EXPECT_TRUE(xmss.getDescriptor().getHashFunction() == eHashFunction::SHA2_256);
+        EXPECT_TRUE(xmss.getDescriptor().getHashFunction() == eHashFunction::SHAKE_256);
 
         EXPECT_EQ("0202", bin2hstr(xmss.getDescriptor().getBytes()));
         EXPECT_EQ("02020000000000000000000000000000000000000000000000"
                   "00000000000000000000000000000000000000000000000000",
                 bin2hstr(xmss.getExtendedSeed()));
 
-        EXPECT_EQ("02020329a5705fbf196fe3ee034aa37fa64e73c86ebf33ffcda31a98a0cbf7ea076c16acbbb5",
+        EXPECT_EQ("02020329a5705fbf196fe3ee034aa37fa64e73c86ebf33ffcda31a98a0cbf7ea076c4ce4a6a5",
                   bin2hstr(xmss.getAddress()));
 
-        EXPECT_EQ("02020329a5705fbf196fe3ee034aa37fa64e73c86ebf33ffcda31a98a0cbf7ea076c16acbbb5",
+        EXPECT_EQ("02020329a5705fbf196fe3ee034aa37fa64e73c86ebf33ffcda31a98a0cbf7ea076c4ce4a6a5",
                   bin2hstr(QRLHelper::getAddress( xmss.getPK())));
     }
 

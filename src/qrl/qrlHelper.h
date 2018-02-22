@@ -24,10 +24,25 @@ public:
         address.insert(address.end(), hashed_key.cbegin(), hashed_key.cend());
 
         std::vector<uint8_t> hashed_key2(ADDRESS_HASH_SIZE, 0);
-        picosha2::hash256(hashed_key.begin(), hashed_key.end(), hashed_key2.begin(), hashed_key2.end());
+        picosha2::hash256(address.begin(), address.end(), hashed_key2.begin(), hashed_key2.end());
         address.insert(address.end(), hashed_key2.cend() - 4, hashed_key2.cend());
 
         return address;
+    }
+
+    static bool addressIsValid(const std::vector<uint8_t>&address)
+    {
+        if (address.size()!=(2+ADDRESS_HASH_SIZE+4))
+            return false;
+
+        std::vector<uint8_t> hashed_key2(ADDRESS_HASH_SIZE, 0);
+        picosha2::hash256(address.cbegin(), address.cbegin()+2+ADDRESS_HASH_SIZE,
+                          hashed_key2.begin(), hashed_key2.end());
+
+        return address[34] == hashed_key2[28] &&
+               address[35] == hashed_key2[29] &&
+               address[36] == hashed_key2[30] &&
+               address[37] == hashed_key2[31];
     }
 
     static QRLDescriptor extractDescriptor(const std::vector<uint8_t>&pk) throw(std::invalid_argument)
