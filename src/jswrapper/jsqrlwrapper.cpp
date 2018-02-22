@@ -4,6 +4,8 @@
 #include <xmssFast.h>
 #include <misc.h>
 #include <wordlist.h>
+#include <qrlHelper.h>
+#include <qrlDescriptor.h>
 
 namespace {
 
@@ -62,6 +64,63 @@ namespace {
         return bin2mnemonic(vec);
     }
 
+    std::string EMSCRIPTEN_KEEPALIVE _getHashFunction(const std::vector<unsigned char> &address)
+    {
+        if (address.size()<2)
+        {
+            return "Invalid address";
+        }
+
+        auto descr = QRLDescriptor::fromBytes(address[0], address[1]);
+
+        switch(descr.getHashFunction())
+        {
+            case eHashFunction::SHA2_256:
+                return "SHA2_256";
+            case eHashFunction::SHAKE_128:
+                return "SHAKE128";
+            case eHashFunction::SHAKE_256:
+                return "SHAKE256";
+        }
+
+        return "Not recognized";
+    }
+
+    std::string EMSCRIPTEN_KEEPALIVE _getSignatureType(const std::vector<unsigned char> &address)
+    {
+        if (address.size()<2)
+        {
+            return "Invalid address";
+        }
+
+        auto descr = QRLDescriptor::fromBytes(address[0], address[1]);
+
+        switch(descr.getSignatureType())
+        {
+            case eSignatureType::XMSS:
+                return "XMSS";
+        }
+
+        return "Not recognized";
+    }
+
+    uint8_t EMSCRIPTEN_KEEPALIVE _getHeight(const std::vector<unsigned char> &address)
+    {
+        if (address.size()<2)
+        {
+            return 0;
+        }
+
+        auto descr = QRLDescriptor::fromBytes(address[0], address[1]);
+
+        return descr.getHeight();
+    }
+
+    bool EMSCRIPTEN_KEEPALIVE _validateAddress(const std::vector<unsigned char> &address)
+    {
+        return QRLHelper::addressIsValid(address);
+    }
+
     using namespace emscripten;
 
     EMSCRIPTEN_BINDINGS(my_module) {
@@ -72,6 +131,12 @@ namespace {
 
         function("mnemonic2bin", &_mnemonic2bin);
         function("bin2mnemonic", &_bin2mnemonic);
+
+        function("getHashFunction", &_getHashFunction);
+        function("getSignatureType", &_getSignatureType);
+        function("getHeight", &_getHeight);
+
+        function("validateAddress", &_validateAddress);
 
         class_<XmssWrapper>("Xmss")
                 .constructor<TSEED, unsigned char>()
