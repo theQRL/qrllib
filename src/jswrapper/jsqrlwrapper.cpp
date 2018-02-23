@@ -19,6 +19,7 @@ namespace {
         TKEY getSK() {  return _xmss.getSK(); }
         TKEY getPK() {  return _xmss.getPK(); }
         TSEED getSeed() {  return _xmss.getSeed(); }
+        TSEED getExtendedSeed() {  return _xmss.getExtendedSeed(); }
         int getHeight() {  return _xmss.getHeight(); }
 
         TKEY getRoot() {  return _xmss.getRoot(); }
@@ -143,6 +144,7 @@ namespace {
                 .function("getPK", &XmssWrapper::getPK)
                 .function("getSK", &XmssWrapper::getSK)
                 .function("getSeed", &XmssWrapper::getSeed)
+                .function("getExtendedSeed", &XmssWrapper::getExtendedSeed)
                 .function("getHeight", &XmssWrapper::getHeight)
 
                 .function("getRoot", &XmssWrapper::getRoot)
