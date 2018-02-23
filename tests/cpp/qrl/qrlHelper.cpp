@@ -6,7 +6,7 @@
 
 namespace {
     TEST(QRL_Helper, validateAddress) {
-        std::vector<unsigned char> pk(34, 0);
+        std::vector<unsigned char> pk(QRLDescriptor::getSize() + 32, 0);
 
         auto address = QRLHelper::getAddress(pk);
 

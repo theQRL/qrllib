@@ -32,17 +32,17 @@ public:
 
     static bool addressIsValid(const std::vector<uint8_t>&address)
     {
-        if (address.size()!=(2+ADDRESS_HASH_SIZE+4))
+        if (address.size()!=(QRLDescriptor::getSize() +ADDRESS_HASH_SIZE+4))
             return false;
 
         std::vector<uint8_t> hashed_key2(ADDRESS_HASH_SIZE, 0);
-        picosha2::hash256(address.cbegin(), address.cbegin()+2+ADDRESS_HASH_SIZE,
+        picosha2::hash256(address.cbegin(), address.cbegin()+QRLDescriptor::getSize()+ADDRESS_HASH_SIZE,
                           hashed_key2.begin(), hashed_key2.end());
 
-        return address[34] == hashed_key2[28] &&
-               address[35] == hashed_key2[29] &&
-               address[36] == hashed_key2[30] &&
-               address[37] == hashed_key2[31];
+        return address[35] == hashed_key2[28] &&
+               address[36] == hashed_key2[29] &&
+               address[37] == hashed_key2[30] &&
+               address[38] == hashed_key2[31];
     }
 
     static QRLDescriptor extractDescriptor(const std::vector<uint8_t>&pk) throw(std::invalid_argument)
@@ -50,7 +50,7 @@ public:
         if (pk.size()<2) {
             throw std::invalid_argument("invalid pk size");
         }
-        return QRLDescriptor::fromBytes(pk[0], pk[1]);
+        return QRLDescriptor::fromBytes(pk[0], pk[1], pk[2]);
     }
 };
 

@@ -18,7 +18,7 @@ namespace {
 
         EXPECT_EQ(10, desc.getHeight());
 
-        std::vector<uint8_t> expected_descriptor_bytes{0x00, 0x05};
+        std::vector<uint8_t> expected_descriptor_bytes{0x00, 0x05, 0x00};
         EXPECT_EQ(expected_descriptor_bytes, desc.getBytes());
     }
 
@@ -33,19 +33,19 @@ namespace {
         EXPECT_TRUE(desc.getSignatureType() == eSignatureType::XMSS);
         EXPECT_EQ(16, desc.getHeight());
 
-        std::vector<uint8_t> expected_descriptor_bytes{0x01, 0x08};
+        std::vector<uint8_t> expected_descriptor_bytes{0x01, 0x08, 0x00};
         EXPECT_EQ(expected_descriptor_bytes, desc.getBytes());
     }
 
     TEST(QRL_Descriptor, checkAttributesFromBytes) {
-        QRLDescriptor desc = QRLDescriptor::fromBytes(0x01, 0x08);
+        QRLDescriptor desc = QRLDescriptor::fromBytes(0x01, 0x08, 0x00);
 
         EXPECT_TRUE(desc.getHashFunction() != eHashFunction::SHA2_256);
         EXPECT_TRUE(desc.getHashFunction() == eHashFunction::SHAKE_128);
         EXPECT_TRUE(desc.getSignatureType() == eSignatureType::XMSS);
         EXPECT_EQ(16, desc.getHeight());
 
-        std::vector<uint8_t> expected_descriptor_bytes{0x01, 0x08};
+        std::vector<uint8_t> expected_descriptor_bytes{0x01, 0x08, 0x00};
         EXPECT_EQ(expected_descriptor_bytes, desc.getBytes());
     }
 
