@@ -20,8 +20,8 @@ class TestXmssBasic(TestCase):
         seed = pyqrllib.ucharVector(48, 0)
         xmss = pyqrllib.XmssBasic(seed, HEIGHT)
 
-        expected_address = "010274764b521b002b55c57fa182142310c0bd6f2be9b3d673bf2e7f731e86da45edac082a29"
-        expected_PK = "0102c25188b585f731c128e2b457069e" \
+        expected_address = "01020095f03f084bcb29b96b0529c17ce92c54c1e8290193a93803812ead95e8e6902506b67897"
+        expected_PK = "010200c25188b585f731c128e2b457069e" \
                       "afd1e3fa3961605af8c58a1aec4d82ac" \
                       "316d3191da3442686282b3d5160f25cf" \
                       "162a517fd2131f83fbf2698a58f9c46a" \
@@ -40,9 +40,9 @@ class TestXmssBasic(TestCase):
         seed = pyqrllib.ucharVector(48, 0)
         xmss = pyqrllib.XmssBasic(seed, HEIGHT)
 
-        expected_address = "010327fe0d944d50c033fd4a9995b13a004017575db9f834d357463df66c68303edb0b64aa02"
+        expected_address = "0103008b0e18dd0bac2c3fdc9a48e10fc466eef899ef074449d12ddf050317b2083527aee74bc3"
 
-        expected_PK = "0103859060f15adc3825adeec85c7483" \
+        expected_PK = "010300859060f15adc3825adeec85c7483" \
                       "d868e898bc5117d0cff04ab1343916d4" \
                       "07af3191da3442686282b3d5160f25cf" \
                       "162a517fd2131f83fbf2698a58f9c46a" \

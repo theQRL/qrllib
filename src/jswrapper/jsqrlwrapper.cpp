@@ -67,12 +67,12 @@ namespace {
 
     std::string EMSCRIPTEN_KEEPALIVE _getHashFunction(const std::vector<unsigned char> &address)
     {
-        if (address.size()<2)
+        if (address.size()<QRLDescriptor::getSize())
         {
             return "Invalid address";
         }
 
-        auto descr = QRLDescriptor::fromBytes(address[0], address[1]);
+        auto descr = QRLDescriptor::fromBytes(address[0], address[1], address[2]);
 
         switch(descr.getHashFunction())
         {
@@ -89,12 +89,12 @@ namespace {
 
     std::string EMSCRIPTEN_KEEPALIVE _getSignatureType(const std::vector<unsigned char> &address)
     {
-        if (address.size()<2)
+        if (address.size()<QRLDescriptor::getSize())
         {
             return "Invalid address";
         }
 
-        auto descr = QRLDescriptor::fromBytes(address[0], address[1]);
+        auto descr = QRLDescriptor::fromBytes(address[0], address[1], address[2]);
 
         switch(descr.getSignatureType())
         {
@@ -107,12 +107,12 @@ namespace {
 
     uint8_t EMSCRIPTEN_KEEPALIVE _getHeight(const std::vector<unsigned char> &address)
     {
-        if (address.size()<2)
+        if (address.size()<QRLDescriptor::getSize())
         {
             return 0;
         }
 
-        auto descr = QRLDescriptor::fromBytes(address[0], address[1]);
+        auto descr = QRLDescriptor::fromBytes(address[0], address[1], address[2]);
 
         return descr.getHeight();
     }

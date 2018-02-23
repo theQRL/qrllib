@@ -33,16 +33,25 @@ namespace {
 
         EXPECT_TRUE(xmss.getDescriptor().getHashFunction() == eHashFunction::SHAKE_128);
 
-        EXPECT_EQ("0102", bin2hstr(xmss.getDescriptor().getBytes()));
-        EXPECT_EQ("01020000000000000000000000000000000000000000000000"
+        EXPECT_EQ("010200", bin2hstr(xmss.getDescriptor().getBytes()));
+        EXPECT_EQ("0102000000000000000000000000000000000000000000000000"
                   "00000000000000000000000000000000000000000000000000",
                   bin2hstr(xmss.getExtendedSeed()));
-        EXPECT_EQ("010274764b521b002b55c57fa182142310c0bd6f2be9b3d673bf2e7f731e86da45edac082a29",
-                  bin2hstr(xmss.getAddress()));
 
-        EXPECT_EQ("010274764b521b002b55c57fa182142310c0bd6f2be9b3d673bf2e7f731e86da45edac082a29",
+        EXPECT_EQ(51, xmss.getExtendedSeed().size());
+
+        std::string s = "absorb bunny aback aback aback aback aback aback aback aback aback aback aback aback aback "
+            "aback aback aback aback aback aback aback aback aback aback aback aback aback aback aback "
+            "aback aback aback aback";
+
+        EXPECT_EQ(s, bin2mnemonic(xmss.getExtendedSeed()));
+        EXPECT_EQ(xmss.getExtendedSeed(), mnemonic2bin(s));
+
+        EXPECT_EQ("01020095f03f084bcb29b96b0529c17ce92c54c1e8290193a93803812ead95e8e6902506b67897",
+                      bin2hstr(xmss.getAddress()));
+
+        EXPECT_EQ("01020095f03f084bcb29b96b0529c17ce92c54c1e8290193a93803812ead95e8e6902506b67897",
                   bin2hstr(QRLHelper::getAddress( xmss.getPK())));
-
     }
 
     TEST(XmssBasic_Default, SignatureLen) {

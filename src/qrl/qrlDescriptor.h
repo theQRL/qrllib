@@ -7,8 +7,6 @@
 #include <cstdint>
 #include "xmss-alt/eHashFunctions.h"
 
-#define QRLDESCRIPTOR_SIZE 2
-
 enum eSignatureType {
     XMSS = 0,
 };
@@ -32,7 +30,7 @@ public:
 
     uint8_t getParams2() { return _params2; }
 
-    static QRLDescriptor fromBytes(uint8_t byte0, uint8_t byte1) {
+    static QRLDescriptor fromBytes(uint8_t byte0, uint8_t byte1, uint8_t byte2) {
         auto hashFunction = static_cast<eHashFunction>(byte0 & 0x0F);
         auto signatureType = static_cast<eSignatureType>( (byte0 >> 4) & 0xF0);
         auto height = static_cast<uint8_t>( (byte1 & 0x0F) << 1 );
@@ -41,16 +39,23 @@ public:
         return {hashFunction, signatureType, height, params2};
     }
 
+    static uint8_t getSize()
+    {
+        return 3;
+    }
+
     std::vector<uint8_t> getBytes() {
         // descriptor
         //  0.. 3   hash function    [ SHA2-256, SHA3, .. ]
         //  4.. 7   signature scheme [ XMSS, XMSS^MT, .. ]
         //  8..11   params:  i.e. Height / 2
         // 12..15   params2: reserved
+        // 16..23   params3: reserved
 
         std::vector<uint8_t> descr{
                 static_cast<uint8_t>( (_signatureType << 4) | (_hashFunction & 0x0F)),
                 static_cast<uint8_t>( (_params2 << 4) | ((_height >> 1) & 0x0F)),
+                0
         };
 
         return descr;

@@ -25,7 +25,7 @@ uint8_t XmssBase::getHeightFromSigSize(size_t sigSize) {
 }
 
 uint32_t XmssBase::getPublicKeySize() {
-    return QRLDESCRIPTOR_SIZE+64;
+    return QRLDescriptor::getSize()+64;
 }
 
 uint32_t XmssBase::getSecretKeySize() {
@@ -96,7 +96,7 @@ TKEY XmssBase::getSK() {
 
 TKEY XmssBase::getPK() {
     //    PK format
-    //     2 QRL_DESCRIPTOR
+    //     3 QRL_DESCRIPTOR
     //    32 root address
     //    32 pub_seed
 
@@ -134,7 +134,7 @@ bool XmssBase::verify(const TMESSAGE &message,
                       const TSIGNATURE &signature,
                       const TKEY &pk) throw(std::invalid_argument) {
 
-    auto desc = QRLDescriptor::fromBytes(pk[0], pk[1]);
+    auto desc = QRLDescriptor::fromBytes(pk[0], pk[1], pk[2]);
     if (desc.getSignatureType() != eSignatureType::XMSS) {
         return false;
     }
@@ -164,6 +164,6 @@ bool XmssBase::verify(const TMESSAGE &message,
                           static_cast<TMESSAGE>(message).data(),
                           message.size(),
                           tmp.data(),
-                          pk.data()+ QRLDESCRIPTOR_SIZE,
+                          pk.data()+ QRLDescriptor::getSize(),
                           height) == 0;
 }
