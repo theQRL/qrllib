@@ -2,6 +2,7 @@
 #include <emscripten/bind.h>
 #include <iostream>
 #include <xmssFast.h>
+#include <hashing.h>
 #include <misc.h>
 #include <wordlist.h>
 #include <qrlHelper.h>
@@ -122,6 +123,11 @@ namespace {
         return QRLHelper::addressIsValid(address);
     }
 
+    std::vector<unsigned char> EMSCRIPTEN_KEEPALIVE _sha2_256(const std::vector<unsigned char> &data)
+    {
+        return sha2_256(data);
+    }
+
     using namespace emscripten;
 
     EMSCRIPTEN_BINDINGS(my_module) {
@@ -138,6 +144,7 @@ namespace {
         function("getHeight", &_getHeight);
 
         function("validateAddress", &_validateAddress);
+        function("sha2_256", &_sha2_256);
 
         class_<XmssWrapper>("Xmss")
                 .constructor<TSEED, unsigned char>()
