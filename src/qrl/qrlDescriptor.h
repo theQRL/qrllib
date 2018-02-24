@@ -30,7 +30,7 @@ public:
 
     uint8_t getParams2() { return _params2; }
 
-    static QRLDescriptor fromBytes(uint8_t byte0, uint8_t byte1, uint8_t byte2) {
+    static QRLDescriptor fromBytes(uint8_t byte0, uint8_t byte1) {
         auto hashFunction = static_cast<eHashFunction>(byte0 & 0x0F);
         auto signatureType = static_cast<eSignatureType>( (byte0 >> 4) & 0xF0);
         auto height = static_cast<uint8_t>( (byte1 & 0x0F) << 1 );
