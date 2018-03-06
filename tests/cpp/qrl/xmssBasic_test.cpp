@@ -13,7 +13,7 @@ namespace {
     TEST(XmssBasic_Default, Instantiation) {
         std::vector<unsigned char> seed(48, 0);
 
-        XmssBasic xmss(seed, XMSS_HEIGHT);
+        XmssBasic xmss(seed, XMSS_HEIGHT, eHashFunction::SHAKE_128, eAddrFormatType::SHA256_2X);
 
         auto pk = xmss.getPK();
         auto sk = xmss.getSK();
@@ -32,6 +32,7 @@ namespace {
                   bin2hstr(xmss.getSeed()));
 
         EXPECT_TRUE(xmss.getDescriptor().getHashFunction() == eHashFunction::SHAKE_128);
+        EXPECT_TRUE(xmss.getDescriptor().getAddrFormatType() == eAddrFormatType::SHA256_2X);
 
         EXPECT_EQ("010200", bin2hstr(xmss.getDescriptor().getBytes()));
         EXPECT_EQ("0102000000000000000000000000000000000000000000000000"
@@ -51,23 +52,23 @@ namespace {
                       bin2hstr(xmss.getAddress()));
 
         EXPECT_EQ("01020095f03f084bcb29b96b0529c17ce92c54c1e8290193a93803812ead95e8e6902506b67897",
-                  bin2hstr(QRLHelper::getAddress( xmss.getPK())));
+                  bin2hstr(QRLHelper::getAddress( xmss.getPK(), eAddrFormatType::SHA256_2X)));
     }
 
     TEST(XmssBasic_Default, SignatureLen) {
         std::vector<unsigned char> seed(48, 0);
 
-        XmssBasic xmss4(seed, 4);
+        XmssBasic xmss4(seed, 4, eHashFunction::SHAKE_128, eAddrFormatType::SHA256_2X);
         EXPECT_EQ(2308, xmss4.getSignatureSize());
 
-        XmssBasic xmss6(seed, 6);
+        XmssBasic xmss6(seed, 6, eHashFunction::SHAKE_128, eAddrFormatType::SHA256_2X);
         EXPECT_EQ(2372, xmss6.getSignatureSize());
     }
 
     TEST(XmssBasic_Default, Sign) {
         std::vector<unsigned char> seed(48, 0);
 
-        XmssBasic xmss(seed, XMSS_HEIGHT);
+        XmssBasic xmss(seed, XMSS_HEIGHT, eHashFunction::SHAKE_128, eAddrFormatType::SHA256_2X);
 
         std::string message = "This is a test message";
         std::vector<unsigned char> data(message.begin(), message.end());
@@ -98,7 +99,7 @@ namespace {
         for(unsigned char i=0; i<48; i++)
             seed.push_back(i);
 
-        XmssBasic xmss(seed, XMSS_HEIGHT);
+        XmssBasic xmss(seed, XMSS_HEIGHT, eHashFunction::SHAKE_128, eAddrFormatType::SHA256_2X);
 
         std::string message = "This is a test message";
         std::vector<unsigned char> data_ref(message.begin(), message.end());

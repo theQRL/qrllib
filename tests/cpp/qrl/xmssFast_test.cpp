@@ -69,7 +69,7 @@ namespace {
     TEST(XmssFast, Verify) {
         std::vector<unsigned char> seed(48, 0);
 
-        XmssBasic xmss(seed, XMSS_HEIGHT);
+        XmssBasic xmss(seed, XMSS_HEIGHT, eHashFunction::SHAKE_128, eAddrFormatType::SHA256_2X);
 
         std::string message = "This is a test message";
         std::vector<unsigned char> data_ref(message.begin(), message.end());
@@ -100,7 +100,7 @@ namespace {
     TEST(XmssFast, SignIndexShift) {
         std::vector<unsigned char> seed(48, 0);
 
-        XmssBasic xmss1(seed, 4);
+        XmssBasic xmss1(seed, 4, eHashFunction::SHAKE_128, eAddrFormatType::SHA256_2X);
         XmssFast xmss2(seed, 4);
 
         std::string message = "This is a test message";

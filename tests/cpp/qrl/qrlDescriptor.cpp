@@ -10,7 +10,9 @@ namespace {
         QRLDescriptor desc(
                 eHashFunction::SHA2_256,
                 eSignatureType::XMSS,
-                10);
+                10,
+                eAddrFormatType::SHA256_2X
+        );
 
         EXPECT_TRUE(desc.getHashFunction() == eHashFunction::SHA2_256);
         EXPECT_TRUE(desc.getHashFunction() != eHashFunction::SHAKE_128);
@@ -26,11 +28,14 @@ namespace {
         QRLDescriptor desc(
                 eHashFunction::SHAKE_128,
                 eSignatureType::XMSS,
-                16);
+                16,
+                eAddrFormatType::SHA256_2X
+        );
 
         EXPECT_TRUE(desc.getHashFunction() != eHashFunction::SHA2_256);
         EXPECT_TRUE(desc.getHashFunction() == eHashFunction::SHAKE_128);
         EXPECT_TRUE(desc.getSignatureType() == eSignatureType::XMSS);
+        EXPECT_TRUE(desc.getAddrFormatType() == eAddrFormatType::SHA256_2X);
         EXPECT_EQ(16, desc.getHeight());
 
         std::vector<uint8_t> expected_descriptor_bytes{0x01, 0x08, 0x00};
@@ -43,6 +48,7 @@ namespace {
         EXPECT_TRUE(desc.getHashFunction() != eHashFunction::SHA2_256);
         EXPECT_TRUE(desc.getHashFunction() == eHashFunction::SHAKE_128);
         EXPECT_TRUE(desc.getSignatureType() == eSignatureType::XMSS);
+        EXPECT_TRUE(desc.getAddrFormatType() == eAddrFormatType::SHA256_2X);
         EXPECT_EQ(16, desc.getHeight());
 
         std::vector<uint8_t> expected_descriptor_bytes{0x01, 0x08, 0x00};

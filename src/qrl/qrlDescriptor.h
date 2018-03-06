@@ -6,6 +6,7 @@
 #include <vector>
 #include <cstdint>
 #include "xmss-alt/eHashFunctions.h"
+#include "qrlAddressFormat.h"
 
 enum eSignatureType {
     XMSS = 0,
@@ -16,11 +17,11 @@ public:
     QRLDescriptor(eHashFunction hashFunction,
                   eSignatureType signatureType,
                   uint8_t height,
-                  uint8_t params2 = 0) :
+                  eAddrFormatType addrFormatType) :
             _hashFunction(hashFunction),
             _signatureType(signatureType),
             _height(height),
-            _params2(params2) {}
+            _addrFormatType(addrFormatType) {}
 
     eHashFunction getHashFunction() { return _hashFunction; }
 
@@ -28,15 +29,15 @@ public:
 
     uint8_t getHeight() { return _height; }
 
-    uint8_t getParams2() { return _params2; }
+    eAddrFormatType getAddrFormatType() { return _addrFormatType; }
 
     static QRLDescriptor fromBytes(uint8_t byte0, uint8_t byte1, uint8_t byte2) {
         auto hashFunction = static_cast<eHashFunction>(byte0 & 0x0F);
         auto signatureType = static_cast<eSignatureType>( (byte0 >> 4) & 0xF0);
         auto height = static_cast<uint8_t>( (byte1 & 0x0F) << 1 );
-        auto params2 = static_cast<uint8_t>( (byte1 & 0xF0) >> 4 );
+        auto addrFormatType = static_cast<eAddrFormatType>( (byte1 & 0xF0) >> 4 );
 
-        return {hashFunction, signatureType, height, params2};
+        return {hashFunction, signatureType, height, addrFormatType};
     }
 
     static uint8_t getSize()
@@ -54,7 +55,7 @@ public:
 
         std::vector<uint8_t> descr{
                 static_cast<uint8_t>( (_signatureType << 4) | (_hashFunction & 0x0F)),
-                static_cast<uint8_t>( (_params2 << 4) | ((_height >> 1) & 0x0F)),
+                static_cast<uint8_t>( (_addrFormatType << 4) | ((_height >> 1) & 0x0F)),
                 0
         };
 
@@ -65,7 +66,7 @@ private:
     eHashFunction _hashFunction;
     eSignatureType _signatureType;
     uint8_t _height;
-    uint8_t _params2;
+    eAddrFormatType _addrFormatType;
 };
 
 
