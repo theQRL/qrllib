@@ -14,16 +14,16 @@ class QRLHelper {
 public:
     QRLHelper()= default;
 
-    static std::vector<uint8_t> getAddress(const std::vector<uint8_t>&pk,
-                                           eAddrFormatType addrFormatType) throw(std::invalid_argument)
+    static std::vector<uint8_t> getAddress(const std::vector<uint8_t>&pk) throw(std::invalid_argument)
     {
-        if (addrFormatType!=eAddrFormatType::SHA256_2X)
+        auto descr = QRLHelper::extractDescriptor(pk);
+        if (descr.getAddrFormatType()!=eAddrFormatType::SHA256_2X)
         {
             throw std::invalid_argument("Address format type not supported");
         }
 
-        auto descr = QRLHelper::extractDescriptor(pk);
-        auto address = descr.getBytes();
+        const auto descrBytes = descr.getBytes();
+        auto address = descrBytes;
 
         std::vector<uint8_t> hashed_key(ADDRESS_HASH_SIZE, 0);
         picosha2::hash256(pk.begin(), pk.end(), hashed_key.begin(), hashed_key.end());
@@ -38,6 +38,12 @@ public:
 
     static bool addressIsValid(const std::vector<uint8_t>&address)
     {
+        auto descr = QRLHelper::extractDescriptor(address);
+        if (descr.getAddrFormatType()!=eAddrFormatType::SHA256_2X)
+        {
+            throw std::invalid_argument("Address format type not supported");
+        }
+
         if (address.size()!=(QRLDescriptor::getSize() +ADDRESS_HASH_SIZE+4))
             return false;
 

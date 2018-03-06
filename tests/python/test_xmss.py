@@ -29,7 +29,7 @@ class TestXmssBasic(TestCase):
         self.assertEqual(expected_PK, pyqrllib.bin2hstr(xmss.getPK()))
         self.assertEqual(expected_address, pyqrllib.bin2hstr(xmss.getAddress()))
 
-        tmp_addr = pyqrllib.QRLHelper.getAddress(xmss.getPK(), pyqrllib.SHA256_2X)
+        tmp_addr = pyqrllib.QRLHelper.getAddress(xmss.getPK())
         self.assertEqual(expected_address, pyqrllib.bin2hstr(tmp_addr))
 
         descr = pyqrllib.QRLHelper.extractDescriptor(xmss.getPK())
@@ -52,7 +52,7 @@ class TestXmssBasic(TestCase):
         self.assertEqual(expected_PK, pyqrllib.bin2hstr(xmss.getPK()))
         self.assertEqual(expected_address, pyqrllib.bin2hstr(xmss.getAddress()))
 
-        tmp_addr = pyqrllib.QRLHelper.getAddress(xmss.getPK(), pyqrllib.SHA256_2X)
+        tmp_addr = pyqrllib.QRLHelper.getAddress(xmss.getPK())
         self.assertEqual(expected_address, pyqrllib.bin2hstr(tmp_addr))
 
         descr = pyqrllib.QRLHelper.extractDescriptor(xmss.getPK())
