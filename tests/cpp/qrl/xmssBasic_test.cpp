@@ -52,7 +52,7 @@ namespace {
                       bin2hstr(xmss.getAddress()));
 
         EXPECT_EQ("01020095f03f084bcb29b96b0529c17ce92c54c1e8290193a93803812ead95e8e6902506b67897",
-                  bin2hstr(QRLHelper::getAddress( xmss.getPK(), eAddrFormatType::SHA256_2X)));
+                  bin2hstr(QRLHelper::getAddress( xmss.getPK())));
     }
 
     TEST(XmssBasic_Default, SignatureLen) {

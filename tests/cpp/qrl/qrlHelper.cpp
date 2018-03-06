@@ -8,7 +8,7 @@ namespace {
     TEST(QRL_Helper, validateAddress) {
         std::vector<unsigned char> pk(QRLDescriptor::getSize() + 32, 0);
 
-        auto address = QRLHelper::getAddress(pk, eAddrFormatType::SHA256_2X);
+        auto address = QRLHelper::getAddress(pk);
 
         std::cout << std::endl;
         std::cout << bin2hstr(address) << std::endl;
