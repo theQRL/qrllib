@@ -14,8 +14,14 @@ class QRLHelper {
 public:
     QRLHelper()= default;
 
-    static std::vector<uint8_t> getAddress(const std::vector<uint8_t>&pk)
+    static std::vector<uint8_t> getAddress(const std::vector<uint8_t>&pk,
+                                           eAddrFormatType addrFormatType) throw(std::invalid_argument)
     {
+        if (addrFormatType!=eAddrFormatType::SHA256_2X)
+        {
+            throw std::invalid_argument("Address format type not supported");
+        }
+
         auto descr = QRLHelper::extractDescriptor(pk);
         auto address = descr.getBytes();
 

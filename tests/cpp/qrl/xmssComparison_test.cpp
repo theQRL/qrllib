@@ -8,9 +8,7 @@
 #include <misc.h>
 
 constexpr uint8_t XMSS_HEIGHT = 4;
-constexpr uint32_t XMSS_N = 48;
-constexpr uint32_t XMSS_W = 16;
-constexpr uint32_t XMSS_K = 2;
+constexpr uint32_t XMSS_SEED_SIZE = 48;
 
 template <typename T>
 class XmssComparisonTest : public ::testing::Test
@@ -34,10 +32,10 @@ typedef ::testing::Types<
 TYPED_TEST_CASE(XmssComparisonTest, xmssTypes);
 
 TYPED_TEST(XmssComparisonTest, KeyCreation) {
-    std::vector<unsigned char> seed(XMSS_N, 0);
+    std::vector<unsigned char> seed(XMSS_SEED_SIZE, 0);
 
-    typename TestFixture::TXMSS1 xmss1(seed, XMSS_HEIGHT);
-    typename TestFixture::TXMSS2 xmss2(seed, XMSS_HEIGHT);
+    typename TestFixture::TXMSS1 xmss1(seed, XMSS_HEIGHT, eHashFunction::SHAKE_128, eAddrFormatType::SHA256_2X);
+    typename TestFixture::TXMSS2 xmss2(seed, XMSS_HEIGHT, eHashFunction::SHAKE_128, eAddrFormatType::SHA256_2X);
 
     auto PK1 = xmss1.getPK();
     auto SK1 = xmss1.getSK();
@@ -50,10 +48,10 @@ TYPED_TEST(XmssComparisonTest, KeyCreation) {
 }
 
 TYPED_TEST(XmssComparisonTest, Sign) {
-    std::vector<unsigned char> seed(XMSS_N, 0);
+    std::vector<unsigned char> seed(XMSS_SEED_SIZE, 0);
 
-    typename TestFixture::TXMSS1 xmss1(seed, XMSS_HEIGHT);
-    typename TestFixture::TXMSS2 xmss2(seed, XMSS_HEIGHT);
+    typename TestFixture::TXMSS1 xmss1(seed, XMSS_HEIGHT, eHashFunction::SHAKE_128, eAddrFormatType::SHA256_2X);
+    typename TestFixture::TXMSS2 xmss2(seed, XMSS_HEIGHT, eHashFunction::SHAKE_128, eAddrFormatType::SHA256_2X);
 
     std::string message = "This is a test message";
     std::vector<unsigned char> data(message.begin(), message.end());
@@ -65,16 +63,18 @@ TYPED_TEST(XmssComparisonTest, Sign) {
 }
 
 TYPED_TEST(XmssComparisonTest, SignTwice) {
-    std::vector<unsigned char> seed(XMSS_N, 0);
+    std::vector<unsigned char> seed(XMSS_SEED_SIZE, 0);
 
-    typename TestFixture::TXMSS1 xmss1(seed, XMSS_HEIGHT);
-    typename TestFixture::TXMSS2 xmss2(seed, XMSS_HEIGHT);
+    typename TestFixture::TXMSS1 xmss1(seed, XMSS_HEIGHT, eHashFunction::SHAKE_128, eAddrFormatType::SHA256_2X);
+    typename TestFixture::TXMSS2 xmss2(seed, XMSS_HEIGHT, eHashFunction::SHAKE_128, eAddrFormatType::SHA256_2X);
 
     std::string message = "This is a test message";
     std::vector<unsigned char> data(message.begin(), message.end());
 
     auto signature1 = xmss1.sign(data);
     auto signature2 = xmss2.sign(data);
+    EXPECT_EQ(signature1, signature2);
+
     signature1 = xmss1.sign(data);
     signature2 = xmss2.sign(data);
 
@@ -82,14 +82,14 @@ TYPED_TEST(XmssComparisonTest, SignTwice) {
     auto hstr_sig2 = bin2hstr(signature2);
 
     EXPECT_EQ(hstr_sig1, hstr_sig2);
-//    EXPECT_EQ(signature1, signature2);
+    EXPECT_EQ(signature1, signature2);
 }
 
 TYPED_TEST(XmssComparisonTest, SignThreeTimesVsShift) {
-    std::vector<unsigned char> seed(XMSS_N, 0);
+    std::vector<unsigned char> seed(XMSS_SEED_SIZE, 0);
 
-    typename TestFixture::TXMSS1 xmss1(seed, XMSS_HEIGHT);
-    typename TestFixture::TXMSS2 xmss2(seed, XMSS_HEIGHT);
+    typename TestFixture::TXMSS1 xmss1(seed, XMSS_HEIGHT, eHashFunction::SHAKE_128, eAddrFormatType::SHA256_2X);
+    typename TestFixture::TXMSS2 xmss2(seed, XMSS_HEIGHT, eHashFunction::SHAKE_128, eAddrFormatType::SHA256_2X);
 
     std::string message = "This is a test message";
     std::vector<unsigned char> data(message.begin(), message.end());
@@ -107,10 +107,10 @@ TYPED_TEST(XmssComparisonTest, SignThreeTimesVsShift) {
 }
 
 TYPED_TEST(XmssComparisonTest, SignIndexShift) {
-    std::vector<unsigned char> seed(XMSS_N, 0);
+    std::vector<unsigned char> seed(XMSS_SEED_SIZE, 0);
 
-    typename TestFixture::TXMSS1 xmss1(seed, XMSS_HEIGHT);
-    typename TestFixture::TXMSS2 xmss2(seed, XMSS_HEIGHT);
+    typename TestFixture::TXMSS1 xmss1(seed, XMSS_HEIGHT, eHashFunction::SHAKE_128, eAddrFormatType::SHA256_2X);
+    typename TestFixture::TXMSS2 xmss2(seed, XMSS_HEIGHT, eHashFunction::SHAKE_128, eAddrFormatType::SHA256_2X);
 
     std::string message = "This is a test message";
     std::vector<unsigned char> data(message.begin(), message.end());

@@ -17,7 +17,8 @@ class XmssBase {
 public:
     XmssBase(const TSEED &seed,
              uint8_t height,
-             eHashFunction hashFunction = eHashFunction::SHAKE_128) throw(std::invalid_argument);
+             eHashFunction hashFunction,
+             eAddrFormatType formatType) throw(std::invalid_argument);
 
     virtual ~XmssBase() = default;
 
@@ -72,6 +73,7 @@ protected:
     xmss_params params;
 
     eHashFunction _hashFunction;
+    eAddrFormatType _addrFormatType;
     uint8_t _height;
     TKEY _sk;
     TSEED _seed;

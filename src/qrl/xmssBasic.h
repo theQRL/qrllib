@@ -18,7 +18,8 @@ class XmssBasic : public ::XmssBase {
 public:
     XmssBasic(const TSEED &seed,
               unsigned char height,
-              eHashFunction hashFunction = eHashFunction::SHAKE_128) throw(std::invalid_argument);
+              eHashFunction hashFunction,
+              eAddrFormatType addrFormatType) throw(std::invalid_argument);
 
     TSIGNATURE sign(const TMESSAGE &message) override;
 };
