@@ -14,7 +14,8 @@ public:
     // TODO: Fix constness / passing by copy, this requires changes in the underlying lib
     XmssFast(const TSEED &seed,
              unsigned char height,
-             eHashFunction hashFunction = eHashFunction::SHAKE_128) throw(std::invalid_argument);
+             eHashFunction hashFunction = eHashFunction::SHAKE_128,
+             eAddrFormatType addrFormatType = eAddrFormatType::SHA256_2X ) throw(std::invalid_argument);
 
     TSIGNATURE sign(const TMESSAGE &message) override;
 

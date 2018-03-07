@@ -6,8 +6,12 @@
 
 XmssBase::XmssBase(const TSEED &seed,
                    uint8_t height,
-                   eHashFunction hashFunction) throw(std::invalid_argument)
-        : _seed(seed), _height(height), _hashFunction(hashFunction) {
+                   eHashFunction hashFunction,
+                   eAddrFormatType addrFormatType) throw(std::invalid_argument)
+        : _seed(seed),
+          _height(height),
+          _hashFunction(hashFunction),
+          _addrFormatType(addrFormatType) {
     if (seed.size() != 48) {
         throw std::invalid_argument("Seed should be 48 bytes. Other values are not currently supported");
     }
@@ -25,7 +29,7 @@ uint8_t XmssBase::getHeightFromSigSize(size_t sigSize) {
 }
 
 uint32_t XmssBase::getPublicKeySize() {
-    return QRLDescriptor::getSize()+64;
+    return QRLDescriptor::getSize() + 64;
 }
 
 uint32_t XmssBase::getSecretKeySize() {
@@ -110,15 +114,19 @@ TKEY XmssBase::getPK() {
     return PK;
 }
 
-TSEED XmssBase::getExtendedSeed()
-{
+TSEED XmssBase::getExtendedSeed() {
     TKEY extendedSeed(getDescriptorBytes());
     extendedSeed.insert(extendedSeed.end(), _seed.begin(), _seed.end());
     return extendedSeed;
 }
 
 QRLDescriptor XmssBase::getDescriptor() {
-    return {_hashFunction, eSignatureType::XMSS, _height, 0};
+    return {
+        _hashFunction,
+        eSignatureType::XMSS,
+        _height,
+        _addrFormatType
+    };
 }
 
 std::vector<uint8_t> XmssBase::getDescriptorBytes() {
@@ -164,6 +172,6 @@ bool XmssBase::verify(const TMESSAGE &message,
                           static_cast<TMESSAGE>(message).data(),
                           message.size(),
                           tmp.data(),
-                          pk.data()+ QRLDescriptor::getSize(),
+                          pk.data() + QRLDescriptor::getSize(),
                           height) == 0;
 }

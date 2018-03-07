@@ -8,8 +8,9 @@
 
 XmssBasic::XmssBasic(const TSEED &seed,
                      unsigned char height,
-                     eHashFunction hashFunction) throw(std::invalid_argument)
-        : XmssBase(seed, height, hashFunction) {
+                     eHashFunction hashFunction,
+                     eAddrFormatType addrFormatType) throw(std::invalid_argument)
+        : XmssBase(seed, height, hashFunction, addrFormatType) {
 //    PK format
 //    32 root address
 //    32 pub_seed

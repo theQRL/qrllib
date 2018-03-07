@@ -6,7 +6,6 @@ from time import time
 from unittest import TestCase
 
 import pytest
-from pyqrllib.pyqrllib import QRLDescriptor
 
 from pyqrllib import pyqrllib
 
@@ -18,7 +17,7 @@ class TestXmssBasic(TestCase):
     def test_xmss_creation_height4(self):
         HEIGHT = 4
         seed = pyqrllib.ucharVector(48, 0)
-        xmss = pyqrllib.XmssBasic(seed, HEIGHT)
+        xmss = pyqrllib.XmssBasic(seed, HEIGHT, pyqrllib.SHAKE_128, pyqrllib.SHA256_2X)
 
         expected_address = "01020095f03f084bcb29b96b0529c17ce92c54c1e8290193a93803812ead95e8e6902506b67897"
         expected_PK = "010200c25188b585f731c128e2b457069e" \
@@ -29,7 +28,9 @@ class TestXmssBasic(TestCase):
 
         self.assertEqual(expected_PK, pyqrllib.bin2hstr(xmss.getPK()))
         self.assertEqual(expected_address, pyqrllib.bin2hstr(xmss.getAddress()))
-        self.assertEqual(expected_address, pyqrllib.bin2hstr(pyqrllib.QRLHelper.getAddress(xmss.getPK())))
+
+        tmp_addr = pyqrllib.QRLHelper.getAddress(xmss.getPK())
+        self.assertEqual(expected_address, pyqrllib.bin2hstr(tmp_addr))
 
         descr = pyqrllib.QRLHelper.extractDescriptor(xmss.getPK())
         self.assertEqual(4, descr.getHeight())
@@ -38,7 +39,7 @@ class TestXmssBasic(TestCase):
     def test_xmss_creation_height6(self):
         HEIGHT = 6
         seed = pyqrllib.ucharVector(48, 0)
-        xmss = pyqrllib.XmssBasic(seed, HEIGHT)
+        xmss = pyqrllib.XmssBasic(seed, HEIGHT, pyqrllib.SHAKE_128, pyqrllib.SHA256_2X)
 
         expected_address = "0103008b0e18dd0bac2c3fdc9a48e10fc466eef899ef074449d12ddf050317b2083527aee74bc3"
 
@@ -50,7 +51,9 @@ class TestXmssBasic(TestCase):
 
         self.assertEqual(expected_PK, pyqrllib.bin2hstr(xmss.getPK()))
         self.assertEqual(expected_address, pyqrllib.bin2hstr(xmss.getAddress()))
-        self.assertEqual(expected_address, pyqrllib.bin2hstr(pyqrllib.QRLHelper.getAddress(xmss.getPK())))
+
+        tmp_addr = pyqrllib.QRLHelper.getAddress(xmss.getPK())
+        self.assertEqual(expected_address, pyqrllib.bin2hstr(tmp_addr))
 
         descr = pyqrllib.QRLHelper.extractDescriptor(xmss.getPK())
         self.assertEqual(6, descr.getHeight())
@@ -60,7 +63,7 @@ class TestXmssBasic(TestCase):
         HEIGHT = 6
 
         seed = pyqrllib.ucharVector(48, 0)
-        xmss = pyqrllib.XmssBasic(seed, HEIGHT)
+        xmss = pyqrllib.XmssBasic(seed, HEIGHT, pyqrllib.SHAKE_128, pyqrllib.SHA256_2X)
 
         # print("Seed", len(seed))
         # print(pyqrllib.bin2hstr(seed, 48))
@@ -92,7 +95,7 @@ class TestXmssBasic(TestCase):
                                                       signature,
                                                       xmss.getPK()))
         end = time()
-        # print(end - start)
+        print(end - start)
 
         # Touch the signature
         signature[100] += 1
