@@ -11,6 +11,14 @@ This code was taken from the XMSS reference implementation by Andreas Hülsing a
 #include "shasha.h"
 #include <cstdio>
 
+#ifdef _WIN32
+#include <malloc.h>
+#undef alloca
+#define alloca _alloca
+#else
+#include <alloca.h>
+#endif
+
 unsigned char *addr_to_byte(unsigned char *bytes, const uint32_t addr[8]) {
 #if __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
     int i = 0;
@@ -32,7 +40,7 @@ int core_hash(eHashFunction hash_func,
               unsigned long long inlen,
               unsigned int n) {
     unsigned long long i = 0;
-    unsigned char buf[inlen + n + keylen];
+    unsigned char *buf = (unsigned char*)alloca(inlen + n + keylen);
 
     // Input is (toByte(X, 32) || KEY || M)
 
@@ -101,7 +109,7 @@ int h_msg(eHashFunction hash_func,
           unsigned char *out, const unsigned char *in, unsigned long long inlen, const unsigned char *key,
           const unsigned int keylen, const unsigned int n) {
     if (keylen != 3 * n) {
-        fprintf(stderr, "H_msg takes 3n-bit keys, we got n=%d but a keylength of %d.\n", n, keylen);
+        fprintf(stderr, "H_msg takes 3n-bit keys, we got n=%u but a keylength of %u.\n", n, keylen);
         return 1;
     }
     return core_hash(hash_func, out, 2, key, keylen, in, inlen, n);
@@ -114,9 +122,9 @@ int hash_h(eHashFunction hash_func,
            unsigned char *out, const unsigned char *in, const unsigned char *pub_seed, uint32_t addr[8],
            const unsigned int n) {
 
-    unsigned char buf[2 * n];
-    unsigned char key[n];
-    unsigned char bitmask[2 * n];
+    unsigned char *buf = (unsigned char*)alloca(2 * n);
+    unsigned char *key = (unsigned char*)alloca(n);
+    unsigned char *bitmask = (unsigned char*)alloca(2 * n);
     unsigned char byte_addr[32];
     unsigned int i;
 
@@ -139,9 +147,9 @@ int hash_h(eHashFunction hash_func,
 int hash_f(eHashFunction hash_func,
            unsigned char *out, const unsigned char *in, const unsigned char *pub_seed, uint32_t addr[8],
            const unsigned int n) {
-    unsigned char buf[n];
-    unsigned char key[n];
-    unsigned char bitmask[n];
+    unsigned char *buf = (unsigned char*)alloca(n);
+    unsigned char *key = (unsigned char*)alloca(n);
+    unsigned char *bitmask = (unsigned char*)alloca(n);
     unsigned char byte_addr[32];
     unsigned int i;
 

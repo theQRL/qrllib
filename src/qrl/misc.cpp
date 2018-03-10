@@ -10,6 +10,7 @@
 #include <iostream>
 #include <unordered_map>
 #include <fstream>
+#include <cctype>
 
 std::string bin2hstr(const std::vector<unsigned char> &vec, uint32_t wrap) {
     std::stringstream ss;

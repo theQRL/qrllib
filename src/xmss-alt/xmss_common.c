@@ -15,6 +15,14 @@ Public domain.
 #include <cstdio>
 #include <cstring>
 
+#ifdef _WIN32
+#include <malloc.h>
+#undef alloca
+#define alloca _alloca
+#else
+#include <alloca.h>
+#endif
+
 void to_byte(unsigned char *out, unsigned long long in, uint32_t bytes) {
     int32_t i;
     for (i = bytes - 1; i >= 0; i--) {
@@ -88,20 +96,20 @@ validate_authpath(eHashFunction hash_func,
                   const unsigned char *pub_seed,
                   uint32_t addr[8]) {
     uint32_t i, j;
-    unsigned char buffer[2 * n];
+    unsigned char *buffer = (unsigned char*)alloca(2 * n);
 
     // If leafidx is odd (last bit = 1), current path element is a right child and authpath has to go to the left.
     // Otherwise, it is the other way around
     if (leafidx & 1) {
         for (j = 0; j < n; j++)
-            buffer[n + j] = leaf[j];
+            *(buffer + n + j) = leaf[j];
         for (j = 0; j < n; j++)
-            buffer[j] = authpath[j];
+            *(buffer +j) = authpath[j];
     } else {
         for (j = 0; j < n; j++)
-            buffer[j] = leaf[j];
+            *(buffer + j) = leaf[j];
         for (j = 0; j < n; j++)
-            buffer[n + j] = authpath[j];
+            *(buffer + n + j) = authpath[j];
     }
     authpath += n;
 
@@ -112,11 +120,11 @@ validate_authpath(eHashFunction hash_func,
         if (leafidx & 1) {
             hash_h(hash_func, buffer + n, buffer, pub_seed, addr, n);
             for (j = 0; j < n; j++)
-                buffer[j] = authpath[j];
+                *(buffer + j) = authpath[j];
         } else {
             hash_h(hash_func, buffer, buffer, pub_seed, addr, n);
             for (j = 0; j < n; j++)
-                buffer[j + n] = authpath[j];
+                *(buffer + j + n) = authpath[j];
         }
         authpath += n;
     }
@@ -144,13 +152,13 @@ int xmss_Verifysig(eHashFunction hash_func,
 
     unsigned long long i, m_len;
     unsigned long idx = 0;
-    unsigned char wots_pk[wotsParams->keysize];
-    unsigned char pkhash[n];
-    unsigned char root[n];
-    unsigned char msg_h[n];
-    unsigned char hash_key[3 * n];
+    unsigned char *wots_pk = (unsigned char*)alloca(wotsParams->keysize);
+    unsigned char *pkhash = (unsigned char*)alloca(n);
+    unsigned char *root = (unsigned char*)alloca(n);
+    unsigned char *msg_h = (unsigned char*)alloca(n);
+    unsigned char *hash_key = (unsigned char*)alloca(3 * n);
 
-    unsigned char pub_seed[n];
+    unsigned char *pub_seed = (unsigned char*)alloca(n);
     memcpy(pub_seed, pk + n, n);
 
     // Init addresses
