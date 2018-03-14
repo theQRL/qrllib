@@ -19,7 +19,7 @@ public:
 
     TSIGNATURE sign(const TMESSAGE &message) override;
 
-    unsigned int setIndex(unsigned int new_index) throw(std::invalid_argument) override;
+    unsigned int setIndex(unsigned int new_index) throw(std::invalid_argument);
 
 protected:
     // FIXME: This needs refactoring (encapsulate)
