@@ -59,7 +59,7 @@ public:
 
     unsigned int getIndex();
 
-    virtual unsigned int setIndex(uint32_t new_index);
+    virtual unsigned int setIndex(uint32_t new_index) throw(std::invalid_argument);
 
     unsigned int getSignatureSize();
 

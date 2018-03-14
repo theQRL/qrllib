@@ -8,31 +8,36 @@ XmssBase::XmssBase(const TSEED &seed,
                    uint8_t height,
                    eHashFunction hashFunction,
                    eAddrFormatType addrFormatType) throw(std::invalid_argument)
-        : _seed(seed),
-          _height(height),
-          _hashFunction(hashFunction),
-          _addrFormatType(addrFormatType) {
+    : _seed(seed),
+      _height(height),
+      _hashFunction(hashFunction),
+      _addrFormatType(addrFormatType)
+{
     if (seed.size() != 48) {
         throw std::invalid_argument("Seed should be 48 bytes. Other values are not currently supported");
     }
 }
 
-uint32_t XmssBase::getSignatureSize() {
+uint32_t XmssBase::getSignatureSize()
+{
     // 4 + n + (len + h) * n)
     // FIXME: There could be consistency problems due to changes in len
     return static_cast<uint32_t>(4 + 32 + 67 * 32 + _height * 32);
 }
 
-uint8_t XmssBase::getHeightFromSigSize(size_t sigSize) {
+uint8_t XmssBase::getHeightFromSigSize(size_t sigSize)
+{
     // FIXME: Clean this up and consider len
     return static_cast<uint8_t>((sigSize - 4 - 32 - 67 * 32) / 32);
 }
 
-uint32_t XmssBase::getPublicKeySize() {
+uint32_t XmssBase::getPublicKeySize()
+{
     return QRLDescriptor::getSize() + 64;
 }
 
-uint32_t XmssBase::getSecretKeySize() {
+uint32_t XmssBase::getSecretKeySize()
+{
     return 132;
 }
 
@@ -50,39 +55,49 @@ uint32_t XmssBase::getSecretKeySize() {
 
 // FIXME: Use a union for this
 constexpr size_t OFFSET_IDX = 0;
+
 constexpr size_t OFFSET_SK_SEED = OFFSET_IDX + 4;
+
 constexpr size_t OFFSET_SK_PRF = OFFSET_SK_SEED + 32;
+
 constexpr size_t OFFSET_PUB_SEED = OFFSET_SK_PRF + 32;
+
 constexpr size_t OFFSET_ROOT = OFFSET_PUB_SEED + 32;
 
-TKEY XmssBase::getSKSeed() {
+TKEY XmssBase::getSKSeed()
+{
 // FIXME: Use a union for this
     return TKEY(_sk.begin() + OFFSET_SK_SEED, _sk.begin() + OFFSET_SK_SEED + 32);
 }
 
-TKEY XmssBase::getSKPRF() {
+TKEY XmssBase::getSKPRF()
+{
 // FIXME: Use a union for this
     return TKEY(_sk.begin() + OFFSET_SK_PRF, _sk.begin() + OFFSET_SK_PRF + 32);
 }
 
-TKEY XmssBase::getPKSeed() {
+TKEY XmssBase::getPKSeed()
+{
 // FIXME: Use a union for this
     return TKEY(_sk.begin() + OFFSET_PUB_SEED, _sk.begin() + OFFSET_PUB_SEED + 32);
 }
 
-TKEY XmssBase::getRoot() {
+TKEY XmssBase::getRoot()
+{
 // FIXME: Use a union for this
     return TKEY(_sk.begin() + OFFSET_ROOT, _sk.begin() + OFFSET_ROOT + 32);
 }
 
-uint32_t XmssBase::getIndex() {
+uint32_t XmssBase::getIndex()
+{
     return (_sk[0] << 24) +
-           (_sk[1] << 16) +
-           (_sk[2] << 8) +
-           _sk[3];
+        (_sk[1] << 16) +
+        (_sk[2] << 8) +
+        _sk[3];
 }
 
-uint32_t XmssBase::setIndex(uint32_t new_index) {
+uint32_t XmssBase::setIndex(uint32_t new_index) throw(std::invalid_argument)
+{
     _sk[3] = static_cast<uint8_t>(new_index & 0xFF);
     new_index >>= 8;
     _sk[2] = static_cast<uint8_t>(new_index & 0xFF);
@@ -94,11 +109,13 @@ uint32_t XmssBase::setIndex(uint32_t new_index) {
     return getIndex();
 }
 
-TKEY XmssBase::getSK() {
+TKEY XmssBase::getSK()
+{
     return _sk;
 }
 
-TKEY XmssBase::getPK() {
+TKEY XmssBase::getPK()
+{
     //    PK format
     //     3 QRL_DESCRIPTOR
     //    32 root address
@@ -114,13 +131,15 @@ TKEY XmssBase::getPK() {
     return PK;
 }
 
-TSEED XmssBase::getExtendedSeed() {
+TSEED XmssBase::getExtendedSeed()
+{
     TKEY extendedSeed(getDescriptorBytes());
     extendedSeed.insert(extendedSeed.end(), _seed.begin(), _seed.end());
     return extendedSeed;
 }
 
-QRLDescriptor XmssBase::getDescriptor() {
+QRLDescriptor XmssBase::getDescriptor()
+{
     return {
         _hashFunction,
         eSignatureType::XMSS,
@@ -129,18 +148,21 @@ QRLDescriptor XmssBase::getDescriptor() {
     };
 }
 
-std::vector<uint8_t> XmssBase::getDescriptorBytes() {
+std::vector<uint8_t> XmssBase::getDescriptorBytes()
+{
     return getDescriptor().getBytes();
 }
 
-std::vector<uint8_t> XmssBase::getAddress() {
+std::vector<uint8_t> XmssBase::getAddress()
+{
 
     return QRLHelper::getAddress(getPK());
 }
 
 bool XmssBase::verify(const TMESSAGE &message,
                       const TSIGNATURE &signature,
-                      const TKEY &pk) throw(std::invalid_argument) {
+                      const TKEY &pk) throw(std::invalid_argument)
+{
 
     auto desc = QRLDescriptor::fromBytes(pk[0], pk[1], pk[2]);
     if (desc.getSignatureType() != eSignatureType::XMSS) {
