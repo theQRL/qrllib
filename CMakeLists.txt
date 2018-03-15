@@ -21,11 +21,14 @@ message(STATUS "GOLANG WRAPPER " ${BUILD_GO})
 message(STATUS "PYTHON WRAPPER " ${BUILD_PYTHON})
 message(STATUS "WEBASSEMBLY    " ${BUILD_WEBASSEMBLY})
 
+set(DEPS_SOURCE_DIR ${PROJECT_SOURCE_DIR}/deps)
+
 if(WIN32)
   add_definitions(-D_CRT_SECURE_NO_WARNINGS -D_CRT_NONSTDC_NO_DEPRECATE -DWIN32_LEAN_AND_MEAN)
 else()
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-deprecated-declarations")
-  set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS} -O3 -Wno-deprecated")
+  set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fPIC")
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++14 -fPIC -Wno-deprecated-declarations")
+  set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -O3 -Wno-deprecated")
 endif()
 
 if (BUILD_PYTHON OR BUILD_GO)
@@ -38,53 +41,22 @@ if (BUILD_PYTHON OR BUILD_GO)
     unset(SWIG_LANG_TYPE)
 endif ()
 
-include_directories(
-        ${CMAKE_CURRENT_SOURCE_DIR}/src/api
-        ${CMAKE_CURRENT_SOURCE_DIR}/src
-        ${CMAKE_CURRENT_SOURCE_DIR}/deps
-)
-
-file(GLOB LIB_QRL_INCLUDES
-        src/xmss-alt
-        ${CMAKE_CURRENT_SOURCE_DIR}/src/qrl
+set(REF_KYBER_SRC
+        ${CMAKE_CURRENT_SOURCE_DIR}/deps/kyber/ref/randombytes.c
+        ${CMAKE_CURRENT_SOURCE_DIR}/deps/kyber/ref/kem.c
+        ${CMAKE_CURRENT_SOURCE_DIR}/deps/kyber/ref/poly.c
+        ${CMAKE_CURRENT_SOURCE_DIR}/deps/kyber/ref/polyvec.c
+        ${CMAKE_CURRENT_SOURCE_DIR}/deps/kyber/ref/reduce.c
+        ${CMAKE_CURRENT_SOURCE_DIR}/deps/kyber/ref/cbd.c
+        ${CMAKE_CURRENT_SOURCE_DIR}/deps/kyber/ref/precomp.c
+        ${CMAKE_CURRENT_SOURCE_DIR}/deps/kyber/ref/ntt.c
+        ${CMAKE_CURRENT_SOURCE_DIR}/deps/kyber/ref/verify.c
+        ${CMAKE_CURRENT_SOURCE_DIR}/deps/kyber/ref/indcpa.c
+        ${CMAKE_CURRENT_SOURCE_DIR}/deps/kyber/ref/fips202.c
         )
-
-file(GLOB LIB_SHASHA_INCLUDES
-        ${CMAKE_CURRENT_SOURCE_DIR}/src/shasha
-        )
-
-file(GLOB LIB_DILITHIUM_INCLUDES
-        ${CMAKE_CURRENT_SOURCE_DIR}/deps/dilithium
-        ${CMAKE_CURRENT_SOURCE_DIR}/src/dilithium
-        )
-
-file(GLOB LIB_KYBER_INCLUDES
-        ${CMAKE_CURRENT_SOURCE_DIR}/deps/kyber
-        ${CMAKE_CURRENT_SOURCE_DIR}/src/kyber
-        )
-
-file(GLOB_RECURSE LIB_QRL_SRC
-        "${CMAKE_CURRENT_SOURCE_DIR}/src/qrl/*.cpp")
-
-file(GLOB_RECURSE LIB_DILITHIUM_SRC
-        "${CMAKE_CURRENT_SOURCE_DIR}/src/dilithium/*.cpp")
 
 file(GLOB_RECURSE LIB_KYBER_SRC
         "${CMAKE_CURRENT_SOURCE_DIR}/src/kyber/*.cpp")
-
-set(LIBXMSSALT_SRC
-        src/xmss-alt/algsxmss_fast.c
-        src/xmss-alt/algsxmss.c
-        src/xmss-alt/hash.c
-        src/xmss-alt/hash_address.c
-        src/xmss-alt/xmss_common.c
-        src/xmss-alt/wots.c
-        src/xmss-alt/fips202.c
-        )
-
-file(GLOB_RECURSE LIB_SHASHA_SRC
-        ${CMAKE_CURRENT_SOURCE_DIR}/src/shasha/*.cpp
-        )
 
 set(REF_DILITHIUM_SRC
         ${CMAKE_CURRENT_SOURCE_DIR}/deps/dilithium/ref/randombytes.c
@@ -98,68 +70,63 @@ set(REF_DILITHIUM_SRC
         ${CMAKE_CURRENT_SOURCE_DIR}/deps/dilithium/ref/fips202.c
         )
 
-set(REF_KYBER_SRC
-        ${CMAKE_CURRENT_SOURCE_DIR}/deps/kyber/ref/randombytes.c
-        ${CMAKE_CURRENT_SOURCE_DIR}/deps/kyber/ref/kem.c
-        ${CMAKE_CURRENT_SOURCE_DIR}/deps/kyber/ref/poly.c
-        ${CMAKE_CURRENT_SOURCE_DIR}/deps/kyber/ref/polyvec.c
-        ${CMAKE_CURRENT_SOURCE_DIR}/deps/kyber/ref/reduce.c
-        ${CMAKE_CURRENT_SOURCE_DIR}/deps/kyber/ref/cbd.c
-        ${CMAKE_CURRENT_SOURCE_DIR}/deps/kyber/ref/precomp.c
-        ${CMAKE_CURRENT_SOURCE_DIR}/deps/kyber/ref/ntt.c
-        ${CMAKE_CURRENT_SOURCE_DIR}/deps/kyber/ref/verify.c
-        ${CMAKE_CURRENT_SOURCE_DIR}/deps/kyber/ref/indcpa.c
-        ${CMAKE_CURRENT_SOURCE_DIR}/deps/kyber/ref/kex.c
-        ${CMAKE_CURRENT_SOURCE_DIR}/deps/kyber/ref/fips202.c
+file(GLOB_RECURSE LIB_DILITHIUM_SRC
+        "${CMAKE_CURRENT_SOURCE_DIR}/src/dilithium/*.cpp")
+
+
+file(GLOB_RECURSE LIB_SHASHA_SRC
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/shasha/*.cpp
         )
 
-file(GLOB_RECURSE TEST_QRL_SRC
-        "${CMAKE_CURRENT_SOURCE_DIR}/tests/cpp/qrl/*.cpp")
+set(LIBXMSSALT_SRC
+        src/xmss-alt/algsxmss_fast.c
+        src/xmss-alt/algsxmss.c
+        src/xmss-alt/hash.c
+        src/xmss-alt/hash_address.c
+        src/xmss-alt/xmss_common.c
+        src/xmss-alt/wots.c
+        src/xmss-alt/fips202.c
+        )
 
-file(GLOB_RECURSE TEST_SHASHA_SRC
-        "${CMAKE_CURRENT_SOURCE_DIR}/tests/cpp/shasha/*.cpp")
+file(GLOB_RECURSE LIB_QRL_SRC
+        "${CMAKE_CURRENT_SOURCE_DIR}/src/qrl/*.cpp")
 
-file(GLOB_RECURSE TEST_DILITHIUM_SRC
-        "${CMAKE_CURRENT_SOURCE_DIR}/tests/cpp/dilithium/*.cpp")
+# TODO: library sources could be reorganized at some point to properly manage
+#       interface/implementation headers
 
-file(GLOB_RECURSE TEST_KYBER_SRC
-        "${CMAKE_CURRENT_SOURCE_DIR}/tests/cpp/kyber/*.cpp")
+add_library(PicoSHA2 INTERFACE IMPORTED)
+set_target_properties(PicoSHA2 PROPERTIES
+    INTERFACE_INCLUDE_DIRECTORIES "${DEPS_SOURCE_DIR}/PicoSHA2")
 
-# Forcing XMSS to be compiled as C++
-SET_SOURCE_FILES_PROPERTIES(${LIB_QRL_SRC} PROPERTIES LANGUAGE CXX)
-SET_SOURCE_FILES_PROPERTIES(${LIBXMSSALT_SRC} PROPERTIES LANGUAGE CXX)
-SET_SOURCE_FILES_PROPERTIES(${LIB_SHASHA_SRC} PROPERTIES LANGUAGE CXX)
+add_library(shasha STATIC ${LIB_SHASHA_SRC})
+target_include_directories(shasha INTERFACE src/shasha)
+target_link_libraries(shasha PRIVATE PicoSHA2)
 
-SET_SOURCE_FILES_PROPERTIES(${TEST_QRL_SRC} PROPERTIES LANGUAGE CXX)
-SET_SOURCE_FILES_PROPERTIES(${TEST_DILITHIUM_SRC} PROPERTIES LANGUAGE CXX)
-SET_SOURCE_FILES_PROPERTIES(${TEST_KYBER_SRC} PROPERTIES LANGUAGE CXX)
 
-SET_SOURCE_FILES_PROPERTIES(${REF_DILITHIUM_SRC} PROPERTIES LANGUAGE CXX)
-SET_SOURCE_FILES_PROPERTIES(${REF_KYBER_SRC} PROPERTIES LANGUAGE CXX)
+# NOTE: exporting ${DEPS_SOURCE_DIR} as interface directory
+add_library(kyber_ref STATIC ${REF_KYBER_SRC})
+target_include_directories(kyber_ref INTERFACE ${DEPS_SOURCE_DIR})
 
-add_library(shasha STATIC
-        ${LIB_SHASHA_SRC})
-target_include_directories(shasha PRIVATE ${LIB_SHASHA_INCLUDES} )
+add_library(kyber STATIC ${LIB_KYBER_SRC})
+target_include_directories(kyber INTERFACE src/kyber)
+target_link_libraries(kyber PRIVATE kyber_ref)
 
-add_library(qrllib STATIC
-        ${LIB_QRL_SRC}
-        ${LIBXMSSALT_SRC})
-target_include_directories(qrllib PRIVATE
-        ${LIB_QRL_INCLUDES}
-        ${LIB_SHASHA_INCLUDES})
-target_link_libraries(qrllib shasha)
+# NOTE: exporting ${DEPS_SOURCE_DIR} as interface directory
+add_library(dilithium_ref STATIC ${REF_DILITHIUM_SRC})
+target_include_directories(dilithium_ref INTERFACE ${DEPS_SOURCE_DIR})
 
-add_library(dilithium STATIC
-        ${LIB_DILITHIUM_SRC}
-        ${REF_DILITHIUM_SRC})
-target_include_directories(dilithium PRIVATE
-        ${LIB_DILITHIUM_INCLUDES} )
+add_library(dilithium STATIC ${LIB_DILITHIUM_SRC})
+target_include_directories(dilithium INTERFACE src/dilithium)
+target_link_libraries(dilithium PRIVATE dilithium_ref)
 
-add_library(kyber STATIC
-        ${LIB_KYBER_SRC}
-        ${REF_KYBER_SRC})
-target_include_directories(kyber PRIVATE
-        ${LIB_KYBER_INCLUDES} )
+add_library(xmss_alt STATIC ${LIBXMSSALT_SRC})
+set_source_files_properties(${LIBXMSSALT_SRC} PROPERTIES LANGUAGE CXX)
+target_include_directories(xmss_alt INTERFACE src src/xmss-alt)
+target_link_libraries(xmss_alt shasha)
+
+add_library(qrllib STATIC ${LIB_QRL_SRC})
+target_include_directories(qrllib INTERFACE src src/qrl)
+target_link_libraries(qrllib PRIVATE dilithium_ref xmss_alt PicoSHA2)
 
 if(WIN32)
   target_link_libraries(kyber PRIVATE bcrypt.lib)
@@ -167,7 +134,20 @@ if(WIN32)
 endif()
 
 if (BUILD_TESTS)
+    include(CTest)
     message(STATUS "GTests enabled")
+
+    file(GLOB_RECURSE TEST_QRL_SRC
+      "${CMAKE_CURRENT_SOURCE_DIR}/tests/cpp/qrl/*.cpp")
+
+    file(GLOB_RECURSE TEST_SHASHA_SRC
+      "${CMAKE_CURRENT_SOURCE_DIR}/tests/cpp/shasha/*.cpp")
+
+    file(GLOB_RECURSE TEST_DILITHIUM_SRC
+      "${CMAKE_CURRENT_SOURCE_DIR}/tests/cpp/dilithium/*.cpp")
+
+    file(GLOB_RECURSE TEST_KYBER_SRC
+      "${CMAKE_CURRENT_SOURCE_DIR}/tests/cpp/kyber/*.cpp")
 
     ##############################
     # Google Test
@@ -205,47 +185,27 @@ if (BUILD_TESTS)
     endif ()
 
     ###########################
-    include(CTest)
 
-    add_executable(qrllib_test
-            ${TEST_QRL_SRC})
-
-    target_include_directories( qrllib_test PRIVATE
-            ${LIB_QRL_INCLUDES}
-            ${LIB_SHASHA_INCLUDES})
-    target_link_libraries(qrllib_test qrllib gtest_main)
+    add_executable(qrllib_test ${TEST_QRL_SRC})
+    target_link_libraries(qrllib_test gtest gtest_main qrllib xmss_alt PicoSHA2)
     add_test(gtest ${PROJECT_BINARY_DIR}/qrllib_test)
 
     ###########################
 
-    add_executable(shasha_test
-            ${TEST_SHASHA_SRC})
-
-    target_include_directories( shasha_test PRIVATE
-            ${LIB_SHASHA_INCLUDES} )
-    target_link_libraries(shasha_test shasha qrllib gtest_main)
+    add_executable(shasha_test ${TEST_SHASHA_SRC})
+    target_link_libraries(shasha_test gtest gtest_main shasha qrllib)
     add_test(gtest ${PROJECT_BINARY_DIR}/shasha_test)
 
     ###########################
 
-    add_executable(dilithium_test
-            ${TEST_DILITHIUM_SRC})
-
-    target_include_directories( dilithium_test PRIVATE
-            ${LIB_DILITHIUM_INCLUDES} )
-
-    target_link_libraries(dilithium_test dilithium gtest_main)
+    add_executable(dilithium_test ${TEST_DILITHIUM_SRC})
+    target_link_libraries(dilithium_test gtest gtest_main dilithium_ref dilithium)
     add_test(gtest ${PROJECT_BINARY_DIR}/dilithium_test)
 
     ###########################
 
-    add_executable(kyber_test
-            ${TEST_KYBER_SRC})
-
-    target_include_directories( kyber_test PRIVATE
-            ${LIB_KYBER_INCLUDES} )
-
-    target_link_libraries(kyber_test kyber gtest_main)
+    add_executable(kyber_test ${TEST_KYBER_SRC})
+    target_link_libraries(kyber_test gtest gtest_main kyber kyber_ref)
     add_test(gtest ${PROJECT_BINARY_DIR}/kyber_test)
 
 endif ()
@@ -256,57 +216,37 @@ if (BUILD_PYTHON)
 
     set(CMAKE_SWIG_FLAGS -includeall -ignoremissing)
 
-    if (NOT CMAKE_LIBRARY_OUTPUT_DIRECTORY)
-        set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
-    endif ()
-
-    set(language python)
-
-    include_directories(
-          ${PYTHON_INCLUDE_PATH}
-    )
-    set(CMAKE_SWIG_OUTDIR ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/pyqrllib)
-    set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/pyqrllib)
-
+    ###########################################################################
+    ## qrllib
     set(SWIG_INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/src/api/qrl.i)
-    set(SWIG_LANG_LIBRARIES ${PYTHON_LIBRARIES})
-    set_source_files_properties(${SWIG_INTERFACE} PROPERTIES CPLUSPLUS ON)
-    set_property(SOURCE ${SWIG_INTERFACE} PROPERTY SWIG_FLAGS "-includeall" "-ignoremissing")
-    message(STATUS "CMAKE_SWIG_OUTDIR: " ${CMAKE_SWIG_OUTDIR})
-    message(STATUS "CMAKE_LIBRARY_OUTPUT_DIRECTORY: " ${CMAKE_LIBRARY_OUTPUT_DIRECTORY})
+    set(SWIG_MODULE_NAME pyqrllib)
+
+    set_source_files_properties(${SWIG_INTERFACE} PROPERTIES
+        CPLUSPLUS ON
+        SWIG_FLAGS "-I${PROJECT_SOURCE_DIR}/src")
 
     # Intentionally use a deprecated version to provide support for the raspberry pi
     # Basic pyqrllib - XmssBasic, etc.
-    SWIG_ADD_MODULE(pyqrllib
-            ${language}
-            ${SWIG_INTERFACE}
-            ${LIB_QRL_SRC}
-            ${LIBXMSSALT_SRC}
-            )
+    swig_add_module(${SWIG_MODULE_NAME} python ${SWIG_INTERFACE})
+    set(SWIG_MODULE ${SWIG_MODULE_${SWIG_MODULE_NAME}_REAL_NAME})
 
-    SWIG_LINK_LIBRARIES(pyqrllib
-            shasha
-            ${SWIG_LANG_LIBRARIES})
+    set_target_properties(${SWIG_MODULE} PROPERTIES DEBUG_POSTFIX "_d")
+    target_link_libraries(${SWIG_MODULE} ${PYTHON_LIBRARIES} qrllib PicoSHA2)
+    target_include_directories(${SWIG_MODULE} PRIVATE ${PYTHON_INCLUDE_DIRS})
 
-    include_directories(
-            ${PYTHON_INCLUDE_PATH}
-            ${LIB_QRL_INCLUDES}
-            ${LIB_SHASHA_INCLUDES}
-    )
+    add_custom_command(TARGET ${SWIG_MODULE}
+        POST_BUILD
+        COMMENT "Moving SWIG files to output dir"
+        COMMAND ${CMAKE_COMMAND} -E
+            copy_if_different $<TARGET_FILE:${SWIG_MODULE}>
+            ${PROJECT_SOURCE_DIR}/pyqrllib/$<TARGET_LINKER_FILE_NAME:${SWIG_MODULE}>)
 
-    add_custom_command(TARGET ${SWIG_MODULE_pyqrllib_REAL_NAME}
-            POST_BUILD
-            COMMENT "Moving SWIG files to output dir"
-            COMMAND ${CMAKE_COMMAND} -E
-            copy_if_different $<TARGET_FILE:${SWIG_MODULE_pyqrllib_REAL_NAME}>
-            ${CMAKE_CURRENT_SOURCE_DIR}/pyqrllib/$<TARGET_LINKER_FILE_NAME:${SWIG_MODULE_pyqrllib_REAL_NAME}>
-            )
-
-    add_custom_command(TARGET ${SWIG_MODULE_pyqrllib_REAL_NAME}
-            POST_BUILD
-            COMMENT ${swig_extra_generated_files}
-            COMMAND ${CMAKE_COMMAND} -E copy_if_different ${swig_extra_generated_files} ${CMAKE_CURRENT_SOURCE_DIR}/pyqrllib/pyqrllib.py
-            )
+    add_custom_command(TARGET ${SWIG_MODULE}
+        POST_BUILD
+        COMMENT ${swig_extra_generated_files}
+        COMMAND ${CMAKE_COMMAND} -E
+            copy_if_different ${swig_extra_generated_files}
+            ${PROJECT_SOURCE_DIR}/pyqrllib/pyqrllib.py)
 
     ###########################################################################
     ## dilithium
@@ -321,7 +261,7 @@ if (BUILD_PYTHON)
     set(SWIG_MODULE ${SWIG_MODULE_${SWIG_MODULE_NAME}_REAL_NAME})
     set_target_properties(${SWIG_MODULE} PROPERTIES DEBUG_POSTFIX "_d")
 
-    target_link_libraries(${SWIG_MODULE} ${PYTHON_LIBRARIES} dilithium)
+    target_link_libraries(${SWIG_MODULE} ${PYTHON_LIBRARIES} dilithium_ref dilithium)
     target_include_directories(${SWIG_MODULE} PRIVATE ${PYTHON_INCLUDE_DIRS})
 
     add_custom_command(TARGET ${SWIG_MODULE}
@@ -350,7 +290,7 @@ if (BUILD_PYTHON)
     set(SWIG_MODULE ${SWIG_MODULE_${SWIG_MODULE_NAME}_REAL_NAME})
     set_target_properties(${SWIG_MODULE} PROPERTIES DEBUG_POSTFIX "_d")
 
-    target_link_libraries(${SWIG_MODULE} ${PYTHON_LIBRARIES} kyber)
+    target_link_libraries(${SWIG_MODULE} ${PYTHON_LIBRARIES} kyber_ref kyber)
     target_include_directories(${SWIG_MODULE} PRIVATE ${PYTHON_INCLUDE_DIRS})
 
     add_custom_command(TARGET ${SWIG_MODULE}
@@ -379,24 +319,32 @@ if (BUILD_WEBASSEMBLY)
             ${LIB_SHASHA_SRC}
             ${LIBXMSSALT_SRC}
             )
-    target_include_directories( jsqrl PRIVATE
-            ${LIB_QRL_INCLUDES}
-            ${LIB_SHASHA_INCLUDES})
+    set_target_properties(jsqrl PROPERTIES COMPILE_FLAGS "--emscripten-cxx")
+    target_include_directories(jsqrl PRIVATE
+      $<TARGET_PROPERTY:qrllib,INTERFACE_INCLUDE_DIRECTORIES>
+      $<TARGET_PROPERTY:xmss_alt,INTERFACE_INCLUDE_DIRECTORIES>
+      $<TARGET_PROPERTY:PicoSHA2,INTERFACE_INCLUDE_DIRECTORIES>
+      $<TARGET_PROPERTY:dilithium_ref,INTERFACE_INCLUDE_DIRECTORIES>
+      )
 
     add_library(jsdilithium SHARED
             ${JS_DILITHIUM_INTERFACE}
             ${LIB_KYBER_SRC}
             ${LIBDILITHIUM_SRC}
             )
-    target_include_directories( jsdilithium PRIVATE
-            ${LIB_DILITHIUM_INCLUDES} )
+    target_include_directories(jsdilithium PRIVATE
+      $<TARGET_PROPERTY:kyber_ref,INTERFACE_INCLUDE_DIRECTORIES>
+      $<TARGET_PROPERTY:dilithium,INTERFACE_INCLUDE_DIRECTORIES>
+      )
 
     add_library(jskyber SHARED
             ${JS_KYBER_INTERFACE}
             ${LIB_KYBER_SRC}
             ${LIBKYBER_SRC}
             )
-    target_include_directories( jskyber PRIVATE
-            ${LIB_KYBER_INCLUDES} )
+    target_include_directories(jskyber PRIVATE
+      $<TARGET_PROPERTY:kyber_ref,INTERFACE_INCLUDE_DIRECTORIES>
+      $<TARGET_PROPERTY:kyber,INTERFACE_INCLUDE_DIRECTORIES>
+      )
 
 endif ()

@@ -8,9 +8,11 @@
 
 #include <string>
 #include <vector>
+
+extern "C" {
 #include <kyber/ref/api.h>
 #include <kyber/ref/randombytes.h>
-
+}
 
 class Kyber {
 public:

@@ -6,8 +6,11 @@
 
 #include <string>
 #include <vector>
+
+extern "C" {
 #include <dilithium/ref/api.h>
 #include <dilithium/ref/randombytes.h>
+}
 
 class Dilithium {
 public:

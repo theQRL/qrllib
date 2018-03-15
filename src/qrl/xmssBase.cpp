@@ -1,7 +1,7 @@
 #include "xmss-alt/algsxmss.h"
 #include "xmssBasic.h"
 #include <iostream>
-#include <PicoSHA2/picosha2.h>
+#include <picosha2.h>
 #include "qrlHelper.h"
 
 XmssBase::XmssBase(const TSEED &seed,

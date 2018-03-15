@@ -1,4 +1,4 @@
-#include <wordlist.h>
+#include "wordlist.h"
 
 const std::array<std::string, 4096> wordlist{
         "aback", "abbey", "abbot", "abide", "ablaze", "able", "aboard", "abode", "abort", "abound", "about", "above",

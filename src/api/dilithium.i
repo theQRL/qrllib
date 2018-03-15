@@ -27,7 +27,7 @@ namespace std {
 
 %module dilithium
 %{
-#include "dilithium/dilithium.h"
+#include "dilithium.h"
 %}
 
-%include "dilithium/dilithium.h"
+%include "dilithium.h"

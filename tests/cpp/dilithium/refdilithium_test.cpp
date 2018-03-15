@@ -2,8 +2,10 @@
 // file LICENSE or http://www.opensource.org/licenses/mit-license.php.
 #include "gtest/gtest.h"
 
+extern "C" {
 #include <dilithium/ref/api.h>
 #include <dilithium/ref/randombytes.h>
+}
 
 namespace {
     TEST(DilithumReferenceTest, sign_keypair) {

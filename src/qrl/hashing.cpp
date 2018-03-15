@@ -5,7 +5,7 @@
 #include <sstream>
 #include <iomanip>
 #include <dilithium/ref/fips202.h>
-#include <PicoSHA2/picosha2.h>
+#include <picosha2.h>
 #include <iostream>
 #include <unordered_map>
 

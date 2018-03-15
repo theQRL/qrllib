@@ -27,7 +27,7 @@ namespace std {
 
 %module kyber
 %{
-#include "kyber/kyber.h"
+#include "kyber.h"
 %}
 
-%include "kyber/kyber.h"
+%include "kyber.h"

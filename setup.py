@@ -37,7 +37,7 @@ class CMakeBuild(build_ext):
                                    '-DPYTHON_LIBRARY=' + python_library])
 
             if sys.platform == 'win32':
-                cmake_call.extend(['-G' + env.get('CMAKE_VS_GENERATOR', 'Visual Studio 15 2017 Win64')])
+                cmake_call.extend(['-G' + env.get('CMAKE_VS_GENERATOR', 'Ninja')])
 
             subprocess.check_call(cmake_call, cwd=self.build_temp, env=env)
 

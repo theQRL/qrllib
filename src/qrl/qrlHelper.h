@@ -5,8 +5,8 @@
 
 #include <vector>
 #include <cstdint>
-#include <qrlDescriptor.h>
-#include <PicoSHA2/picosha2.h>
+#include "qrlDescriptor.h"
+#include <picosha2.h>
 #include <stdexcept>
 #include "misc.h"
 

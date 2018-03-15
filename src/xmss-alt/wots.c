@@ -148,7 +148,7 @@ void wots_sign(eHashFunction hash_func,
     unsigned char *csum_bytes = (unsigned char*)alloca(len_2_bytes);
     to_byte(csum_bytes, csum, len_2_bytes);
 
-    int *csum_basew = (int*)alloca(len_2_bytes * sizeof(int));
+    int *csum_basew = (int*)alloca(params->len_2 * sizeof(int));
 
     base_w(csum_basew, params->len_2, csum_bytes, params);
 
