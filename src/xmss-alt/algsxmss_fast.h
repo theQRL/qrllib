@@ -86,6 +86,6 @@ int xmssfast_update(eHashFunction hash_func,
                     xmss_params *params,
                     unsigned char *sk,
                     bds_state *state,
-                    unsigned long new_idx);
+                    uint32_t new_idx);
 
 #endif // XMSSALT_XMSS_FAST_H
