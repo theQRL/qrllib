@@ -69,7 +69,7 @@ brew install go --cross-compile-common
 #### Windows
 For the purposes of these instructions Build Tools for Visual Studio 2017, CMake 3.10.2, Ninja 1.8.2, Python 3.6 and SWIG 3.0.12 were used, also ```c:\src``` was used for source files and ```c:\opt``` for other dependencies, adjust accordingly if choosing differently.
 
-Note: You can use Microsoft MSBuild instead of Ninja Build by setting environment variable ```CMAKE_VS_GENERATOR=Visual Studio 15 2017 Win64```, however if you choose to install the pyqryptonight package Python setuptools currently will not install it correctly.
+Note: You can use Microsoft MSBuild instead of Ninja Build by setting environment variable ```CMAKE_VS_GENERATOR=Visual Studio 15 2017 Win64```, however if you choose to install the pyqrllib package Python setuptools currently will not install it correctly.
 
 Prerequisites:
 - Install [Build Tools for Visual Studio](https://www.visualstudio.com/downloads/#build-tools-for-visual-studio-2017) selecting the *'Visual C++ build tools'* option, or install [Visual Studio Community Edition](https://www.visualstudio.com/vs/community/) selecting the *'Desktop Development for C++ workload'*.
