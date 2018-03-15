@@ -7,8 +7,9 @@
 XmssFast::XmssFast(const TSEED &seed,
                    unsigned char height,
                    eHashFunction hashFunction,
-                   eAddrFormatType addrFormatType ) throw(std::invalid_argument)
-        : XmssBase(seed, height, hashFunction, addrFormatType) {
+                   eAddrFormatType addrFormatType) throw(std::invalid_argument)
+    : XmssBase(seed, height, hashFunction, addrFormatType)
+{
 //    PK format
 //    32 root address
 //    32 pub_seed
@@ -66,7 +67,8 @@ XmssFast::XmssFast(const TSEED &seed,
                         _seed.data());
 }
 
-unsigned int XmssFast::setIndex(unsigned int new_index) {
+unsigned int XmssFast::setIndex(unsigned int new_index) throw(std::invalid_argument)
+{
     xmssfast_update(_hashFunction,
                     &params,
                     _sk.data(),
@@ -76,7 +78,8 @@ unsigned int XmssFast::setIndex(unsigned int new_index) {
     return new_index;
 }
 
-TSIGNATURE XmssFast::sign(const TMESSAGE &message) {
+TSIGNATURE XmssFast::sign(const TMESSAGE &message)
+{
     auto signature = TSIGNATURE(getSignatureSize(), 0);
 
     auto index = getIndex();

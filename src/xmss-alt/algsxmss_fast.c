@@ -15,6 +15,7 @@ Public domain.
 #include "hash.h"
 #include "hash_address.h"
 #include <cstdio>
+#include <stdexcept>
 
 /**
  * Used for pseudorandom keygeneration,
@@ -26,7 +27,8 @@ static void get_seed(eHashFunction hash_func,
                      unsigned char *seed,
                      const unsigned char *sk_seed,
                      int n,
-                     uint32_t addr[8]) {
+                     uint32_t addr[8])
+{
     unsigned char bytes[32];
 
     // Make sure that chain addr, hash addr, and key bit are 0!
@@ -51,7 +53,8 @@ void xmss_set_bds_state(bds_state *state,
                         unsigned char *keep,
                         treehash_inst *treehash,
                         unsigned char *retain,
-                        unsigned int next_leaf) {
+                        unsigned int next_leaf)
+{
     state->stack = stack;
     state->stackoffset = stackoffset;
     state->stacklevels = stacklevels;
@@ -82,7 +85,8 @@ static void gen_leaf_wots(eHashFunction hash_func,
     l_tree(hash_func, &params->wots_par, leaf, pk, pub_seed, ltree_addr);
 }
 
-static int treehash_minheight_on_stack(bds_state *state, const xmss_params *params, const treehash_inst *treehash) {
+static int treehash_minheight_on_stack(bds_state *state, const xmss_params *params, const treehash_inst *treehash)
+{
     unsigned int r = params->h, i;
     for (i = 0; i < treehash->stackusage; i++) {
         if (state->stacklevels[state->stackoffset - i - 1] < r) {
@@ -105,7 +109,8 @@ static void treehash_setup(eHashFunction hash_func,
                            const unsigned char *sk_seed,
                            const xmss_params *params,
                            const unsigned char *pub_seed,
-                           const uint32_t addr[8]) {
+                           const uint32_t addr[8])
+{
     unsigned int idx = index;
     unsigned int n = params->n;
     unsigned int h = params->h;
@@ -151,10 +156,12 @@ static void treehash_setup(eHashFunction hash_func,
             nodeh = stacklevels[stackoffset - 1];
             if (i >> nodeh == 1) {
                 memcpy(state->auth + nodeh * n, stack + (stackoffset - 1) * n, n);
-            } else {
+            }
+            else {
                 if (nodeh < h - k && i >> nodeh == 3) {
                     memcpy(state->treehash[nodeh].node, stack + (stackoffset - 1) * n, n);
-                } else if (nodeh >= h - k) {
+                }
+                else if (nodeh >= h - k) {
                     memcpy(state->retain + ((1 << (h - 1 - nodeh)) + nodeh - h + (((i >> nodeh) - 3) >> 1)) * n,
                            stack + (stackoffset - 1) * n, n);
                 }
@@ -176,7 +183,8 @@ static void treehash_setup(eHashFunction hash_func,
 static void
 treehash_update(eHashFunction hash_func,
                 treehash_inst *treehash, bds_state *state, const unsigned char *sk_seed, const xmss_params *params,
-                const unsigned char *pub_seed, const uint32_t addr[8]) {
+                const unsigned char *pub_seed, const uint32_t addr[8])
+{
     int n = params->n;
 
     uint32_t ots_addr[8];
@@ -210,7 +218,8 @@ treehash_update(eHashFunction hash_func,
     if (nodeheight == treehash->h) { // this also implies stackusage == 0
         memcpy(treehash->node, nodebuffer, n);
         treehash->completed = 1;
-    } else {
+    }
+    else {
         memcpy(state->stack + state->stackoffset * n, nodebuffer, n);
         treehash->stackusage++;
         state->stacklevels[state->stackoffset] = nodeheight;
@@ -225,7 +234,8 @@ treehash_update(eHashFunction hash_func,
 static void
 validate_authpath(eHashFunction hash_func,
                   unsigned char *root, const unsigned char *leaf, unsigned long leafidx, const unsigned char *authpath,
-                  const xmss_params *params, const unsigned char *pub_seed, uint32_t addr[8]) {
+                  const xmss_params *params, const unsigned char *pub_seed, uint32_t addr[8])
+{
     unsigned int n = params->n;
 
     uint32_t i, j;
@@ -238,7 +248,8 @@ validate_authpath(eHashFunction hash_func,
             buffer[n + j] = leaf[j];
         for (j = 0; j < n; j++)
             buffer[j] = authpath[j];
-    } else {
+    }
+    else {
         for (j = 0; j < n; j++)
             buffer[j] = leaf[j];
         for (j = 0; j < n; j++)
@@ -254,7 +265,8 @@ validate_authpath(eHashFunction hash_func,
             hash_h(hash_func, buffer + n, buffer, pub_seed, addr, n);
             for (j = 0; j < n; j++)
                 buffer[j] = authpath[j];
-        } else {
+        }
+        else {
             hash_h(hash_func, buffer, buffer, pub_seed, addr, n);
             for (j = 0; j < n; j++)
                 buffer[j + n] = authpath[j];
@@ -274,7 +286,8 @@ validate_authpath(eHashFunction hash_func,
 static char
 bds_treehash_update(eHashFunction hash_func,
                     bds_state *state, unsigned int updates, const unsigned char *sk_seed, const xmss_params *params,
-                    unsigned char *pub_seed, const uint32_t addr[8]) {
+                    unsigned char *pub_seed, const uint32_t addr[8])
+{
     uint32_t i, j;
     unsigned int level, l_min, low;
     unsigned int h = params->h;
@@ -287,9 +300,11 @@ bds_treehash_update(eHashFunction hash_func,
         for (i = 0; i < h - k; i++) {
             if (state->treehash[i].completed) {
                 low = h;
-            } else if (state->treehash[i].stackusage == 0) {
+            }
+            else if (state->treehash[i].stackusage == 0) {
                 low = i;
-            } else {
+            }
+            else {
                 low = treehash_minheight_on_stack(state, params, &(state->treehash[i]));
             }
             if (low < l_min) {
@@ -344,44 +359,46 @@ static char bds_state_update(eHashFunction hash_func,
     setLtreeADRS(ltree_addr, idx);
 
     gen_leaf_wots(
-            hash_func,
-            state->stack+state->stackoffset*XMSS_N,
-            sk_seed,
-            params,
-            pub_seed,
-            ltree_addr,
-            ots_addr);
+        hash_func,
+        state->stack + state->stackoffset * XMSS_N,
+        sk_seed,
+        params,
+        pub_seed,
+        ltree_addr,
+        ots_addr);
 
     state->stacklevels[state->stackoffset] = 0;
     state->stackoffset++;
     if (XMSS_TREEHEIGHT - XMSS_BDS_K > 0 && idx == 3) {
-        memcpy(state->treehash[0].node, state->stack+state->stackoffset*XMSS_N, XMSS_N);
+        memcpy(state->treehash[0].node, state->stack + state->stackoffset * XMSS_N, XMSS_N);
     }
-    while (state->stackoffset>1 && state->stacklevels[state->stackoffset-1] == state->stacklevels[state->stackoffset-2]) {
-        nodeh = state->stacklevels[state->stackoffset-1];
+    while (state->stackoffset > 1
+        && state->stacklevels[state->stackoffset - 1] == state->stacklevels[state->stackoffset - 2]) {
+        nodeh = state->stacklevels[state->stackoffset - 1];
         if (idx >> nodeh == 1) {
-            memcpy(state->auth + nodeh*XMSS_N, state->stack+(state->stackoffset-1)*XMSS_N, XMSS_N);
+            memcpy(state->auth + nodeh * XMSS_N, state->stack + (state->stackoffset - 1) * XMSS_N, XMSS_N);
         }
         else {
             if (nodeh < XMSS_TREEHEIGHT - XMSS_BDS_K && idx >> nodeh == 3) {
-                memcpy(state->treehash[nodeh].node, state->stack+(state->stackoffset-1)*XMSS_N, XMSS_N);
+                memcpy(state->treehash[nodeh].node, state->stack + (state->stackoffset - 1) * XMSS_N, XMSS_N);
             }
             else if (nodeh >= XMSS_TREEHEIGHT - XMSS_BDS_K) {
-                memcpy(state->retain + ((1 << (XMSS_TREEHEIGHT - 1 - nodeh)) + nodeh - XMSS_TREEHEIGHT + (((idx >> nodeh) - 3) >> 1)) * XMSS_N, state->stack+(state->stackoffset-1)*XMSS_N, XMSS_N);
+                memcpy(state->retain + ((1 << (XMSS_TREEHEIGHT - 1 - nodeh)) + nodeh - XMSS_TREEHEIGHT
+                    + (((idx >> nodeh) - 3) >> 1)) * XMSS_N, state->stack + (state->stackoffset - 1) * XMSS_N, XMSS_N);
             }
         }
 
-        setTreeHeight(node_addr, state->stacklevels[state->stackoffset-1]);
-        setTreeIndex(node_addr, (idx >> (state->stacklevels[state->stackoffset-1]+1)));
+        setTreeHeight(node_addr, state->stacklevels[state->stackoffset - 1]);
+        setTreeIndex(node_addr, (idx >> (state->stacklevels[state->stackoffset - 1] + 1)));
 
         hash_h(hash_func,
-                state->stack+(state->stackoffset-2)*XMSS_N,
-                state->stack+(state->stackoffset-2)*XMSS_N,
-                pub_seed,
-                node_addr,
-                XMSS_N);
+               state->stack + (state->stackoffset - 2) * XMSS_N,
+               state->stack + (state->stackoffset - 2) * XMSS_N,
+               pub_seed,
+               node_addr,
+               XMSS_N);
 
-        state->stacklevels[state->stackoffset-2]++;
+        state->stacklevels[state->stackoffset - 2]++;
         state->stackoffset--;
     }
     state->next_leaf++;
@@ -394,8 +411,13 @@ static char bds_state_update(eHashFunction hash_func,
  */
 static void
 bds_round(eHashFunction hash_func,
-          bds_state *state, const unsigned long leaf_idx, const unsigned char *sk_seed, const xmss_params *params,
-          unsigned char *pub_seed, uint32_t addr[8]) {
+          bds_state *state,
+          const unsigned long leaf_idx,
+          const unsigned char *sk_seed,
+          const xmss_params *params,
+          unsigned char *pub_seed,
+          uint32_t addr[8])
+{
     unsigned int i;
     unsigned int n = params->n;
     unsigned int h = params->h;
@@ -437,14 +459,16 @@ bds_round(eHashFunction hash_func,
         setLtreeADRS(ltree_addr, leaf_idx);
         setOTSADRS(ots_addr, leaf_idx);
         gen_leaf_wots(hash_func, state->auth, sk_seed, params, pub_seed, ltree_addr, ots_addr);
-    } else {
+    }
+    else {
         setTreeHeight(node_addr, (tau - 1));
         setTreeIndex(node_addr, leaf_idx >> tau);
         hash_h(hash_func, state->auth + tau * n, buf, pub_seed, node_addr, n);
         for (i = 0; i < tau; i++) {
             if (i < h - k) {
                 memcpy(state->auth + i * n, state->treehash[i].node, n);
-            } else {
+            }
+            else {
                 offset = (1 << (h - 1 - i)) + i - h;
                 rowidx = ((leaf_idx >> i) - 1) >> 1;
                 memcpy(state->auth + i * n, state->retain + (offset + rowidx) * n, n);
@@ -509,29 +533,28 @@ int xmssfast_update(eHashFunction hash_func,
                     xmss_params *params,
                     unsigned char *sk,
                     bds_state *state,
-                    unsigned long new_idx)
+                    uint32_t new_idx)
 {
-    unsigned long k = params->k;
+    const uint32_t num_elems = (1U << params->h) - 1;
 
-    // FIXME: Avoid this repetition
-    auto idxkey = static_cast<uint32_t>(((unsigned long) sk[0] << 24) |
-                                            ((unsigned long) sk[1] << 16) |
-                                            ((unsigned long) sk[2] << 8) |
-                                            sk[3]);
+    auto current_idx = static_cast<uint32_t>(
+        ((unsigned long) sk[0] << 24) |
+        ((unsigned long) sk[1] << 16) |
+        ((unsigned long) sk[2] << 8) |
+        sk[3]);
 
-    if (idxkey >= new_idx)
+    // Verify ranges
+    if (new_idx>=num_elems)
     {
-        //the secret key is updated more than the blockchain, so all fine
-        return -1;
+        throw std::invalid_argument("index too high");
     }
 
-    uint32_t idx = new_idx;
-    //update secret key index
-    sk[0] = static_cast<unsigned char>(((idx) >> 24) & 255);
-    sk[1] = static_cast<unsigned char>(((idx) >> 16) & 255);
-    sk[2] = static_cast<unsigned char>(((idx) >> 8) & 255);
-    sk[3] = static_cast<unsigned char>((idx) & 255);
+    if (new_idx<current_idx)
+    {
+        throw std::invalid_argument("cannot rewind");
+    }
 
+    // Change index
     unsigned char sk_seed[32];
     memcpy(sk_seed, sk + 4, 32);
 
@@ -540,12 +563,27 @@ int xmssfast_update(eHashFunction hash_func,
 
     uint32_t ots_addr[8] = {0, 0, 0, 0, 0, 0, 0, 0};
 
-    for (int j = idxkey; j < new_idx; j++) {
-        if (j < (1U << params->h) - 1) {
-            bds_round(hash_func, state, j, sk_seed, params, pub_seed, ots_addr);
-            bds_treehash_update(hash_func, state, (params->h - k) >> 1, sk_seed, params, pub_seed, ots_addr);
+    for (unsigned int j = current_idx; j < new_idx; j++) {
+        if (j >= num_elems)
+        {
+            return -1;
         }
+
+        bds_round(hash_func, state, j, sk_seed, params, pub_seed, ots_addr);
+        bds_treehash_update(hash_func,
+                            state,
+                            (params->h - params->k) >> 1,
+                            sk_seed,
+                            params,
+                            pub_seed,
+                            ots_addr);
     }
+
+    //update secret key index
+    sk[0] = static_cast<unsigned char>(((new_idx) >> 24) & 255);
+    sk[1] = static_cast<unsigned char>(((new_idx) >> 16) & 255);
+    sk[2] = static_cast<unsigned char>(((new_idx) >> 8) & 255);
+    sk[3] = static_cast<unsigned char>((new_idx) & 255);
 
     return 0;
 }
@@ -563,7 +601,7 @@ int xmssfast_Signmsg(eHashFunction hash_func,
 
     // Extract SK
     unsigned long idx =
-            ((unsigned long) sk[0] << 24) | ((unsigned long) sk[1] << 16) | ((unsigned long) sk[2] << 8) | sk[3];
+        ((unsigned long) sk[0] << 24) | ((unsigned long) sk[1] << 16) | ((unsigned long) sk[2] << 8) | sk[3];
     unsigned char sk_seed[n];
     memcpy(sk_seed, sk + 4, n);
     unsigned char sk_prf[n];
