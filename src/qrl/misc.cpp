@@ -1,12 +1,12 @@
 // Distributed under the MIT software license, see the accompanying
 // file LICENSE or http://www.opensource.org/licenses/mit-license.php.
-#include "hashing.h"
 #include "misc.h"
 #include "xmssBase.h"
 #include "wordlist.h"
+#include <util/hashing.h>
 #include <sstream>
 #include <iomanip>
-#include <PicoSHA2/picosha2.h>
+#include <picosha2.h>
 #include <iostream>
 #include <unordered_map>
 #include <fstream>
@@ -121,26 +121,6 @@ std::vector<unsigned char> mnemonic2bin(const std::string &mnemonic) {
     }
 
     return result;
-}
-
-std::vector<unsigned char> getRandomSeed(uint32_t seed_size, const std::string &entropy) {
-    std::vector<unsigned char> tmp(seed_size, 0);
-
-    std::ifstream urandom("/dev/urandom", std::ios::in | std::ios::binary);
-    if (!urandom) {
-        throw std::runtime_error("error accessing /dev/urandom");
-    }
-
-    urandom.read(reinterpret_cast<char *>(tmp.data()), seed_size);
-    if (!urandom) {
-        throw std::runtime_error("error reading from /dev/urandom");
-    }
-    urandom.close();
-
-    auto tmpbytes = str2bin(entropy);
-    tmp.insert(tmp.end(), tmpbytes.begin(), tmpbytes.end());
-
-    return shake256(seed_size, tmp);
 }
 
 std::vector<std::vector<unsigned char>> getHashChainSeed(const std::vector<unsigned char> &seed,

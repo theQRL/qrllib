@@ -1,9 +1,13 @@
 // Distributed under the MIT software license, see the accompanying
 // file LICENSE or http://www.opensource.org/licenses/mit-license.php.
 
-#include <string>
 #include <vector>
 #include <stdexcept>
+
+extern "C" {
+#include <kyber/ref/api.h>
+}
+
 #include "kyber.h"
 
 Kyber::Kyber(const std::vector<uint8_t> &pk,

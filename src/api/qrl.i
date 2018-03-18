@@ -34,18 +34,20 @@ namespace std {
 %module pyqrllib
 %{
     #include "qrl/misc.h"
-    #include "qrl/hashing.h"
     #include "qrl/qrlHelper.h"
     #include "qrl/xmssBasic.h"
     #include "qrl/xmssBase.h"
     #include "qrl/xmssFast.h"
     #include "qrl/xmssPool.h"
+    #include "util/random.h"
+    #include "util/hashing.h"
 %}
 
 %include "qrl/misc.h"
-%include "qrl/hashing.h"
 %include "qrl/qrlHelper.h"
 %include "qrl/xmssBasic.h"
 %include "qrl/xmssBase.h"
 %include "qrl/xmssFast.h"
 %include "qrl/xmssPool.h"
+%include "util/random.h"
+%include "util/hashing.h"
