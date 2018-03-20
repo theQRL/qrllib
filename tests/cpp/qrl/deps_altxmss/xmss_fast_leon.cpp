@@ -19,21 +19,22 @@ namespace {
 
         bds_state s;
         unsigned int k = 2;
-        unsigned char stack[(h+1)*n];
+        auto stack = std::vector<unsigned char>((h + 1)*n);
+        auto stacklevels = std::vector<unsigned char>(h+1);
+        auto auth = std::vector<unsigned char>((h)*n);
+        auto keep = std::vector<unsigned char>((h >> 1)*n);
+        auto treehash = std::vector<treehash_inst>(h - k);
+        auto th_nodes = std::vector<unsigned char>((h-k)*n);
+        auto retain = std::vector<unsigned char>(((1 << k) - k - 1)*n);
         unsigned int stackoffset = 0;
-        unsigned char stacklevels[h+1];
-        unsigned char auth[(h)*n];
-        unsigned char keep[(h >> 1)*n];
-        treehash_inst treehash[h-k];
-        unsigned char th_nodes[(h-k)*n];
-        unsigned char retain[((1 << k) - k - 1)*n];
         bds_state *state = &s;
 
-        for (int i = 0; i < h-k; i++)
+        for (unsigned i = 0; i < h-k; i++)
         {
             treehash[i].node = &th_nodes[n*i];
         }
-        xmss_set_bds_state(state, stack, stackoffset, stacklevels, auth, keep, treehash, retain, 0);
+        xmss_set_bds_state(state, stack.data(), stackoffset, stacklevels.data(),
+          auth.data(), keep.data(), treehash.data(), retain.data(), 0);
 
         xmss_params params;
         xmss_set_params(&params, 32, h, 16, 2);

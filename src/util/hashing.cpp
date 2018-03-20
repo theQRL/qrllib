@@ -1,13 +1,14 @@
 // Distributed under the MIT software license, see the accompanying
 // file LICENSE or http://www.opensource.org/licenses/mit-license.php.
-#include "hashing.h"
-#include "xmssBase.h"
-#include <sstream>
-#include <iomanip>
+
+#include <stdexcept>
+
+extern "C" {
 #include <dilithium/ref/fips202.h>
-#include <PicoSHA2/picosha2.h>
-#include <iostream>
-#include <unordered_map>
+}
+#include <picosha2.h>
+
+#include "hashing.h"
 
 std::vector<unsigned char> shake128(size_t hash_size, std::vector<unsigned char> input) {
     std::vector<unsigned char> hashed_output(hash_size, 0);

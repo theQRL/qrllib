@@ -20,7 +20,7 @@ This library currently exposes the following functionality:
 
 |           | Linux |     OSX<br>10.12     |  Windows<br>10 | Raspbian<br>? | 
 |-----------|:------------:|:-----------:|:--------:|:--------:|
-|Python 3   | :white_check_mark: | :white_check_mark: |    :seedling:     |     :white_check_mark:    |
+|Python 3   | :white_check_mark: | :white_check_mark: |    :white_check_mark:     |     :white_check_mark:    |
 |Webassembly (JS) |      :white_check_mark:       |     :white_check_mark:       |    :white_check_mark:     |     :white_check_mark:    |
 |Golang     | :seedling: |     -       |    -     |     -    |
 |Java       |      -       |     -       |    -     |     -    |
@@ -63,6 +63,37 @@ Golang and Java wrappers are currently experimental (By default they are disable
 
 ```
 brew install go --cross-compile-common
+```
+## Building from Source
+
+#### Windows
+For the purposes of these instructions Build Tools for Visual Studio 2017, CMake 3.10.2, Ninja 1.8.2, Python 3.6 and SWIG 3.0.12 were used, also ```c:\src``` was used for source files and ```c:\opt``` for other dependencies, adjust accordingly if choosing differently.
+
+Note: You can use Microsoft MSBuild instead of Ninja Build by setting environment variable ```CMAKE_VS_GENERATOR=Visual Studio 15 2017 Win64```, however if you choose to install the pyqrllib package Python setuptools currently will not install it correctly.
+
+Prerequisites:
+- Install [Build Tools for Visual Studio](https://www.visualstudio.com/downloads/#build-tools-for-visual-studio-2017) selecting the *'Visual C++ build tools'* option, or install [Visual Studio Community Edition](https://www.visualstudio.com/vs/community/) selecting the *'Desktop Development for C++ workload'*.
+- Install [Git for Windows](https://gitforwindows.org/) keeping the default option to use git from the command prompt.
+- Install the latest stable [CMake x64 for Windows](https://cmake.org/download/), selecting to add CMake to system or user PATH.
+- Install [Python 3 Windows x86-64](https://www.python.org/downloads/) selecting the option to '*Add Python 3.x to PATH*'. Optionally change the install location to ```c:\python36```, install the debugging symbols/binaries, and disable the path length limit.
+- Download [SWIG](http://swig.org/) *(download swigwin)* and extract archive to ```c:\opt```
+- Download [Ninja Build](https://github.com/ninja-build/ninja/releases) and extract ```ninja.exe``` to ```c:\opt\bin```
+
+*Build Qrllib:*
+```
+git clone https://github.com/theQRL/qrllib.git c:\src\qrllib
+cd \src\qrllib
+set PATH=c:\opt\bin;c:\opt\swigwin-3.0.12;%PATH%
+set CC=cl.exe
+set CXX=cl.exe
+
+python setup.py build
+```
+
+If the build succeeded you can perform further steps, issue the command ```python setup.py --help-commands``` to see other options, e.g.:
+```
+python setup.py test
+python setup.py install
 ```
 
 ## License

@@ -2,7 +2,7 @@
 #include <emscripten/bind.h>
 #include <iostream>
 #include <xmssFast.h>
-#include <hashing.h>
+#include <util/hashing.h>
 #include <misc.h>
 #include <wordlist.h>
 #include <qrlHelper.h>

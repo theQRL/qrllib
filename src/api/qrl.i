@@ -12,7 +12,7 @@
 %include "exception.i"
 
 %array_class(unsigned char, ucharCArray)
-%array_class(uint, uintCArray)
+%array_class(unsigned int, uintCArray)
 %array_class(uint32_t, uint32CArray)
 
 namespace std {
@@ -34,18 +34,20 @@ namespace std {
 %module pyqrllib
 %{
     #include "qrl/misc.h"
-    #include "qrl/hashing.h"
     #include "qrl/qrlHelper.h"
     #include "qrl/xmssBasic.h"
     #include "qrl/xmssBase.h"
     #include "qrl/xmssFast.h"
     #include "qrl/xmssPool.h"
+    #include "util/random.h"
+    #include "util/hashing.h"
 %}
 
 %include "qrl/misc.h"
-%include "qrl/hashing.h"
 %include "qrl/qrlHelper.h"
 %include "qrl/xmssBasic.h"
 %include "qrl/xmssBase.h"
 %include "qrl/xmssFast.h"
 %include "qrl/xmssPool.h"
+%include "util/random.h"
+%include "util/hashing.h"

@@ -20,7 +20,7 @@ class CMakeBuild(build_ext):
         env['CXXFLAGS'] += ' -DVERSION_INFO=\\"' + self.distribution.get_version() + '\\"'
 
         for ext in self.extensions:
-            extension_path = os.path.abspath(os.path.dirname(self.get_ext_fullpath(ext.name)))
+            extension_path = os.path.abspath(os.path.dirname(self.get_ext_fullpath(ext.name))).replace('\\','/')
 
             cmake_call = ['cmake', ext.sourcedir,
                           '-DBUILD_PYTHON=ON',
@@ -36,10 +36,13 @@ class CMakeBuild(build_ext):
                 cmake_call.extend(['-DPYTHON_INCLUDE_DIR=' + python_include_dir,
                                    '-DPYTHON_LIBRARY=' + python_library])
 
+            if sys.platform == 'win32':
+                cmake_call.extend(['-G' + env.get('CMAKE_VS_GENERATOR', 'Ninja')])
+
             subprocess.check_call(cmake_call, cwd=self.build_temp, env=env)
 
             subprocess.check_call(['cmake', '--build', '.',
-                                   '--config', 'Release', '--', '-j2'], cwd=self.build_temp)
+                                   '--config', 'Release'], cwd=self.build_temp)
 
 
 class CMakeExtension(Extension):

@@ -4,7 +4,7 @@
 #include <algorithm>
 #include "xmssFast.h"
 #include "xmssPool.h"
-#include "hashing.h"
+#include <util/hashing.h>
 #include "misc.h"
 
 XmssPool::XmssPool(const TSEED &base_seed, uint8_t height, const size_t starting_index, size_t pool_size) :

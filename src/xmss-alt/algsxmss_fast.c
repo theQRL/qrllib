@@ -17,6 +17,13 @@ Public domain.
 #include <cstdio>
 #include <stdexcept>
 
+#ifdef _WIN32
+#include <malloc.h>
+#define alloca _alloca
+#else
+#include <alloca.h>
+#endif
+
 /**
  * Used for pseudorandom keygeneration,
  * generates the seed for the WOTS keypair at address addr
@@ -76,8 +83,8 @@ static void gen_leaf_wots(eHashFunction hash_func,
                           uint32_t ltree_addr[8],
                           uint32_t ots_addr[8])
 {
-    unsigned char seed[params->n];
-    unsigned char pk[params->wots_par.keysize];
+    unsigned char *seed = (unsigned char*)alloca(params->n);
+    unsigned char *pk = (unsigned char*)alloca(params->wots_par.keysize);
 
     get_seed(hash_func, seed, sk_seed, params->n, ots_addr);
     wots_pkgen(hash_func, pk, seed, &(params->wots_par), pub_seed, ots_addr);
@@ -129,8 +136,8 @@ static void treehash_setup(eHashFunction hash_func,
     setType(node_addr, 2);
 
     uint32_t lastnode, i;
-    unsigned char stack[(height + 1) * n];
-    unsigned int stacklevels[height + 1];
+    unsigned char *stack = (unsigned char*)alloca((height + 1) * n);
+    unsigned int *stacklevels = (unsigned int*)alloca((height + 1) * sizeof(int));
     unsigned int stackoffset = 0;
     unsigned int nodeh;
 
@@ -147,7 +154,7 @@ static void treehash_setup(eHashFunction hash_func,
         setLtreeADRS(ltree_addr, idx);
         setOTSADRS(ots_addr, idx);
         gen_leaf_wots(hash_func, stack + stackoffset * n, sk_seed, params, pub_seed, ltree_addr, ots_addr);
-        stacklevels[stackoffset] = 0;
+        *(stacklevels+stackoffset) = 0;
         stackoffset++;
         if (h - k > 0 && i == 3) {
             memcpy(state->treehash[0].node, stack + stackoffset * n, n);
@@ -202,7 +209,7 @@ treehash_update(eHashFunction hash_func,
     setLtreeADRS(ltree_addr, treehash->next_idx);
     setOTSADRS(ots_addr, treehash->next_idx);
 
-    unsigned char nodebuffer[2 * n];
+    unsigned char *nodebuffer = (unsigned char*)alloca(2 * n);
     unsigned int nodeheight = 0;
     gen_leaf_wots(hash_func, nodebuffer, sk_seed, params, pub_seed, ltree_addr, ots_addr);
     while (treehash->stackusage > 0 && state->stacklevels[state->stackoffset - 1] == nodeheight) {
@@ -239,21 +246,21 @@ validate_authpath(eHashFunction hash_func,
     unsigned int n = params->n;
 
     uint32_t i, j;
-    unsigned char buffer[2 * n];
+    unsigned char *buffer = (unsigned char*)alloca(2 * n);
 
     // If leafidx is odd (last bit = 1), current path element is a right child and authpath has to go to the left.
     // Otherwise, it is the other way around
     if (leafidx & 1) {
         for (j = 0; j < n; j++)
-            buffer[n + j] = leaf[j];
+            *(buffer + n + j) = leaf[j];
         for (j = 0; j < n; j++)
-            buffer[j] = authpath[j];
+            *(buffer + j) = authpath[j];
     }
     else {
         for (j = 0; j < n; j++)
-            buffer[j] = leaf[j];
+            *(buffer+j) = leaf[j];
         for (j = 0; j < n; j++)
-            buffer[n + j] = authpath[j];
+            *(buffer + n + j) = authpath[j];
     }
     authpath += n;
 
@@ -264,12 +271,12 @@ validate_authpath(eHashFunction hash_func,
         if (leafidx & 1) {
             hash_h(hash_func, buffer + n, buffer, pub_seed, addr, n);
             for (j = 0; j < n; j++)
-                buffer[j] = authpath[j];
+                *(buffer + j) = authpath[j];
         }
         else {
             hash_h(hash_func, buffer, buffer, pub_seed, addr, n);
             for (j = 0; j < n; j++)
-                buffer[j + n] = authpath[j];
+                *(buffer + j + n) = authpath[j];
         }
         authpath += n;
     }
@@ -426,7 +433,7 @@ bds_round(eHashFunction hash_func,
     unsigned int tau = h;
     unsigned int startidx;
     unsigned int offset, rowidx;
-    unsigned char buf[2 * n];
+    unsigned char *buf = (unsigned char*)alloca(2 * n);
 
     uint32_t ots_addr[8];
     uint32_t ltree_addr[8];
@@ -513,7 +520,7 @@ int xmssfast_Genkeypair(eHashFunction hash_func,
     sk[3] = 0;
 
     // Copy PUB_SEED to public key
-    unsigned char randombits[3 * n];
+    unsigned char *randombits = (unsigned char*)alloca(3 * n);
     shake256(randombits, 3 * n, seed, 48);  // FIXME: seed size has been hardcoded to 48
     size_t rnd = 96;
     size_t pks = 32;
@@ -601,19 +608,19 @@ int xmssfast_Signmsg(eHashFunction hash_func,
 
     // Extract SK
     unsigned long idx =
-        ((unsigned long) sk[0] << 24) | ((unsigned long) sk[1] << 16) | ((unsigned long) sk[2] << 8) | sk[3];
-    unsigned char sk_seed[n];
+            ((unsigned long) sk[0] << 24) | ((unsigned long) sk[1] << 16) | ((unsigned long) sk[2] << 8) | sk[3];
+    unsigned char *sk_seed = (unsigned char*)alloca(n);
     memcpy(sk_seed, sk + 4, n);
-    unsigned char sk_prf[n];
+    unsigned char *sk_prf = (unsigned char*)alloca(n);
     memcpy(sk_prf, sk + 4 + n, n);
-    unsigned char pub_seed[n];
+    unsigned char *pub_seed = (unsigned char*)alloca(n);
     memcpy(pub_seed, sk + 4 + 2 * n, n);
 
     // index as 32 bytes string
     unsigned char idx_bytes_32[32];
     to_byte(idx_bytes_32, idx, 32);
 
-    unsigned char hash_key[3 * n];
+    unsigned char *hash_key = (unsigned char*)alloca(3 * n);
 
     // Update SK
     sk[0] = ((idx + 1) >> 24) & 255;
@@ -624,9 +631,9 @@ int xmssfast_Signmsg(eHashFunction hash_func,
     // -- A productive implementation should use a file handle instead and write the updated secret key at this point!
     unsigned long long sig_msg_len;
     // Init working params
-    unsigned char R[n];
-    unsigned char msg_h[n];
-    unsigned char ots_seed[n];
+    unsigned char *R = (unsigned char*)alloca(n);
+    unsigned char *msg_h = (unsigned char*)alloca(n);
+    unsigned char *ots_seed = (unsigned char*)alloca(n);
     uint32_t ots_addr[8] = {0, 0, 0, 0, 0, 0, 0, 0};
 
     // ---------------------------------

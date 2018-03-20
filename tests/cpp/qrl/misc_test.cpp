@@ -3,7 +3,8 @@
 #include "gtest/gtest.h"
 
 #include <misc.h>
-#include <hashing.h>
+#include <util/random.h>
+#include <util/hashing.h>
 
 namespace {
 #define XMSS_HEIGHT 8
@@ -130,4 +131,31 @@ namespace {
         EXPECT_EQ(bin2hstr(r[9]), "a1083ac97a92ba4a86a37f09a018e5ef1db29e80e007224effdd8bbcafe7445b");
     }
 
+    TEST(Util, getRandomBytes) {
+        auto rbytes = getRandomBytes(51);
+        auto all_zero = std::all_of(begin(rbytes), end(rbytes), [](auto n){ return n == 0; });
+
+        EXPECT_EQ(all_zero, false);
+        EXPECT_EQ(rbytes.size(), 51);
+        EXPECT_EQ(rbytes.capacity(), rbytes.size());
+    }
+
+    TEST(Util, getRandomBytesWithReserve) {
+        auto rbytes = getRandomBytes(51, 9);
+        auto rbytes_zero = std::all_of(begin(rbytes), end(rbytes) - 9, [](auto n){ return n == 0; });
+        auto reserve_zero = std::all_of(end(rbytes) - 9, end(rbytes), [](auto n){ return n == 0; });
+
+        EXPECT_EQ(rbytes_zero, false);
+        EXPECT_EQ(reserve_zero, true);
+        EXPECT_EQ(rbytes.size(), 60);
+        EXPECT_EQ(rbytes.capacity(), rbytes.size());
+    }
+
+    TEST(Util, getRandomSeed) {
+        auto rbytes = getRandomSeed(47, "");
+        auto all_zero = std::all_of(begin(rbytes), end(rbytes), [](auto n){ return n == 0; });
+
+        EXPECT_EQ(all_zero, false);
+        EXPECT_EQ(rbytes.size(), 47);
+    }
 }
