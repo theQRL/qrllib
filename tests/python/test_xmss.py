@@ -130,3 +130,35 @@ class TestXmssBasic(TestCase):
         pk = pyqrllib.ucharVector(48, 0)
 
         self.assertFalse(pyqrllib.XmssFast.verify(message, signature, pk))
+
+    def test_xmss_change_index_too_high(self):
+        HEIGHT = 4
+        seed = pyqrllib.ucharVector(48, 0)
+        xmss = pyqrllib.XmssFast(seed, HEIGHT, pyqrllib.SHAKE_128)
+
+        with pytest.raises(ValueError):
+            xmss.setIndex(20)
+
+    def test_xmss_change_index_high(self):
+        HEIGHT = 4
+        seed = pyqrllib.ucharVector(48, 0)
+        xmss = pyqrllib.XmssFast(seed, HEIGHT, pyqrllib.SHAKE_128)
+
+        with pytest.raises(ValueError):
+            xmss.setIndex(16)
+
+    def test_xmss_change_index_limit(self):
+        HEIGHT = 4
+        seed = pyqrllib.ucharVector(48, 0)
+        xmss = pyqrllib.XmssFast(seed, HEIGHT, pyqrllib.SHAKE_128)
+
+        xmss.setIndex(15)
+        self.assertEqual(15, xmss.getIndex())
+
+    def test_xmss_change_index(self):
+        HEIGHT = 4
+        seed = pyqrllib.ucharVector(48, 0)
+        xmss = pyqrllib.XmssFast(seed, HEIGHT, pyqrllib.SHAKE_128)
+
+        xmss.setIndex(0)
+        self.assertEqual(0, xmss.getIndex())
