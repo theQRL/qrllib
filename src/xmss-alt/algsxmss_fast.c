@@ -542,7 +542,7 @@ int xmssfast_update(eHashFunction hash_func,
                     bds_state *state,
                     uint32_t new_idx)
 {
-    const uint32_t num_elems = (1U << params->h) - 1;
+    const uint32_t num_elems = (1U << params->h);
 
     auto current_idx = static_cast<uint32_t>(
         ((unsigned long) sk[0] << 24) |
