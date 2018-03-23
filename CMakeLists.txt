@@ -237,6 +237,13 @@ endif ()
 if (BUILD_PYTHON)
     message(STATUS "Python wrapper enabled")
 
+    if (NOT CMAKE_LIBRARY_OUTPUT_DIRECTORY)
+        set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
+    endif ()
+
+    set(CMAKE_SWIG_OUTDIR ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/pyqrllib)
+    set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/pyqrllib)
+
     set(CMAKE_SWIG_FLAGS -includeall -ignoremissing)
 
     ###########################################################################
