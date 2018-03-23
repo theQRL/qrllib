@@ -4,7 +4,6 @@
 set -e
 sudo mkhomedir_helper $(whoami)
 
-BUILD_DIR="build"
 cmake --version
 
 # Get emscripten
