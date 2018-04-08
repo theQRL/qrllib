@@ -4,8 +4,8 @@
 #ifndef QRLLIB_MISC_H
 #define QRLLIB_MISC_H
 
-#include<string>
-#include<vector>
+#include <string>
+#include <vector>
 #include <stdexcept>
 
 #define ADDRESS_HASH_SIZE 32
@@ -16,8 +16,8 @@ std::string bin2hstr(const std::string &vec, uint32_t wrap = 0);
 std::vector<unsigned char> str2bin(const std::string &s);
 std::vector<unsigned char> hstr2bin(const std::string &s) throw(std::invalid_argument);
 
-std::string bin2mnemonic(const std::vector<unsigned char> &vec);
-std::vector<unsigned char> mnemonic2bin(const std::string &mnemonic);
+std::string bin2mnemonic(const std::vector<unsigned char> &vec) throw(std::invalid_argument);
+std::vector<unsigned char> mnemonic2bin(const std::string &mnemonic) throw(std::invalid_argument);
 
 std::vector<unsigned char> getRandomSeed(uint32_t seed_size, const std::string &entropy);
 
