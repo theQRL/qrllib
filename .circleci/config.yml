@@ -56,5 +56,5 @@ workflows:
     jobs:
       - build
       - test_python
-      #- build_emscripten
+      - build_emscripten
 
