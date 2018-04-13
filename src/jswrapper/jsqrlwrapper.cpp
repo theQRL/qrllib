@@ -11,8 +11,11 @@
 namespace {
 
 class XmssWrapper {
-    explicit XmssWrapper(const std::vector<uint8_t>& seed, uint8_t height)
-            :_xmss(seed, height) { }
+    explicit XmssWrapper(
+            const std::vector<uint8_t>& seed,
+            uint8_t height,
+            eHashFunction hashFunction)
+            :_xmss(seed, height, hashFunction) { }
 public:
 
     TSIGNATURE sign(const TMESSAGE& message) { return _xmss.sign(message); }
@@ -43,10 +46,26 @@ public:
             uint8_t height,
             eHashFunction hash_function)
     {
+        return XmssWrapper(seed, height, hash_function);
     }
 
     static XmssWrapper fromExtendedSeed(const std::vector<uint8_t>& extended_seed)
     {
+        auto descr = QRLDescriptor::fromExtendedSeed(
+                std::vector<uint8_t>(
+                        extended_seed.cbegin(),
+                        extended_seed.cbegin()+QRLDescriptor::getSize()));
+
+        auto seed = std::vector<uint8_t>(
+                extended_seed.cbegin()+QRLDescriptor::getSize(),
+                extended_seed.cend()
+        );
+
+        return XmssWrapper(
+                seed,
+                descr.getHeight(),
+                descr.getHashFunction()
+        );
     }
 
     static bool verify(
@@ -92,13 +111,16 @@ _bin2mnemonic(const std::vector<unsigned char>& vec)
 }
 
 std::string EMSCRIPTEN_KEEPALIVE
-_getHashFunction(const std::vector<unsigned char>& address)
+_getHashFunction(const std::vector<uint8_t>& address)
 {
     if (address.size()<QRLDescriptor::getSize()) {
         return "Invalid address";
     }
 
-    auto descr = QRLDescriptor::fromBytes(address[0], address[1], address[2]);
+    auto descr = QRLDescriptor::fromBytes(
+            std::vector<uint8_t>(
+                    address.cbegin(),
+                    address.cbegin()+QRLDescriptor::getSize()));
 
     switch (descr.getHashFunction()) {
     case eHashFunction::SHA2_256:return "SHA2_256";
@@ -116,7 +138,10 @@ _getSignatureType(const std::vector<unsigned char>& address)
         return "Invalid address";
     }
 
-    auto descr = QRLDescriptor::fromBytes(address[0], address[1], address[2]);
+    auto descr = QRLDescriptor::fromBytes(
+            std::vector<uint8_t>(
+                    address.cbegin(),
+                    address.cbegin()+QRLDescriptor::getSize()));
 
     switch (descr.getSignatureType()) {
     case eSignatureType::XMSS:return "XMSS";
@@ -132,7 +157,10 @@ _getHeight(const std::vector<unsigned char>& address)
         return 0;
     }
 
-    auto descr = QRLDescriptor::fromBytes(address[0], address[1], address[2]);
+    auto descr = QRLDescriptor::fromBytes(
+            std::vector<uint8_t>(
+                    address.cbegin(),
+                    address.cbegin()+QRLDescriptor::getSize()));
 
     return descr.getHeight();
 }
@@ -152,23 +180,30 @@ _sha2_256(const std::vector<unsigned char>& data)
 using namespace emscripten;
 
 EMSCRIPTEN_BINDINGS(my_module) {
-        register_vector<unsigned char>("VectorUChar");
+        register_vector<uint8_t>("VectorUChar");
+
+        // HASH FUNCTIONS
+        function("sha2_256", &_sha2_256);
+
+        // UTILITIES
         function("bin2hstr", &_bin2hstr);
         function("hstr2bin", &_hstr2bin);
         function("str2bin", &_str2bin);
-
         function("mnemonic2bin", &_mnemonic2bin);
         function("bin2mnemonic", &_bin2mnemonic);
+        function("validateAddress", &_validateAddress);
 
+        // DESCRIPTOR
         function("getHashFunction", &_getHashFunction);
         function("getSignatureType", &_getSignatureType);
         function("getHeight", &_getHeight);
 
-        function("validateAddress", &_validateAddress);
-        function("sha2_256", &_sha2_256);
-
+        // XMSS
         class_<XmssWrapper>("Xmss")
-        .constructor<TSEED, unsigned char>()
+//        .constructor<TSEED, uint8_t>()
+        .class_function("fromExtendedSeed", &XmssWrapper::fromExtendedSeed)
+        .class_function("fromParameters", &XmssWrapper::fromParameters)
+
         .function("getPK", &XmssWrapper::getPK)
         .function("getSK", &XmssWrapper::getSK)
         .function("getSeed", &XmssWrapper::getSeed)
@@ -186,6 +221,7 @@ EMSCRIPTEN_BINDINGS(my_module) {
         .function("setIndex", &XmssWrapper::setIndex)
 
         .function("sign", &XmssWrapper::sign)
+
         .class_function("verify", &XmssWrapper::verify);
 }
 }
