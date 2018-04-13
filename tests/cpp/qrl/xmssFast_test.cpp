@@ -134,7 +134,7 @@ TEST(XmssFast, BadInputVerify)
 {
     TMESSAGE message(2, 0);
     TSIGNATURE signature(48, 0);
-    TKEY pk(48, 0);
+    TKEY pk(67, 0);
 
     EXPECT_FALSE(XmssFast::verify(message, signature, pk));
 

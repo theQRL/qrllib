@@ -13,12 +13,26 @@
 #define TSEED std::vector<uint8_t>
 #define TKEY std::vector<uint8_t>
 
+// TODO: Use a union? to operate on partial fields
+//    PK format
+//    32 root address
+//    32 pub_seed
+//
+//    SK format
+//    4  idx
+//    32 sk_seed
+//    32 sk_prf
+//    32 pub_seed
+//    32 root
+
 class XmssBase {
 public:
     XmssBase(const TSEED &seed,
              uint8_t height,
              eHashFunction hashFunction,
              eAddrFormatType formatType) throw(std::invalid_argument);
+
+    XmssBase(const TSEED &extended_seed) throw(std::invalid_argument);
 
     virtual ~XmssBase() = default;
 
