@@ -42,7 +42,10 @@ jobs:
       - run: if test -d /tmp/_circleci_local_build_repo; then cp *.js /tmp/_circleci_local_build_repo/tests/js/; fi
       - run: if test -d /tmp/_circleci_local_build_repo; then cp *.wasm /tmp/_circleci_local_build_repo/tests/js/; fi
       - run: if test -d /tmp/_circleci_local_build_repo; then chmod 777 /tmp/_circleci_local_build_repo/tests/js/*; fi
+      - run: cp *.js tests/js
+      - run: cp *.wasm tests/js
 
+      # Get node.js and run the tests
       - run: curl -sL https://deb.nodesource.com/setup_8.x | sudo -E bash -
       - run: apt-get install -y nodejs
       - run: npm -v
