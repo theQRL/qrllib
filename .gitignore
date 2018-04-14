@@ -68,3 +68,4 @@ pyqrllib/kyberPYTHON_wrap\.cxx
 
 pyqrllib/qrlPYTHON_wrap\.cxx
 .pytest_cache
+tests/js/node_modules

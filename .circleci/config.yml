@@ -35,10 +35,18 @@ jobs:
       - run: emcc --bind libjsqrl.so -O3 --memory-init-file 0  -o libjsqrl.js
       - run: emcc --bind libjsqrl.so -O3 -s WASM=1 -o web-libjsqrl.js
       - run: echo "QRLLIB=Module;" >> web-libjsqrl.js
-
        # Fix paths of web-libjsqrl.wasm for web clients
-      #- run: sed -i 's/web-libjsqrl\.wasm/\/web-libjsqrl\.wasm/g' web-libjsqrl.js
-      #- run: node tests/js/test.js
+      - run: sed -i 's/web-libjsqrl\.wasm/\/web-libjsqrl\.wasm/g' web-libjsqrl.js
+
+      # Copy to local dir in case it is run locally, the output is shared
+      - run: if test -d /tmp/_circleci_local_build_repo; then cp *.js /tmp/_circleci_local_build_repo/tests/js/; fi
+      - run: if test -d /tmp/_circleci_local_build_repo; then cp *.wasm /tmp/_circleci_local_build_repo/tests/js/; fi
+      - run: if test -d /tmp/_circleci_local_build_repo; then chmod 777 /tmp/_circleci_local_build_repo/tests/js/*; fi
+
+      - run: curl -sL https://deb.nodesource.com/setup_8.x | sudo -E bash -
+      - run: apt-get install -y nodejs
+      - run: npm -v
+      - run: cd tests/js && npm install && npm test
 
   deploy_pypi:
     docker:
