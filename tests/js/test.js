@@ -20,7 +20,7 @@ console.log("Mnemonic: ", mnemonic_random);
 
 console.log("\n========== CREATE FIXED SEED ========");
 seed_in = new libqrl.VectorUChar();
-for (i = 0; i < 48; i++) {
+for (var i = 0; i < 48; i++) {
     // Put some data
     seed_in.push_back(i);
 }

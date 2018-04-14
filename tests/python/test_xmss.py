@@ -32,7 +32,7 @@ class TestXmssBasic(TestCase):
         tmp_addr = pyqrllib.QRLHelper.getAddress(xmss.getPK())
         self.assertEqual(expected_address, pyqrllib.bin2hstr(tmp_addr))
 
-        descr = pyqrllib.QRLHelper.extractDescriptor(xmss.getPK())
+        descr = pyqrllib.QRLDescriptor.fromExtendedPK(xmss.getPK())
         self.assertEqual(4, descr.getHeight())
         self.assertEqual(pyqrllib.SHAKE_128, descr.getHashFunction())
 
@@ -55,7 +55,7 @@ class TestXmssBasic(TestCase):
         tmp_addr = pyqrllib.QRLHelper.getAddress(xmss.getPK())
         self.assertEqual(expected_address, pyqrllib.bin2hstr(tmp_addr))
 
-        descr = pyqrllib.QRLHelper.extractDescriptor(xmss.getPK())
+        descr = pyqrllib.QRLDescriptor.fromExtendedPK(xmss.getPK())
         self.assertEqual(6, descr.getHeight())
         self.assertEqual(pyqrllib.SHAKE_128, descr.getHashFunction())
 
@@ -122,12 +122,12 @@ class TestXmssBasic(TestCase):
         seed = pyqrllib.ucharVector(48, 0)
 
         with pytest.raises(ValueError):
-            xmss = pyqrllib.XmssFast(seed, HEIGHT, pyqrllib.SHAKE_128)
+            pyqrllib.XmssFast(seed, HEIGHT, pyqrllib.SHAKE_128)
 
     def test_xmss_exception_verify(self):
         message = pyqrllib.ucharVector(48, 0)
         signature = pyqrllib.ucharVector(2287, 0)
-        pk = pyqrllib.ucharVector(48, 0)
+        pk = pyqrllib.ucharVector(67, 0)
 
         self.assertFalse(pyqrllib.XmssFast.verify(message, signature, pk))
 
