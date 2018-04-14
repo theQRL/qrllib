@@ -8,10 +8,9 @@ console.log("\n========== CREATE RANDOM SEED ========");
 const seed_random = crypto.randomBytes(48);
 // TODO: Provide automatic conversion between Nodejs Buffer and libqrl.VectorUChar [ std::vector<unsigned char> ]
 seed_random2 = new libqrl.VectorUChar();
-for(var i =0; i<48; i++)
-{
+for (var i = 0; i < 48; i++) {
     // Put some data
-    seed_random2.push_back( seed_random[i] );
+    seed_random2.push_back(seed_random[i]);
 }
 
 mnemonic_random = libqrl.bin2mnemonic(seed_random2);
@@ -19,11 +18,9 @@ console.log("Seed    : ", libqrl.bin2hstr(seed_random2));
 console.log("Mnemonic: ", mnemonic_random);
 
 
-
 console.log("\n========== CREATE FIXED SEED ========");
 seed_in = new libqrl.VectorUChar();
-for(i =0; i<48; i++)
-{
+for (var i = 0; i < 48; i++) {
     // Put some data
     seed_in.push_back(i);
 }
@@ -55,7 +52,6 @@ console.log("SKPRF   : ", libqrl.bin2hstr(xmss.getSKPRF()));
 
 
 assert(xmss.getAddress() === known_address, "ADDRESS DOES NOT MATCH");
-
 
 
 console.log("\n========== PREPARE MESSAGE ========");

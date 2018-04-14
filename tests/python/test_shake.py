@@ -17,8 +17,6 @@ class TestShake128(TestCase):
         super(TestShake128, self).__init__(*args, **kwargs)
 
     def check_shake_result(self, data_text, expected):
-        size_out = 32
-
         hex_in_before = pyqrllib.bin2hstr(pyqrllib.str2bin(data_text))
         data_out = pyqrllib.shake128(32, pyqrllib.str2bin(data_text))
 
