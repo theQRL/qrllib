@@ -110,11 +110,11 @@ _bin2mnemonic(const std::vector<unsigned char>& vec)
     return bin2mnemonic(vec);
 }
 
-std::string EMSCRIPTEN_KEEPALIVE
+eHashFunction EMSCRIPTEN_KEEPALIVE
 _getHashFunction(const std::vector<uint8_t>& address)
 {
     if (address.size()<QRLDescriptor::getSize()) {
-        return "Invalid address";
+        throw std::invalid_argument("Invalid address");
     }
 
     auto descr = QRLDescriptor::fromBytes(
@@ -122,20 +122,14 @@ _getHashFunction(const std::vector<uint8_t>& address)
                     address.cbegin(),
                     address.cbegin()+QRLDescriptor::getSize()));
 
-    switch (descr.getHashFunction()) {
-    case eHashFunction::SHA2_256:return "SHA2_256";
-    case eHashFunction::SHAKE_128:return "SHAKE128";
-    case eHashFunction::SHAKE_256:return "SHAKE256";
-    }
-
-    return "Not recognized";
+    return descr.getHashFunction();
 }
 
-std::string EMSCRIPTEN_KEEPALIVE
+eSignatureType EMSCRIPTEN_KEEPALIVE
 _getSignatureType(const std::vector<unsigned char>& address)
 {
     if (address.size()<QRLDescriptor::getSize()) {
-        return "Invalid address";
+        throw std::invalid_argument("Invalid address");
     }
 
     auto descr = QRLDescriptor::fromBytes(
@@ -143,11 +137,7 @@ _getSignatureType(const std::vector<unsigned char>& address)
                     address.cbegin(),
                     address.cbegin()+QRLDescriptor::getSize()));
 
-    switch (descr.getSignatureType()) {
-    case eSignatureType::XMSS:return "XMSS";
-    }
-
-    return "Not recognized";
+    return descr.getSignatureType();
 }
 
 uint8_t EMSCRIPTEN_KEEPALIVE
@@ -180,7 +170,7 @@ _sha2_256(const std::vector<unsigned char>& data)
 using namespace emscripten;
 
 EMSCRIPTEN_BINDINGS(my_module) {
-        register_vector<uint8_t>("VectorUChar");
+        register_vector<uint8_t>("Uint8Vector");
 
         // HASH FUNCTIONS
         function("sha2_256", &_sha2_256);
@@ -197,6 +187,16 @@ EMSCRIPTEN_BINDINGS(my_module) {
         function("getHashFunction", &_getHashFunction);
         function("getSignatureType", &_getSignatureType);
         function("getHeight", &_getHeight);
+
+        enum_<eHashFunction>("eHashFunction")
+            .value("SHA2_256", eHashFunction::SHA2_256)
+            .value("SHAKE_128", eHashFunction::SHAKE_128)
+            .value("SHAKE_256", eHashFunction::SHAKE_256)
+            ;
+
+        enum_<eSignatureType>("eSignatureType")
+            .value("XMSS", eSignatureType::XMSS)
+        ;
 
         // XMSS
         class_<XmssWrapper>("Xmss")
