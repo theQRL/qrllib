@@ -3,7 +3,7 @@
   "version": "__QRLLIB_VERSION__",
   "description": "QRL Core Library",
   "scripts": {
-    "test": "cd build && node test.js"
+    "test": "cd tests/js && node test.js"
   },
   "repository": {
     "type": "git",
