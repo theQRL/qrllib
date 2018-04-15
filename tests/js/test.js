@@ -1,5 +1,5 @@
 var assert = require('assert');
-var libqrl = require('./libjsqrl.js');
+var libqrl = require('./tmp/libjsqrl.js');
 
 describe('libjsqrl', function () {
     describe('bin2mnemonic', function () {

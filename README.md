@@ -65,6 +65,24 @@ Golang and Java wrappers are currently experimental (By default they are disable
 brew install go --cross-compile-common
 ```
 
+## Development
+
+#### Emscripten
+
+In order to compile the webassembly and run node.js tests you first need to install CircleCI CLI:
+
+https://circleci.com/docs/2.0/local-cli/#installing-the-circleci-local-cli-on-macos-and-linux-distros
+
+Then run the following command
+
+```
+circleci build --job build_emscripten
+```
+
+This will compile and test the webassembly. Output files will be copied over to `tests/js/tmp`
+
+You can then run node.js locally using npm.
+
 ## License
 
 *This library is distributed under the MIT software license, see the accompanying file LICENSE or http://www.opensource.org/licenses/mit-license.php.*
