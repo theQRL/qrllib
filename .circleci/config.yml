@@ -39,11 +39,11 @@ jobs:
       - run: sed -i 's/web-libjsqrl\.wasm/\/web-libjsqrl\.wasm/g' web-libjsqrl.js
 
       # Copy to local dir in case it is run locally, the output is shared
-      - run: if test -d /tmp/_circleci_local_build_repo; then cp *.js /tmp/_circleci_local_build_repo/tests/js/; fi
-      - run: if test -d /tmp/_circleci_local_build_repo; then cp *.wasm /tmp/_circleci_local_build_repo/tests/js/; fi
-      - run: if test -d /tmp/_circleci_local_build_repo; then chmod 777 /tmp/_circleci_local_build_repo/tests/js/*; fi
-      - run: cp *.js tests/js
-      - run: cp *.wasm tests/js
+      - run: if test -d /tmp/_circleci_local_build_repo; then cp *.js /tmp/_circleci_local_build_repo/tests/js/tmp/; fi
+      - run: if test -d /tmp/_circleci_local_build_repo; then cp *.wasm /tmp/_circleci_local_build_repo/tests/js/tmp/; fi
+      - run: if test -d /tmp/_circleci_local_build_repo; then chmod 777 /tmp/_circleci_local_build_repo/tests/js/tmp/*; fi
+      - run: cp *.js tests/js/tmp/
+      - run: cp *.wasm tests/js/tmp/
 
       # Get node.js and run the tests
       - run: curl -sL https://deb.nodesource.com/setup_8.x | sudo -E bash -
