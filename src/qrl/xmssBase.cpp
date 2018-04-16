@@ -172,7 +172,6 @@ std::vector<uint8_t> XmssBase::getDescriptorBytes()
 
 std::vector<uint8_t> XmssBase::getAddress()
 {
-
     return QRLHelper::getAddress(getPK());
 }
 

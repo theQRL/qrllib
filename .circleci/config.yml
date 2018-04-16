@@ -32,8 +32,8 @@ jobs:
       - run: emmake make
 
       # FIXME: Disable .mem for node.js until this gets fixed: https://github.com/kripken/emscripten/issues/2542
-      - run: emcc --bind libjsqrl.so -O3 --memory-init-file 0  -o libjsqrl.js
-      - run: emcc --bind libjsqrl.so -O3 -s WASM=1 -o web-libjsqrl.js
+      - run: emcc --bind libjsqrl.so -s DISABLE_EXCEPTION_CATCHING=0 -O3 --memory-init-file 0  -o libjsqrl.js
+      - run: emcc --bind libjsqrl.so -s DISABLE_EXCEPTION_CATCHING=0 -O3 -s WASM=1 -o web-libjsqrl.js
       - run: echo "QRLLIB=Module;" >> web-libjsqrl.js
        # Fix paths of web-libjsqrl.wasm for web clients
       - run: sed -i 's/web-libjsqrl\.wasm/\/web-libjsqrl\.wasm/g' web-libjsqrl.js
@@ -46,8 +46,6 @@ jobs:
       - run: cp *.wasm tests/js/tmp/
 
       # Get node.js and run the tests
-      - run: curl -sL https://deb.nodesource.com/setup_8.x | sudo -E bash -
-      - run: apt-get install -y nodejs
       - run: npm -v
       - run: cd tests/js && npm install && npm test
 
