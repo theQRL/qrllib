@@ -9,7 +9,7 @@ set(CMAKE_CXX_STANDARD 14)
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIC -Wno-deprecated-declarations")
 set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS} -O3 -Wno-deprecated")
 
-set(CMAKE_VERBOSE_MAKEFILE FALSE)
+set(CMAKE_VERBOSE_MAKEFILE TRUE)
 set(CMAKE_ERROR_DEPRECATED FALSE)
 set(CMAKE_WARN_DEPRECATED FALSE)
 
@@ -18,6 +18,13 @@ option(BUILD_GO "Enable go wrapper" OFF )
 option(BUILD_PYTHON "Enable python wrapper" OFF)
 option(BUILD_PYTHON_LOCALDEPLOY "Deploy python locally" OFF)
 option(BUILD_WEBASSEMBLY "Enable emscripten build" OFF)
+
+if (BUILD_WEBASSEMBLY)
+    message(WARNING "webassembly enabled. Disabling other modules")
+    set(BUILD_PYTHON 0)
+    set(BUILD_GO 0)
+    set(BUILD_TESTS 0)
+endif ()
 
 message(STATUS "BUILD_TESTS    " ${BUILD_TESTS})
 message(STATUS "GOLANG WRAPPER " ${BUILD_GO})
@@ -376,34 +383,40 @@ endif ()
 
 if (BUILD_WEBASSEMBLY)
     set(JS_QRL_INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/src/jswrapper/jsqrlwrapper.cpp)
-    set(JS_DILITHIUM_INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/src/jswrapper/jsdilwrapper.cpp)
-    set(JS_KYBINTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/src/jswrapper/jskybwrapper.cpp)
 
-    message(STATUS "webassembly enabled")
+    message(WARNING "webassembly enabled")
+
     add_library(jsqrl SHARED
             ${JS_QRL_INTERFACE}
             ${LIB_QRL_SRC}
             ${LIB_SHASHA_SRC}
             ${LIBXMSSALT_SRC}
             )
+
     target_include_directories( jsqrl PRIVATE
             ${LIB_QRL_INCLUDES}
             ${LIB_SHASHA_INCLUDES})
 
-    add_library(jsdilithium SHARED
-            ${JS_DILITHIUM_INTERFACE}
-            ${LIB_KYBER_SRC}
-            ${LIBDILITHIUM_SRC}
+    set_target_properties(jsqrl
+            PROPERTIES LINK_FLAGS "-s DISABLE_EXCEPTION_CATCHING=0"
             )
-    target_include_directories( jsdilithium PRIVATE
-            ${LIB_DILITHIUM_INCLUDES} )
 
-    add_library(jskyber SHARED
-            ${JS_KYBER_INTERFACE}
-            ${LIB_KYBER_SRC}
-            ${LIBKYBER_SRC}
-            )
-    target_include_directories( jskyber PRIVATE
-            ${LIB_KYBER_INCLUDES} )
+#    set(JS_DILITHIUM_INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/src/jswrapper/jsdilwrapper.cpp)
+#    set(JS_KYBINTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/src/jswrapper/jskybwrapper.cpp)
+#    add_library(jsdilithium SHARED
+#            ${JS_DILITHIUM_INTERFACE}
+#            ${LIB_KYBER_SRC}
+#            ${LIBDILITHIUM_SRC}
+#            )
+#    target_include_directories( jsdilithium PRIVATE
+#            ${LIB_DILITHIUM_INCLUDES} )
+#
+#    add_library(jskyber SHARED
+#            ${JS_KYBER_INTERFACE}
+#            ${LIB_KYBER_SRC}
+#            ${LIBKYBER_SRC}
+#            )
+#    target_include_directories( jskyber PRIVATE
+#            ${LIB_KYBER_INCLUDES} )
 
 endif ()

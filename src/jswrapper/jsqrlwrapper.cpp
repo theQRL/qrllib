@@ -17,55 +17,104 @@ class XmssWrapper {
             eHashFunction hashFunction)
             :_xmss(seed, height, hashFunction) { }
 public:
+    unsigned int getIndex()
+    {
+        return _xmss.getIndex();
+    }
 
-    TSIGNATURE sign(const TMESSAGE& message) { return _xmss.sign(message); }
+    int getHeight()
+    {
+        return _xmss.getHeight();
+    }
 
-    TKEY getSK() { return _xmss.getSK(); }
+    TKEY getPKRaw()
+    {
+        return _xmss.getPK();
+    }
 
-    TKEY getPK() { return _xmss.getPK(); }
+    std::string getPK()
+    {
+        return bin2hstr( _xmss.getPK() );
+    }
 
-    TSEED getSeed() { return _xmss.getSeed(); }
+    std::vector<uint8_t> getAddressRaw()
+    {
+        return _xmss.getAddress();
+    }
 
-    TSEED getExtendedSeed() { return _xmss.getExtendedSeed(); }
+    std::string getAddress()
+    {
+        return 'Q' + bin2hstr(_xmss.getAddress());
+    }
 
-    int getHeight() { return _xmss.getHeight(); }
+    std::string getHexSeed()
+    {
+        auto extended_seed = _xmss.getExtendedSeed();
+        return bin2hstr(extended_seed);
+    }
 
-    TKEY getRoot() { return _xmss.getRoot(); }
-    TKEY getPKSeed() { return _xmss.getPKSeed(); }
-    TKEY getSKSeed() { return _xmss.getSKSeed(); }
-    TKEY getSKPRF() { return _xmss.getSKPRF(); }
+    std::string getMnemonic()
+    {
+        auto extended_seed = _xmss.getExtendedSeed();
+        return bin2mnemonic(extended_seed);
+    }
 
-    std::vector<uint8_t> getAddress() { return _xmss.getAddress(); }
-
-    unsigned int getIndex() { return _xmss.getIndex(); }
-
-    unsigned int setIndex(unsigned int new_index) { return _xmss.setIndex(new_index); }
+    /////////////////////////////////////
+    /////////////////////////////////////
 
     static XmssWrapper fromParameters(
-            const std::vector<uint8_t>& seed,
+            const std::vector<uint8_t>& random_bytes,
             uint8_t height,
             eHashFunction hash_function)
     {
-        return XmssWrapper(seed, height, hash_function);
+        return XmssWrapper(random_bytes, height, hash_function);
     }
 
-    static XmssWrapper fromExtendedSeed(const std::vector<uint8_t>& extended_seed)
+    static XmssWrapper fromHexSeed(const std::string hexseed)
     {
-        auto descr = QRLDescriptor::fromExtendedSeed(
-                std::vector<uint8_t>(
-                        extended_seed.cbegin(),
-                        extended_seed.cbegin()+QRLDescriptor::getSize()));
+        auto extended_seed = hstr2bin(hexseed);
+        auto descr = QRLDescriptor::fromExtendedSeed(extended_seed);
 
-        auto seed = std::vector<uint8_t>(
-                extended_seed.cbegin()+QRLDescriptor::getSize(),
-                extended_seed.cend()
+        auto raw_seed = std::vector<uint8_t>(
+            extended_seed.cbegin()+QRLDescriptor::getSize(),
+            extended_seed.cend()
         );
 
         return XmssWrapper(
-                seed,
-                descr.getHeight(),
-                descr.getHashFunction()
+            raw_seed,
+            descr.getHeight(),
+            descr.getHashFunction()
         );
+    }
+
+    static XmssWrapper fromMnemonic(const std::string mnemonic)
+    {
+        auto extended_seed = mnemonic2bin(mnemonic);
+        auto descr = QRLDescriptor::fromExtendedSeed(extended_seed);
+
+        auto raw_seed = std::vector<uint8_t>(
+            extended_seed.cbegin()+QRLDescriptor::getSize(),
+            extended_seed.cend()
+        );
+
+        return XmssWrapper(
+            raw_seed,
+            descr.getHeight(),
+            descr.getHashFunction()
+        );
+    }
+
+    /////////////////////////////////////
+    /////////////////////////////////////
+
+    unsigned int setIndex(unsigned int new_index)
+    {
+        return _xmss.setIndex(new_index);
+    }
+
+    TSIGNATURE sign(const TMESSAGE& message)
+    {
+        return _xmss.sign(message);
     }
 
     static bool verify(
@@ -110,10 +159,23 @@ _bin2mnemonic(const std::vector<unsigned char>& vec)
     return bin2mnemonic(vec);
 }
 
-eHashFunction EMSCRIPTEN_KEEPALIVE
-_getHashFunction(const std::vector<uint8_t>& address)
+std::vector<uint8_t> getBinAddress(std::string address_str)
 {
-    if (address.size()<QRLDescriptor::getSize()) {
+    if (address_str.size()<1+2*QRLDescriptor::getSize())
+    {
+        throw std::invalid_argument("Invalid address");
+    }
+
+    return hstr2bin(address_str.substr(1));
+}
+
+eHashFunction EMSCRIPTEN_KEEPALIVE
+_getHashFunction(std::string address_str)
+{
+    auto address = getBinAddress(address_str);
+
+    if (address.size() < QRLDescriptor::getSize())
+    {
         throw std::invalid_argument("Invalid address");
     }
 
@@ -126,8 +188,10 @@ _getHashFunction(const std::vector<uint8_t>& address)
 }
 
 eSignatureType EMSCRIPTEN_KEEPALIVE
-_getSignatureType(const std::vector<unsigned char>& address)
+_getSignatureType(std::string address_str)
 {
+    auto address = getBinAddress(address_str);
+
     if (address.size()<QRLDescriptor::getSize()) {
         throw std::invalid_argument("Invalid address");
     }
@@ -141,11 +205,9 @@ _getSignatureType(const std::vector<unsigned char>& address)
 }
 
 uint8_t EMSCRIPTEN_KEEPALIVE
-_getHeight(const std::vector<unsigned char>& address)
+_getHeight(std::string address_str)
 {
-    if (address.size()<QRLDescriptor::getSize()) {
-        return 0;
-    }
+    auto address = getBinAddress(address_str);
 
     auto descr = QRLDescriptor::fromBytes(
             std::vector<uint8_t>(
@@ -156,9 +218,16 @@ _getHeight(const std::vector<unsigned char>& address)
 }
 
 bool EMSCRIPTEN_KEEPALIVE
-_validateAddress(const std::vector<unsigned char>& address)
+_validateAddressRaw(const std::vector<unsigned char>& address)
 {
     return QRLHelper::addressIsValid(address);
+}
+
+bool EMSCRIPTEN_KEEPALIVE
+_validateAddress(std::string address_str)
+{
+    auto address = getBinAddress(address_str);
+    return _validateAddressRaw(address);
 }
 
 std::vector<unsigned char> EMSCRIPTEN_KEEPALIVE
@@ -182,6 +251,7 @@ EMSCRIPTEN_BINDINGS(my_module) {
         function("mnemonic2bin", &_mnemonic2bin);
         function("bin2mnemonic", &_bin2mnemonic);
         function("validateAddress", &_validateAddress);
+        function("validateAddressRaw", &_validateAddressRaw);
 
         // DESCRIPTOR
         function("getHashFunction", &_getHashFunction);
@@ -200,28 +270,24 @@ EMSCRIPTEN_BINDINGS(my_module) {
 
         // XMSS
         class_<XmssWrapper>("Xmss")
-//        .constructor<TSEED, uint8_t>()
-        .class_function("fromExtendedSeed", &XmssWrapper::fromExtendedSeed)
         .class_function("fromParameters", &XmssWrapper::fromParameters)
-
-        .function("getPK", &XmssWrapper::getPK)
-        .function("getSK", &XmssWrapper::getSK)
-        .function("getSeed", &XmssWrapper::getSeed)
-        .function("getExtendedSeed", &XmssWrapper::getExtendedSeed)
-        .function("getHeight", &XmssWrapper::getHeight)
-
-        .function("getRoot", &XmssWrapper::getRoot)
-        .function("getPKSeed", &XmssWrapper::getPKSeed)
-        .function("getSKSeed", &XmssWrapper::getSKSeed)
-        .function("getSKPRF", &XmssWrapper::getSKPRF)
-
-        .function("getAddress", &XmssWrapper::getAddress)
+        .class_function("fromHexSeed", &XmssWrapper::fromHexSeed)
+        .class_function("fromMnemonic", &XmssWrapper::fromMnemonic)
 
         .function("getIndex", &XmssWrapper::getIndex)
+        .function("getHeight", &XmssWrapper::getHeight)
+
+        .function("getPKRaw", &XmssWrapper::getPKRaw)
+        .function("getPK", &XmssWrapper::getPK)
+
+        .function("getAddressRaw", &XmssWrapper::getAddressRaw)
+        .function("getAddress", &XmssWrapper::getAddress)
+
+        .function("getHexSeed", &XmssWrapper::getHexSeed)
+        .function("getMnemonic", &XmssWrapper::getMnemonic)
+
         .function("setIndex", &XmssWrapper::setIndex)
-
         .function("sign", &XmssWrapper::sign)
-
         .class_function("verify", &XmssWrapper::verify);
 }
 }
