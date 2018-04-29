@@ -39,6 +39,9 @@ public:
     static bool addressIsValid(const std::vector<uint8_t>& address)
     {
         try {
+            if (address.size()!=(QRLDescriptor::getSize()+ADDRESS_HASH_SIZE+4))
+                return false;
+
             auto descr = QRLDescriptor::fromBytes(
                     std::vector<uint8_t>(
                             address.cbegin(),
@@ -47,9 +50,6 @@ public:
             if (descr.getAddrFormatType()!=eAddrFormatType::SHA256_2X) {
                 return false;
             }
-
-            if (address.size()!=(QRLDescriptor::getSize()+ADDRESS_HASH_SIZE+4))
-                return false;
 
             std::vector<uint8_t> hashed_key2(ADDRESS_HASH_SIZE, 0);
 
