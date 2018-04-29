@@ -49,13 +49,15 @@ jobs:
       - run: npm -v
       - run: cd tests/js && npm install && npm test
 
-  deploy_pypi:
+  deploy-pypi:
     docker:
-      - image: zondax/qrl-build-images:xenial-qrllib
+      - image: qrledger/qrl-docker:xenial
     steps:
       - checkout
       - run: git submodule update --init --recursive
-      - run: python3 setup.py test
+      - run: python3 setup.py build sdist
+      - run: pip install twine
+      - run: twine upload -u $PYPI_USERNAME -p $PYPI_PASSWORD dist/*
 
 workflows:
   version: 2
