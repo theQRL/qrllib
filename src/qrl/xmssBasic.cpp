@@ -9,7 +9,7 @@
 XmssBasic::XmssBasic(const TSEED &seed,
                      unsigned char height,
                      eHashFunction hashFunction,
-                     eAddrFormatType addrFormatType) throw(std::invalid_argument)
+                     eAddrFormatType addrFormatType)
         : XmssBase(seed, height, hashFunction, addrFormatType) {
 //    PK format
 //    32 root address

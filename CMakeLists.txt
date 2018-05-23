@@ -13,10 +13,9 @@ set(CMAKE_VERBOSE_MAKEFILE TRUE)
 set(CMAKE_ERROR_DEPRECATED FALSE)
 set(CMAKE_WARN_DEPRECATED FALSE)
 
-option(BUILD_TESTS "Enable tests" ON )
+option(BUILD_TESTS "Enable tests" OFF )
 option(BUILD_GO "Enable go wrapper" OFF )
-option(BUILD_PYTHON "Enable python wrapper" OFF)
-option(BUILD_PYTHON_LOCALDEPLOY "Deploy python locally" OFF)
+option(BUILD_PYTHON "Enable python wrapper" ON)
 option(BUILD_WEBASSEMBLY "Enable emscripten build" OFF)
 
 if (BUILD_WEBASSEMBLY)
@@ -32,13 +31,15 @@ message(STATUS "PYTHON WRAPPER " ${BUILD_PYTHON})
 message(STATUS "WEBASSEMBLY    " ${BUILD_WEBASSEMBLY})
 
 if (BUILD_PYTHON OR BUILD_GO)
-    set(Python_ADDITIONAL_VERSIONS 3 3.6 3.5)
-    find_package(PythonLibs REQUIRED)
-    find_package(PythonInterp REQUIRED)
-
     find_package(SWIG REQUIRED)
     INCLUDE(${SWIG_USE_FILE})
     unset(SWIG_LANG_TYPE)
+endif ()
+
+if (BUILD_PYTHON)
+    set(Python_ADDITIONAL_VERSIONS 3 3.6 3.5)
+    find_package(PythonLibs REQUIRED)
+    find_package(PythonInterp REQUIRED)
 endif ()
 
 include_directories(
@@ -265,7 +266,7 @@ if (BUILD_PYTHON)
     set(CMAKE_SWIG_OUTDIR ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/pyqrllib)
     set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/pyqrllib)
 
-    set(SWIG_INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/src/api/qrl.i)
+    set(SWIG_INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/src/api/pyqrllib.i)
     set(SWIG_LANG_LIBRARIES ${PYTHON_LIBRARIES})
     set_source_files_properties(${SWIG_INTERFACE} PROPERTIES CPLUSPLUS ON)
     set_property(SOURCE ${SWIG_INTERFACE} PROPERTY SWIG_FLAGS "-includeall" "-ignoremissing")

@@ -30,9 +30,9 @@ public:
     XmssBase(const TSEED &seed,
              uint8_t height,
              eHashFunction hashFunction,
-             eAddrFormatType formatType) throw(std::invalid_argument);
+             eAddrFormatType formatType);
 
-    XmssBase(const TSEED &extended_seed) throw(std::invalid_argument);
+    XmssBase(const TSEED &extended_seed);
 
     virtual ~XmssBase() = default;
 
@@ -40,7 +40,7 @@ public:
 
     static bool verify(const TMESSAGE &message,
                        const TSIGNATURE &signature,
-                       const TKEY &pk) throw(std::invalid_argument);
+                       const TKEY &pk);
 
     // TODO: Differentiate between XMSS and WOTS+ keys
     TKEY getSK();
@@ -73,7 +73,7 @@ public:
 
     unsigned int getIndex();
 
-    virtual unsigned int setIndex(uint32_t new_index) throw(std::invalid_argument);
+    virtual unsigned int setIndex(uint32_t new_index);
 
     unsigned int getSignatureSize();
 

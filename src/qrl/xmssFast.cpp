@@ -7,13 +7,13 @@
 XmssFast::XmssFast(const TSEED &seed,
                    unsigned char height,
                    eHashFunction hashFunction,
-                   eAddrFormatType addrFormatType) throw(std::invalid_argument)
+                   eAddrFormatType addrFormatType)
     : XmssBase(seed, height, hashFunction, addrFormatType)
 {
     _initialize_tree();
 }
 
-XmssFast::XmssFast(const TSEED& extended_seed) throw(std::invalid_argument)
+XmssFast::XmssFast(const TSEED& extended_seed)
     : XmssBase(extended_seed)
 {
     _initialize_tree();
@@ -65,7 +65,7 @@ void XmssFast::_initialize_tree()
             _seed.data());
 }
 
-unsigned int XmssFast::setIndex(unsigned int new_index) throw(std::invalid_argument)
+unsigned int XmssFast::setIndex(unsigned int new_index)
 {
     xmssfast_update(_hashFunction,
                     &params,

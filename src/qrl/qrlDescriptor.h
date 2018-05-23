@@ -34,7 +34,7 @@ public:
 
     eAddrFormatType getAddrFormatType() { return _addrFormatType; }
 
-    static QRLDescriptor fromExtendedSeed(std::vector<uint8_t> extended_seed) throw(std::invalid_argument)
+    static QRLDescriptor fromExtendedSeed(std::vector<uint8_t> extended_seed)
     {
         if (extended_seed.size()!=51) {
             throw std::invalid_argument("Extended seed should be 51 bytes");
@@ -46,7 +46,7 @@ public:
                         extended_seed.cbegin()+QRLDescriptor::getSize()));
     }
 
-    static QRLDescriptor fromExtendedPK(const std::vector<uint8_t>& extended_pk) throw(std::invalid_argument)
+    static QRLDescriptor fromExtendedPK(const std::vector<uint8_t>& extended_pk)
     {
         if (extended_pk.size()!=67) {
             throw std::invalid_argument("Invalid extended_pk size. It should be 67 bytes");
@@ -58,7 +58,7 @@ public:
                         extended_pk.cbegin()+QRLDescriptor::getSize()));
     }
 
-    static QRLDescriptor fromBytes(std::vector<uint8_t> bytes) throw(std::invalid_argument)
+    static QRLDescriptor fromBytes(std::vector<uint8_t> bytes)
     {
         if (bytes.size()!=3) {
             throw std::invalid_argument("Descriptor size should be 3 bytes");

@@ -7,7 +7,7 @@
 XmssBase::XmssBase(const TSEED& seed,
         uint8_t height,
         eHashFunction hashFunction,
-        eAddrFormatType addrFormatType) throw(std::invalid_argument)
+        eAddrFormatType addrFormatType)
         :_seed(seed),
          _height(height),
          _hashFunction(hashFunction),
@@ -18,7 +18,7 @@ XmssBase::XmssBase(const TSEED& seed,
     }
 }
 
-XmssBase::XmssBase(const TSEED& extended_seed) throw(std::invalid_argument)
+XmssBase::XmssBase(const TSEED& extended_seed)
 {
     if (extended_seed.size()!=51) {
         throw std::invalid_argument("Extended seed should be 51 bytes. Other values are not currently supported");
@@ -38,14 +38,24 @@ XmssBase::XmssBase(const TSEED& extended_seed) throw(std::invalid_argument)
 uint32_t XmssBase::getSignatureSize()
 {
     // 4 + n + (len + h) * n)
-    // FIXME: There could be consistency problems due to changes in len
     return static_cast<uint32_t>(4+32+67*32+_height*32);
 }
 
 uint8_t XmssBase::getHeightFromSigSize(size_t sigSize)
 {
-    // FIXME: Clean this up and consider len
-    return static_cast<uint8_t>((sigSize-4-32-67*32)/32);
+    const uint32_t min_size = 4+32+67*32;    // FIXME: Move these values to constants
+    if (sigSize < min_size)
+    {
+        throw std::invalid_argument("Invalid signature size");
+    }
+
+    size_t tmp = sigSize-min_size;
+
+    if (tmp%32!=0) {
+        throw std::invalid_argument("Invalid signature size");
+    }
+
+    return static_cast<uint8_t>(tmp/32);
 }
 
 uint32_t XmssBase::getPublicKeySize()
@@ -113,7 +123,7 @@ uint32_t XmssBase::getIndex()
             _sk[3];
 }
 
-uint32_t XmssBase::setIndex(uint32_t new_index) throw(std::invalid_argument)
+uint32_t XmssBase::setIndex(uint32_t new_index)
 {
     _sk[3] = static_cast<uint8_t>(new_index & 0xFF);
     new_index >>= 8;
@@ -177,8 +187,12 @@ std::vector<uint8_t> XmssBase::getAddress()
 
 bool XmssBase::verify(const TMESSAGE& message,
         const TSIGNATURE& signature,
-        const TKEY& extended_pk) throw(std::invalid_argument)
+        const TKEY& extended_pk)
 {
+    if (extended_pk.size()!=67) {
+        throw std::invalid_argument("Invalid extended_pk size. It should be 67 bytes");
+    }
+
     auto desc = QRLDescriptor::fromExtendedPK(extended_pk);
 
     if (desc.getSignatureType()!=eSignatureType::XMSS) {
@@ -187,7 +201,7 @@ bool XmssBase::verify(const TMESSAGE& message,
 
     const auto height = static_cast<const uint8_t> (XmssBase::getHeightFromSigSize(signature.size()));
 
-    if (desc.getHeight()!=height) {
+    if (height==0 || desc.getHeight()!=height) {
         return false;
     }
 
