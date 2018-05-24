@@ -46,7 +46,7 @@ unsigned char getHexValue(char c) {
     return (unsigned char) (tmp - 'a' + 10);
 }
 
-std::vector<unsigned char> hstr2bin(const std::string &s) throw(std::invalid_argument) {
+std::vector<unsigned char> hstr2bin(const std::string &s) {
     if (s.size() % 2 != 0) {
         throw std::invalid_argument("hex string is expected to have an even number of characters");
     }
@@ -64,7 +64,7 @@ std::vector<unsigned char> hstr2bin(const std::string &s) throw(std::invalid_arg
     return result;
 }
 
-std::string bin2mnemonic(const std::vector<unsigned char> &vec) throw(std::invalid_argument)
+std::string bin2mnemonic(const std::vector<unsigned char> &vec)
 {
     if (vec.size() % 3 != 0) {
         throw std::invalid_argument("byte count needs to be a multiple of 3");
@@ -84,7 +84,7 @@ std::string bin2mnemonic(const std::vector<unsigned char> &vec) throw(std::inval
     return ss.str();
 }
 
-std::vector<unsigned char> mnemonic2bin(const std::string &mnemonic)  throw(std::invalid_argument)
+std::vector<unsigned char> mnemonic2bin(const std::string &mnemonic)
 {
     auto word_count = std::count(mnemonic.cbegin(), mnemonic.cend(), ' ') + 1;
     if (word_count%2!=0)

@@ -15,13 +15,13 @@ public:
     XmssFast(const TSEED& seed,
             unsigned char height,
             eHashFunction hashFunction = eHashFunction::SHAKE_128,
-            eAddrFormatType addrFormatType = eAddrFormatType::SHA256_2X) throw(std::invalid_argument);
+            eAddrFormatType addrFormatType = eAddrFormatType::SHA256_2X);
 
-    XmssFast(const TSEED& extended_seed) throw(std::invalid_argument);
+    XmssFast(const TSEED& extended_seed);
 
     TSIGNATURE sign(const TMESSAGE& message) override;
 
-    unsigned int setIndex(unsigned int new_index) throw(std::invalid_argument);
+    unsigned int setIndex(unsigned int new_index);
 
 protected:
     bds_state _state;
