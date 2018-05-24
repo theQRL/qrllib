@@ -59,11 +59,57 @@ jobs:
       - run: pip install twine
       - run: twine upload -u $PYPI_USERNAME -p $PYPI_PASSWORD dist/*
 
+  deploy_npm:
+    working_directory: ~/repo
+    docker:
+      - image: circleci/node:8.9.1
+    steps:
+      - attach_workspace:
+          at: ~/repo
+      - run:
+          name: Authenticate with registry
+          command: echo "//registry.npmjs.org/:_authToken=$npm_TOKEN" > ~/repo/.npmrc
+      - run:
+          name: Publish package
+          command: npm publish
+
 workflows:
   version: 2
   build_all:
     jobs:
-      - build
-      - test_python
-      - build_emscripten
+      - build:
+          filters:
+            tags:
+              only: /.*/
 
+      - test_python:
+          filters:
+            tags:
+              only: /.*/
+
+      - build_emscripten:
+          filters:
+            tags:
+              only: /.*/
+
+      - deploy-pypi:
+          requires:
+            - build
+            - test_python
+            - build_emscripten
+          filters:
+            branches:
+              ignore: /.*/
+            tags:
+              only: /^v[0-9]+(\.[0-9]+)*/
+
+      - deploy_npm:
+          requires:
+            - build
+            - test_python
+            - build_emscripten
+          filters:
+            branches:
+              ignore: /.*/
+            tags:
+              only: /^v[0-9]+(\.[0-9]+)*/
