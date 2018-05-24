@@ -49,13 +49,13 @@ uint8_t XmssBase::getHeightFromSigSize(size_t sigSize)
         throw std::invalid_argument("Invalid signature size");
     }
 
-    size_t tmp = sigSize-min_size;
-
-    if (tmp%32!=0) {
+    if ((sigSize-4)%32!=0) {
         throw std::invalid_argument("Invalid signature size");
     }
 
-    return static_cast<uint8_t>(tmp/32);
+    auto height = (sigSize - min_size)/32;
+
+    return static_cast<uint8_t>(height);
 }
 
 uint32_t XmssBase::getPublicKeySize()
@@ -189,42 +189,49 @@ bool XmssBase::verify(const TMESSAGE& message,
         const TSIGNATURE& signature,
         const TKEY& extended_pk)
 {
-    if (extended_pk.size()!=67) {
-        throw std::invalid_argument("Invalid extended_pk size. It should be 67 bytes");
+    try
+    {
+        if (extended_pk.size()!=67) {
+            throw std::invalid_argument("Invalid extended_pk size. It should be 67 bytes");
+        }
+
+        auto desc = QRLDescriptor::fromExtendedPK(extended_pk);
+
+        if (desc.getSignatureType()!=eSignatureType::XMSS) {
+            return false;
+        }
+
+        const auto height = static_cast<const uint8_t> (XmssBase::getHeightFromSigSize(signature.size()));
+
+        if (height==0 || desc.getHeight()!=height) {
+            return false;
+        }
+
+        auto hashFunction = desc.getHashFunction();
+
+        xmss_params params{};
+        const uint32_t k = 2;
+        const uint32_t w = 16;
+        const uint32_t n = 32;
+
+        if (k>=height || (height-k)%2) {
+            throw std::invalid_argument("For BDS traversal, H - K must be even, with H > K >= 2!");
+        }
+
+        xmss_set_params(&params, n, height, w, k);
+
+        auto tmp = static_cast<TSIGNATURE>(signature);
+
+        return xmss_Verifysig(hashFunction,
+                &params.wots_par,
+                static_cast<TMESSAGE>(message).data(),
+                message.size(),
+                tmp.data(),
+                extended_pk.data()+QRLDescriptor::getSize(),
+                height)==0;
     }
-
-    auto desc = QRLDescriptor::fromExtendedPK(extended_pk);
-
-    if (desc.getSignatureType()!=eSignatureType::XMSS) {
+    catch(std::invalid_argument&)
+    {
         return false;
     }
-
-    const auto height = static_cast<const uint8_t> (XmssBase::getHeightFromSigSize(signature.size()));
-
-    if (height==0 || desc.getHeight()!=height) {
-        return false;
-    }
-
-    auto hashFunction = desc.getHashFunction();
-
-    xmss_params params{};
-    const uint32_t k = 2;
-    const uint32_t w = 16;
-    const uint32_t n = 32;
-
-    if (k>=height || (height-k)%2) {
-        throw std::invalid_argument("For BDS traversal, H - K must be even, with H > K >= 2!");
-    }
-
-    xmss_set_params(&params, n, height, w, k);
-
-    auto tmp = static_cast<TSIGNATURE>(signature);
-
-    return xmss_Verifysig(hashFunction,
-            &params.wots_par,
-            static_cast<TMESSAGE>(message).data(),
-            message.size(),
-            tmp.data(),
-            extended_pk.data()+QRLDescriptor::getSize(),
-            height)==0;
 }

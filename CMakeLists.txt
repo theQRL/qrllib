@@ -13,9 +13,9 @@ set(CMAKE_VERBOSE_MAKEFILE TRUE)
 set(CMAKE_ERROR_DEPRECATED FALSE)
 set(CMAKE_WARN_DEPRECATED FALSE)
 
-option(BUILD_TESTS "Enable tests" OFF )
+option(BUILD_TESTS "Enable tests" ON )
 option(BUILD_GO "Enable go wrapper" OFF )
-option(BUILD_PYTHON "Enable python wrapper" ON)
+option(BUILD_PYTHON "Enable python wrapper" OFF)
 option(BUILD_WEBASSEMBLY "Enable emscripten build" OFF)
 
 if (BUILD_WEBASSEMBLY)
