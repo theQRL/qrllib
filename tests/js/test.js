@@ -64,6 +64,21 @@ describe('libjsqrl', function () {
         });
     });
 
+    describe('address from epk', function () {
+        it('basic', function () {
+            let expected_address = 'Q000200baea487e62a96f32a2c427def90f020880d2fb0bff756ff6450186904dcc0c88e9018879';
+
+            // Object a
+            let hexseed = '0002006963291e58d6e776fe25932964748e774fb22cff112fbf5ece45b17965704697550064a60f40ba7c742694346761d5cc';
+            xmss = libqrl.Xmss.fromHexSeed(hexseed);
+            epk = xmss.getPK();
+
+            address = 'Q'+libqrl.getAddress(epk);
+
+            assert.equal(expected_address, address);
+        });
+    });
+
     describe('bin2mnemonic', function () {
         it('[0,1,2,3,4,5] should return aback bag adrift dream', function () {
             data = ToUint8Vector([0, 1, 2, 3, 4, 5]);
@@ -82,7 +97,6 @@ describe('libjsqrl', function () {
             assert.equal('aback bag', tmp_mnemonic);
         });
     });
-
 
     describe('xmss', function () {
         it('create tree from parameters', function () {
