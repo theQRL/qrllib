@@ -53,12 +53,31 @@ jobs:
 
   deploy_npm:
     docker:
-      - image: circleci/node:8.9.1
+      - image: zondax/qrl-build-images:emscripten
+    environment:
+      BASH_ENV: ".circleci/bash_env.sh"
     steps:
       - checkout
       - run:
+          name: Update submodules
+          command: git submodule update --init --recursive
+
+        # Building again and avoiding complex workspaces until they are supported in the CLI
+      - run:
+          name: Build webassembly
+          command: ./.circleci/build_emscripten.sh
+
+      - run:
+          name: Install latest node/npm
+          command: ./.circleci/install_node.sh
+
+      - run:
           name: Authenticate with registry
-          command: echo "//registry.npmjs.org/:_authToken=$npm_TOKEN" > ~/repo/.npmrc
+          command: echo "//registry.npmjs.org/:_authToken=$npm_TOKEN" > .npmrc
+
+      - run:
+          name: Update tag
+          command: npm --no-git-tag-version version $CIRCLE_TAG
 
       - run:
           name: Publish package
