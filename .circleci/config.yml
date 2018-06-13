@@ -73,11 +73,15 @@ jobs:
 
       - run:
           name: Authenticate with registry
-          command: echo "//registry.npmjs.org/:_authToken=$npm_TOKEN" > .npmrc
+          command: echo "//registry.npmjs.org/:_authToken=$NPM_TOKEN" > .npmrc
 
       - run:
           name: Update tag
           command: npm --no-git-tag-version version $CIRCLE_TAG
+
+      - run:
+          name: Authorize user
+          command: npm adduser
 
       - run:
           name: Publish package
