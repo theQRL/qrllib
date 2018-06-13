@@ -62,10 +62,10 @@ jobs:
           name: Update submodules
           command: git submodule update --init --recursive
 
-#        # Building again and avoiding complex workspaces until they are supported in the CLI
-#      - run:
-#          name: Build webassembly
-#          command: ./.circleci/build_emscripten.sh
+        # Building again and avoiding complex workspaces until they are supported in the CLI
+      - run:
+          name: Build webassembly
+          command: ./.circleci/build_emscripten.sh
 
       - run:
           name: Install latest node/npm
@@ -73,7 +73,7 @@ jobs:
 
       - run:
           name: Authenticate with registry
-          command: echo "//registry.npmjs.org/:_authToken=$NPM_TOKEN" > $CIRCLE_WORKING_DIRECTORY/.npmrc
+          command: echo "//registry.npmjs.org/:_authToken=$NPM_TOKEN" > /root/project/.npmrc
 
       - run:
           name: Update tag
