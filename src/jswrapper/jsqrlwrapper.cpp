@@ -217,6 +217,24 @@ _getHeight(std::string address_str)
     return descr.getHeight();
 }
 
+std::vector<unsigned char> EMSCRIPTEN_KEEPALIVE
+_getAddressRaw(const std::vector<unsigned char>& epk)
+{
+    return QRLHelper::getAddress(epk);
+}
+
+std::string EMSCRIPTEN_KEEPALIVE
+_getAddress(std::string epk_str)
+{
+    if (epk_str.size()!=2*67)
+    {
+        throw std::invalid_argument("Invalid epk");
+    }
+
+    auto epk = hstr2bin(epk_str);
+    return _bin2hstr(_getAddressRaw(epk));
+}
+
 bool EMSCRIPTEN_KEEPALIVE
 _validateAddressRaw(const std::vector<unsigned char>& address)
 {
@@ -250,6 +268,8 @@ EMSCRIPTEN_BINDINGS(my_module) {
         function("str2bin", &_str2bin);
         function("mnemonic2bin", &_mnemonic2bin);
         function("bin2mnemonic", &_bin2mnemonic);
+        function("getAddress", &_getAddress);
+        function("getAddressRaw", &_getAddressRaw);
         function("validateAddress", &_validateAddress);
         function("validateAddressRaw", &_validateAddressRaw);
 

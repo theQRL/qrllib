@@ -21,7 +21,7 @@ public:
 
     TSIGNATURE sign(const TMESSAGE& message) override;
 
-    unsigned int setIndex(unsigned int new_index);
+    unsigned int setIndex(unsigned int new_index) override;
 
 protected:
     bds_state _state;
