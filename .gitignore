@@ -71,3 +71,5 @@ pyqrllib/qrlPYTHON_wrap\.cxx
 tests/js/node_modules
 tests/js/tmp/*.js
 tests/js/tmp/*.wasm
+
+\.npmrc
