@@ -25,31 +25,23 @@ jobs:
       BASH_ENV: ".circleci/bash_env.sh"
     steps:
       - checkout
-      - run: git submodule update --init --recursive
+      - run:
+          name: Update submodules
+          command: git submodule update --init --recursive
 
-      # Build
-      - run: emconfigure cmake -DBUILD_WEBASSEMBLY=ON -DCMAKE_BUILD_TYPE=Release
-      - run: emmake make
+      - run:
+          name: Build webassembly
+          command: ./.circleci/build_emscripten.sh
 
-      # FIXME: Disable .mem for node.js until this gets fixed: https://github.com/kripken/emscripten/issues/2542
-      - run: emcc --bind libjsqrl.so -s DISABLE_EXCEPTION_CATCHING=0 -O3 --memory-init-file 0  -o libjsqrl.js
-      - run: emcc --bind libjsqrl.so -s DISABLE_EXCEPTION_CATCHING=0 -O3 -s WASM=1 -o web-libjsqrl.js
-      - run: echo "QRLLIB=Module;" >> web-libjsqrl.js
-       # Fix paths of web-libjsqrl.wasm for web clients
-      - run: sed -i 's/web-libjsqrl\.wasm/\/web-libjsqrl\.wasm/g' web-libjsqrl.js
+      - run:
+          name: Install latest node/npm
+          command: ./.circleci/install_node.sh
 
-      # Copy to local dir in case it is run locally, the output is shared
-      - run: if test -d /tmp/_circleci_local_build_repo; then cp *.js /tmp/_circleci_local_build_repo/tests/js/tmp/; fi
-      - run: if test -d /tmp/_circleci_local_build_repo; then cp *.wasm /tmp/_circleci_local_build_repo/tests/js/tmp/; fi
-      - run: if test -d /tmp/_circleci_local_build_repo; then chmod 777 /tmp/_circleci_local_build_repo/tests/js/tmp/*; fi
-      - run: cp *.js tests/js/tmp/
-      - run: cp *.wasm tests/js/tmp/
+      - run:
+          name: run the tests
+          command: cd tests/js && npm install && npm test
 
-      # Get node.js and run the tests
-      - run: npm -v
-      - run: cd tests/js && npm install && npm test
-
-  deploy-pypi:
+  deploy_pypi:
     docker:
       - image: qrledger/qrl-docker:xenial
     steps:
@@ -60,15 +52,14 @@ jobs:
       - run: twine upload -u $PYPI_USERNAME -p $PYPI_PASSWORD dist/*
 
   deploy_npm:
-    working_directory: ~/repo
     docker:
       - image: circleci/node:8.9.1
     steps:
-      - attach_workspace:
-          at: ~/repo
+      - checkout
       - run:
           name: Authenticate with registry
           command: echo "//registry.npmjs.org/:_authToken=$npm_TOKEN" > ~/repo/.npmrc
+
       - run:
           name: Publish package
           command: npm publish
@@ -92,7 +83,7 @@ workflows:
             tags:
               only: /.*/
 
-      - deploy-pypi:
+      - deploy_pypi:
           requires:
             - build
             - test_python
