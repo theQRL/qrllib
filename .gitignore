@@ -41,7 +41,6 @@ gtest\.pc
 qrllib_test
 
 cmake-build-onlylib/
-build/
 \.idea/workspace\.xml
 \.coverage
 coverage\.xml
