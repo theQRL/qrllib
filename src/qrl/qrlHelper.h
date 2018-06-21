@@ -14,7 +14,7 @@ class QRLHelper {
 public:
     QRLHelper() = default;
 
-    static std::vector<uint8_t> getAddress(const std::vector<uint8_t>& extended_pk) throw(std::invalid_argument)
+    static std::vector<uint8_t> getAddress(const std::vector<uint8_t>& extended_pk)
     {
         auto descr = QRLDescriptor::fromExtendedPK(extended_pk);
 
