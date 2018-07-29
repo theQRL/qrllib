@@ -11,6 +11,7 @@
 %include "std_shared_ptr.i"
 %include "exception.i"
 
+#if defined(SWIGPYTHON)
 %{
 SWIGEXPORT void HandleAllExceptions()
 {
@@ -40,6 +41,7 @@ SWIGEXPORT void HandleAllExceptions()
         SWIG_fail;
     }
 }
+#endif
 
 
 %array_class(unsigned char, ucharCArray)
