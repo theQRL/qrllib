@@ -14,8 +14,8 @@ set(CMAKE_ERROR_DEPRECATED FALSE)
 set(CMAKE_WARN_DEPRECATED FALSE)
 
 option(BUILD_TESTS "Enable tests" ON )
-option(BUILD_GO "Enable go wrapper" OFF )
-option(BUILD_PYTHON "Enable python wrapper" OFF)
+option(BUILD_GO "Enable go wrapper" ON )
+option(BUILD_PYTHON "Enable python wrapper" ON)
 option(BUILD_WEBASSEMBLY "Enable emscripten build" OFF)
 
 if (BUILD_WEBASSEMBLY)
@@ -379,6 +379,131 @@ if (BUILD_PYTHON)
             COMMENT ${swig_extra_generated_files}
             COMMAND ${CMAKE_COMMAND} -E copy_if_different ${swig_extra_generated_files} ${CMAKE_CURRENT_SOURCE_DIR}/pyqrllib/kyber.py
             )
+
+endif ()
+
+## SWIG + API - Go related stuff
+if (BUILD_GO)
+    message(STATUS "Go wrapper enabled")
+
+    unset(CMAKE_LIBRARY_OUTPUT_DIRECTORY)
+
+    if (NOT CMAKE_LIBRARY_OUTPUT_DIRECTORY)
+        set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
+    endif ()
+
+    set(language go)
+
+    set(CMAKE_SWIG_OUTDIR ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/goqrllib)
+    set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/goqrllib)
+
+    set(SWIG_INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/src/api/pyqrllib.i)
+    set_source_files_properties(${SWIG_INTERFACE} PROPERTIES CPLUSPLUS ON)
+    set_property(SOURCE ${SWIG_INTERFACE} PROPERTY SWIG_FLAGS "-includeall" "-ignoremissing" "-cgo" "-intgosize" "64" "-c++")
+    message(STATUS "CMAKE_SWIG_OUTDIR: " ${CMAKE_SWIG_OUTDIR})
+    message(STATUS "CMAKE_LIBRARY_OUTPUT_DIRECTORY: " ${CMAKE_LIBRARY_OUTPUT_DIRECTORY})
+
+    # Intentionally use a deprecated version to provide support for the raspberry pi
+    SWIG_ADD_MODULE(goqrllib
+            ${language}
+            ${SWIG_INTERFACE}
+            ${LIB_QRL_SRC}
+            ${LIBXMSSALT_SRC}
+            )
+
+    SWIG_LINK_LIBRARIES(goqrllib
+            shasha
+            ${SWIG_LANG_LIBRARIES})
+
+    include_directories(
+            ${LIB_QRL_INCLUDES}
+            ${LIB_SHASHA_INCLUDES}
+    )
+
+    add_custom_command(TARGET ${SWIG_MODULE_goqrllib_REAL_NAME}
+            POST_BUILD
+            COMMENT "Moving SWIG files to output dir"
+            COMMAND ${CMAKE_COMMAND} -E
+            copy_if_different $<TARGET_FILE:${SWIG_MODULE_goqrllib_REAL_NAME}>
+            ${CMAKE_CURRENT_SOURCE_DIR}/goqrllib/$<TARGET_LINKER_FILE_NAME:${SWIG_MODULE_goqrllib_REAL_NAME}>
+            )
+
+    #add_custom_command(TARGET ${SWIG_MODULE_goqrllib_REAL_NAME}
+    #        POST_BUILD
+    #        COMMENT ${swig_extra_generated_files}
+    #        COMMAND ${CMAKE_COMMAND} -E copy_if_different ${swig_extra_generated_files} ${CMAKE_CURRENT_SOURCE_DIR}/goqrllib/pyqrllib.go
+    #        )
+
+    ###################################################
+    # Dilithium
+    set(SWIG_INTERFACE src/api/dilithium.i)
+    set_source_files_properties(${SWIG_INTERFACE} PROPERTIES CPLUSPLUS ON)
+    set_property(SOURCE ${SWIG_INTERFACE} PROPERTY SWIG_FLAGS "-includeall" "-ignoremissing" "-cgo" "-intgosize" "64" "-c++")
+    message(STATUS "CMAKE_SWIG_OUTDIR: " ${CMAKE_SWIG_OUTDIR})
+    message(STATUS "CMAKE_LIBRARY_OUTPUT_DIRECTORY: " ${CMAKE_LIBRARY_OUTPUT_DIRECTORY})
+
+    set(SWIG_INTERFACE
+            src/api/dilithium.i)
+
+    include_directories(
+            ${LIB_DILITHIUM_INCLUDES}
+    )
+
+    SWIG_ADD_MODULE(godilithium
+            ${language}
+            ${SWIG_INTERFACE}
+            ${LIB_DILITHIUM_SRC}
+            ${REF_DILITHIUM_SRC}
+            )
+
+    SWIG_LINK_LIBRARIES(godilithium
+            ${SWIG_LANG_LIBRARIES})
+
+    add_custom_command(TARGET ${SWIG_MODULE_godilithium_REAL_NAME}
+            POST_BUILD
+            COMMENT "Moving SWIG files to output dir"
+            COMMAND ${CMAKE_COMMAND} -E
+            copy_if_different $<TARGET_FILE:${SWIG_MODULE_godilithium_REAL_NAME}>
+            ${CMAKE_CURRENT_SOURCE_DIR}/goqrllib/$<TARGET_LINKER_FILE_NAME:${SWIG_MODULE_godilithium_REAL_NAME}>
+            )
+
+    #add_custom_command(TARGET ${SWIG_MODULE_godilithium_REAL_NAME}
+    #        POST_BUILD
+    #        COMMENT ${swig_extra_generated_files}
+    #        COMMAND ${CMAKE_COMMAND} -E copy_if_different ${swig_extra_generated_files} ${CMAKE_CURRENT_SOURCE_DIR}/goqrllib/godilithium.go
+    #        )
+
+
+    # Kyber
+    set(SWIG_INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/src/api/kyber.i)
+    set_source_files_properties(${SWIG_INTERFACE} PROPERTIES CPLUSPLUS ON)
+    set_property(SOURCE ${SWIG_INTERFACE} PROPERTY SWIG_FLAGS "-includeall" "-ignoremissing" "-cgo" "-intgosize" "64" "-c++")
+    message(STATUS "CMAKE_SWIG_OUTDIR: " ${CMAKE_SWIG_OUTDIR})
+    message(STATUS "CMAKE_LIBRARY_OUTPUT_DIRECTORY: " ${CMAKE_LIBRARY_OUTPUT_DIRECTORY})
+
+    SWIG_ADD_MODULE(gokyber
+            ${language}
+            ${SWIG_INTERFACE}
+            ${LIB_KYBER_SRC}
+            ${REF_KYBER_SRC}
+            )
+
+    SWIG_LINK_LIBRARIES(gokyber
+            ${SWIG_LANG_LIBRARIES})
+
+    add_custom_command(TARGET ${SWIG_MODULE_gokyber_REAL_NAME}
+            POST_BUILD
+            COMMENT "Moving SWIG files to output dir"
+            COMMAND ${CMAKE_COMMAND} -E
+            copy_if_different $<TARGET_FILE:${SWIG_MODULE_gokyber_REAL_NAME}>
+            ${CMAKE_CURRENT_SOURCE_DIR}/goqrllib/$<TARGET_LINKER_FILE_NAME:${SWIG_MODULE_gokyber_REAL_NAME}>
+            )
+
+    #add_custom_command(TARGET ${SWIG_MODULE_gokyber_REAL_NAME}
+    #        POST_BUILD
+    #        COMMENT ${swig_extra_generated_files}
+    #        COMMAND ${CMAKE_COMMAND} -E copy_if_different ${swig_extra_generated_files} ${CMAKE_CURRENT_SOURCE_DIR}/goqrllib/gokyber.go
+    #        )
 
 endif ()
 
