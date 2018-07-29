@@ -23,7 +23,7 @@ void xmss_set_params(xmss_params *params, uint32_t n, uint32_t h, uint32_t w, ui
 
 void to_byte(unsigned char *output, unsigned long long in, uint32_t bytes);
 
-void hexdump(const unsigned char *a, size_t len);
+// void hexdump(const unsigned char *a, size_t len);  # Unimplemented
 
 void l_tree(eHashFunction hash_func,
             const wots_params *params,
