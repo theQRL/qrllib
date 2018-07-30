@@ -13,24 +13,28 @@ set(CMAKE_VERBOSE_MAKEFILE TRUE)
 set(CMAKE_ERROR_DEPRECATED FALSE)
 set(CMAKE_WARN_DEPRECATED FALSE)
 
-option(BUILD_TESTS "Enable tests" ON )
+option(BUILD_TESTS "Enable tests" OFF)
 option(BUILD_GO "Enable go wrapper" OFF )
+option(BUILD_JAVA "Enable java wrapper" ON)
 option(BUILD_PYTHON "Enable python wrapper" OFF)
 option(BUILD_WEBASSEMBLY "Enable emscripten build" OFF)
+
 
 if (BUILD_WEBASSEMBLY)
     message(WARNING "webassembly enabled. Disabling other modules")
     set(BUILD_PYTHON 0)
     set(BUILD_GO 0)
     set(BUILD_TESTS 0)
+	set(BUILD_JAVA 0)
 endif ()
 
 message(STATUS "BUILD_TESTS    " ${BUILD_TESTS})
 message(STATUS "GOLANG WRAPPER " ${BUILD_GO})
+message(STATUS "JAVA		   " ${BUILD_JAVA})
 message(STATUS "PYTHON WRAPPER " ${BUILD_PYTHON})
 message(STATUS "WEBASSEMBLY    " ${BUILD_WEBASSEMBLY})
 
-if (BUILD_PYTHON OR BUILD_GO)
+if (BUILD_PYTHON OR BUILD_GO OR BUILD_JAVA)
     find_package(SWIG REQUIRED)
     INCLUDE(${SWIG_USE_FILE})
     unset(SWIG_LANG_TYPE)
@@ -40,6 +44,12 @@ if (BUILD_PYTHON)
     set(Python_ADDITIONAL_VERSIONS 3 3.6 3.5)
     find_package(PythonLibs REQUIRED)
     find_package(PythonInterp REQUIRED)
+endif ()
+
+if (BUILD_JAVA)
+	find_package(Java REQUIRED COMPONENTS Runtime Development)
+	find_package(JNI REQUIRED)
+	include(UseJava)
 endif ()
 
 include_directories(
@@ -380,6 +390,146 @@ if (BUILD_PYTHON)
             COMMAND ${CMAKE_COMMAND} -E copy_if_different ${swig_extra_generated_files} ${CMAKE_CURRENT_SOURCE_DIR}/pyqrllib/kyber.py
             )
 
+endif ()
+
+if (BUILD_JAVA)
+	message(STATUS "Java wrapper enabled")
+	
+	if (NOT CMAKE_LIBRARY_OUTPUT_DIRECTORY)
+        set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
+    endif ()
+
+	set(language java)
+	
+	SET(JAVA_RUNTIME2  $ENV{JAVA_HOME}/bin/java)
+	SET(JAVA_ARCHIVE2  $ENV{JAVA_HOME}/bin/jar)
+	SET(JAVA_COMPILE2  $ENV{JAVA_HOME}/bin/javac)
+	
+	include_directories(${JNI_INCLUDE_DIRS})
+	
+	set(CMAKE_SWIG_FLAGS -package javaqrllib)
+	
+	set(CMAKE_SWIG_OUTDIR ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/javaqrllib/javaqrllib)
+    set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/javaqrllib/javaqrllib)
+
+    set(SWIG_INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/src/api/pyqrllib.i)
+    set(SWIG_LANG_LIBRARIES ${JAVA_LIBRARIES})
+	set_source_files_properties(${SWIG_INTERFACE} PROPERTIES CPLUSPLUS 1)
+	set_property(SOURCE ${SWIG_INTERFACE} PROPERTY SWIG_FLAGS "-includeall" "-ignoremissing")
+	message(STATUS "CMAKE_SWIG_OUTDIR: " ${CMAKE_SWIG_OUTDIR})
+    message(STATUS "CMAKE_LIBRARY_OUTPUT_DIRECTORY: " ${CMAKE_LIBRARY_OUTPUT_DIRECTORY})
+	
+	SWIG_ADD_MODULE(javaqrllib
+            ${language}
+            ${SWIG_INTERFACE}
+            ${LIB_QRL_SRC}
+            ${LIBXMSSALT_SRC}
+            )
+			
+	SWIG_LINK_LIBRARIES(javaqrllib
+            shasha
+            ${SWIG_LANG_LIBRARIES})
+		
+	include_directories(
+            ${JAVA_INCLUDE_PATH}
+            ${LIB_QRL_INCLUDES}
+            ${LIB_SHASHA_INCLUDES}
+    )
+	
+	add_custom_command(TARGET ${SWIG_MODULE_javaqrllib_REAL_NAME}
+            POST_BUILD
+            COMMENT "Moving SWIG files to output dir"
+			COMMAND ${CMAKE_COMMAND} -E
+            copy_if_different $<TARGET_FILE:${SWIG_MODULE_javaqrllib_REAL_NAME}>
+            ${CMAKE_CURRENT_SOURCE_DIR}/javaqrllib/javaqrllib/$<TARGET_LINKER_FILE_NAME:${SWIG_MODULE_javaqrllib_REAL_NAME}>
+			COMMENT "Updating javaqrllib flags"
+            COMMAND sh ${CMAKE_CURRENT_SOURCE_DIR}/scripts/update_javaqrllib_flags.sh ${CMAKE_CURRENT_SOURCE_DIR}
+            )
+			
+	###################################################
+    # Dilithium
+	
+	unset(CMAKE_LIBRARY_OUTPUT_DIRECTORY)
+     if (NOT CMAKE_LIBRARY_OUTPUT_DIRECTORY)
+        set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
+    endif ()
+	
+	set(CMAKE_SWIG_OUTDIR ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/javaqrllib/dilithium)
+    set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/javaqrllib/dilithium)
+	
+    set(SWIG_INTERFACE src/api/dilithium.i)
+    set(SWIG_LANG_LIBRARIES ${JAVA_LIBRARIES}})
+    set_source_files_properties(${SWIG_INTERFACE} PROPERTIES CPLUSPLUS ON)
+    set_property(SOURCE ${SWIG_INTERFACE} PROPERTY SWIG_FLAGS "-includeall" "-ignoremissing")
+    message(STATUS "CMAKE_SWIG_OUTDIR: " ${CMAKE_SWIG_OUTDIR})
+    message(STATUS "CMAKE_LIBRARY_OUTPUT_DIRECTORY: " ${CMAKE_LIBRARY_OUTPUT_DIRECTORY})
+
+    set(SWIG_INTERFACE
+            src/api/dilithium.i)
+
+    include_directories(
+            ${JAVA_INCLUDE_PATH}}
+            ${LIB_DILITHIUM_INCLUDES}
+    )
+
+    SWIG_ADD_MODULE(javadilithium
+            ${language}
+            ${SWIG_INTERFACE}
+            ${LIB_DILITHIUM_SRC}
+            ${REF_DILITHIUM_SRC}
+            )
+
+    SWIG_LINK_LIBRARIES(javadilithium
+            ${SWIG_LANG_LIBRARIES})
+
+    add_custom_command(TARGET ${SWIG_MODULE_javadilithium_REAL_NAME}
+            POST_BUILD
+            COMMENT "Moving SWIG files to output dir"
+			COMMAND ${CMAKE_COMMAND} -E
+            copy_if_different $<TARGET_FILE:${SWIG_MODULE_javadilithium_REAL_NAME}>
+            ${CMAKE_CURRENT_SOURCE_DIR}/javaqrllib/dilithium/$<TARGET_LINKER_FILE_NAME:${SWIG_MODULE_javadilithium_REAL_NAME}>
+			COMMENT "Updating javadilithium flags"
+            COMMAND sh ${CMAKE_CURRENT_SOURCE_DIR}/scripts/update_javadilithium_flags.sh ${CMAKE_CURRENT_SOURCE_DIR}
+            )
+
+
+    # Kyber
+	
+	unset(CMAKE_LIBRARY_OUTPUT_DIRECTORY)
+     if (NOT CMAKE_LIBRARY_OUTPUT_DIRECTORY)
+        set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
+    endif ()
+	
+	set(CMAKE_SWIG_OUTDIR ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/javaqrllib/kyber)
+    set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/javaqrllib/kyber)
+	
+    set(SWIG_INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/src/api/kyber.i)
+    set(SWIG_LANG_LIBRARIES ${JAVA_LIBRARIES})
+    set_source_files_properties(${SWIG_INTERFACE} PROPERTIES CPLUSPLUS ON)
+    set_property(SOURCE ${SWIG_INTERFACE} PROPERTY SWIG_FLAGS "-includeall" "-ignoremissing")
+    message(STATUS "CMAKE_SWIG_OUTDIR: " ${CMAKE_SWIG_OUTDIR})
+    message(STATUS "CMAKE_LIBRARY_OUTPUT_DIRECTORY: " ${CMAKE_LIBRARY_OUTPUT_DIRECTORY})
+
+    SWIG_ADD_MODULE(javakyber
+            ${language}
+            ${SWIG_INTERFACE}
+            ${LIB_KYBER_SRC}
+            ${REF_KYBER_SRC}
+            )
+
+    SWIG_LINK_LIBRARIES(javakyber
+            ${SWIG_LANG_LIBRARIES})
+
+    add_custom_command(TARGET ${SWIG_MODULE_javakyber_REAL_NAME}
+            POST_BUILD
+            COMMENT "Moving SWIG files to output dir"
+			COMMAND ${CMAKE_COMMAND} -E
+            copy_if_different $<TARGET_FILE:${SWIG_MODULE_javakyber_REAL_NAME}>
+            ${CMAKE_CURRENT_SOURCE_DIR}/javaqrllib/kyber/$<TARGET_LINKER_FILE_NAME:${SWIG_MODULE_javakyber_REAL_NAME}>
+			COMMENT "Updating javakyber flags"
+            COMMAND sh ${CMAKE_CURRENT_SOURCE_DIR}/scripts/update_javakyber_flags.sh ${CMAKE_CURRENT_SOURCE_DIR}
+            )
+			
 endif ()
 
 if (BUILD_WEBASSEMBLY)
