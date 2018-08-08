@@ -15,6 +15,10 @@ Public domain.
 #include <cstdio>
 #include <cstring>
 
+#if(_WIN32)
+#include <malloc.h>
+#endif
+
 void to_byte(unsigned char *out, unsigned long long in, uint32_t bytes) {
     int32_t i;
     for (i = bytes - 1; i >= 0; i--) {
@@ -88,7 +92,11 @@ validate_authpath(eHashFunction hash_func,
                   const unsigned char *pub_seed,
                   uint32_t addr[8]) {
     uint32_t i, j;
+#if(_WIN32)
+	unsigned char* buffer = (unsigned char*)alloca(sizeof(unsigned char) * (2 * n));
+#else
     unsigned char buffer[2 * n];
+#endif
 
     // If leafidx is odd (last bit = 1), current path element is a right child and authpath has to go to the left.
     // Otherwise, it is the other way around
@@ -144,13 +152,25 @@ int xmss_Verifysig(eHashFunction hash_func,
 
     unsigned long long i, m_len;
     unsigned long idx = 0;
+#if(_WIN32)
+	unsigned char* wots_pk = (unsigned char*)alloca(sizeof(unsigned char) * (wotsParams->keysize));
+	unsigned char* pkhash = (unsigned char*)alloca(sizeof(unsigned char) * n);
+	unsigned char* root = (unsigned char*)alloca(sizeof(unsigned char) * n);
+	unsigned char* msg_h = (unsigned char*)alloca(sizeof(unsigned char) * n);
+	unsigned char* hash_key = (unsigned char*)alloca(sizeof(unsigned char) * (3 * n));
+#else
     unsigned char wots_pk[wotsParams->keysize];
     unsigned char pkhash[n];
     unsigned char root[n];
     unsigned char msg_h[n];
     unsigned char hash_key[3 * n];
+#endif
 
+#if(_WIN32)
+	unsigned char* pub_seed = (unsigned char*)alloca(sizeof(unsigned char) * n);
+#else
     unsigned char pub_seed[n];
+#endif
     memcpy(pub_seed, pk + n, n);
 
     // Init addresses

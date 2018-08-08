@@ -6,7 +6,7 @@
 	url = https://github.com/okdshin/PicoSHA2
 [submodule "dilithium"]
 	path = deps/dilithium
-	url = https://github.com/theQRL/dilithium.git
+	url = https://github.com/converghub/dilithium.git
 [submodule "kyber"]
 	path = deps/kyber
-	url = https://github.com/theQRL/kyber.git
+	url = https://github.com/converghub/kyber.git

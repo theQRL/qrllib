@@ -11,6 +11,10 @@ This code was taken from the XMSS reference implementation by Andreas Hülsing a
 #include "shasha.h"
 #include <cstdio>
 
+#if(_WIN32)
+#include <malloc.h>
+#endif
+
 unsigned char *addr_to_byte(unsigned char *bytes, const uint32_t addr[8]) {
 #if __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
     int i = 0;
@@ -32,7 +36,11 @@ int core_hash(eHashFunction hash_func,
               unsigned long long inlen,
               unsigned int n) {
     unsigned long long i = 0;
+#if(_WIN32)
+	unsigned char* buf = (unsigned char*)alloca(sizeof(unsigned char) * (inlen + n + keylen));
+#else
     unsigned char buf[inlen + n + keylen];
+#endif
 
     // Input is (toByte(X, 32) || KEY || M)
 
@@ -114,9 +122,15 @@ int hash_h(eHashFunction hash_func,
            unsigned char *out, const unsigned char *in, const unsigned char *pub_seed, uint32_t addr[8],
            const unsigned int n) {
 
+#if(_WIN32)
+	unsigned char* buf = (unsigned char*)alloca(sizeof(unsigned char) * (2 * n));
+	unsigned char* key = (unsigned char*)alloca(sizeof(unsigned char) * n);
+	unsigned char* bitmask = (unsigned char*)alloca(sizeof(unsigned char) * (2 * n));
+#else
     unsigned char buf[2 * n];
     unsigned char key[n];
     unsigned char bitmask[2 * n];
+#endif
     unsigned char byte_addr[32];
     unsigned int i;
 
@@ -139,9 +153,15 @@ int hash_h(eHashFunction hash_func,
 int hash_f(eHashFunction hash_func,
            unsigned char *out, const unsigned char *in, const unsigned char *pub_seed, uint32_t addr[8],
            const unsigned int n) {
+#if(_WIN32)
+	unsigned char* buf = (unsigned char*)alloca(sizeof(unsigned char) * n);
+	unsigned char* key = (unsigned char*)alloca(sizeof(unsigned char) * n);
+	unsigned char* bitmask = (unsigned char*)alloca(sizeof(unsigned char) * n);
+#else
     unsigned char buf[n];
     unsigned char key[n];
     unsigned char bitmask[n];
+#endif
     unsigned char byte_addr[32];
     unsigned int i;
 

@@ -15,6 +15,10 @@ Public domain.
 #include "hash.h"
 #include "hash_address.h"
 
+#if(_WIN32)
+#include <malloc.h>
+#endif
+
 
 void wots_set_params(wots_params *params, int n, int w) {
     params->n = n;
@@ -124,7 +128,11 @@ void wots_sign(eHashFunction hash_func,
                const wots_params *params,
                const unsigned char *pub_seed,
                uint32_t addr[8]) {
+#if(_WIN32)
+	int* basew = (int*)alloca(sizeof(int) * (params->len));
+#else
     int basew[params->len];
+#endif
     int csum = 0;
     uint32_t i = 0;
 
@@ -138,10 +146,18 @@ void wots_sign(eHashFunction hash_func,
 
     uint32_t len_2_bytes = ((params->len_2 * params->log_w) + 7) / 8;
 
+#if(_WIN32)
+	unsigned char* csum_bytes = (unsigned char*)alloca(sizeof(unsigned char) * len_2_bytes);
+#else
     unsigned char csum_bytes[len_2_bytes];
+#endif
     to_byte(csum_bytes, csum, len_2_bytes);
 
+#if(_WIN32)
+	int* csum_basew = (int*)alloca(sizeof(int) * (params->len_2));
+#else
     int csum_basew[params->len_2];
+#endif
 
     base_w(csum_basew, params->len_2, csum_bytes, params);
 
@@ -171,11 +187,19 @@ void wots_pkFromSig(eHashFunction hash_func,
     uint32_t XMSS_WOTS_W = wotsParams->w;
     uint32_t XMSS_N = wotsParams->n;
 
+#if(_WIN32)
+	int* basew = (int*)alloca(sizeof(int) * XMSS_WOTS_LEN);
+	int csum = 0;
+	unsigned char* csum_bytes = (unsigned char*)alloca(sizeof(unsigned char) * (((XMSS_WOTS_LEN2 * XMSS_WOTS_LOG_W) + 7) / 8));
+	int* csum_basew = (int*)alloca(sizeof(int) * XMSS_WOTS_LEN2);
+	uint32_t i = 0;
+#else
     int basew[XMSS_WOTS_LEN];
     int csum = 0;
     unsigned char csum_bytes[((XMSS_WOTS_LEN2 * XMSS_WOTS_LOG_W) + 7) / 8];
     int csum_basew[XMSS_WOTS_LEN2];
     uint32_t i = 0;
+#endif
 
     base_w(basew, XMSS_WOTS_LEN1, msg, wotsParams);
 
