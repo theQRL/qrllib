@@ -17,6 +17,10 @@ Public domain.
 #include <cstdio>
 #include <stdexcept>
 
+#if(_WIN32)
+#include <malloc.h>
+#endif
+
 /**
  * Used for pseudorandom keygeneration,
  * generates the seed for the WOTS keypair at address addr
@@ -76,8 +80,13 @@ static void gen_leaf_wots(eHashFunction hash_func,
                           uint32_t ltree_addr[8],
                           uint32_t ots_addr[8])
 {
+#if(_WIN32)
+	unsigned char* seed = (unsigned char*)alloca(sizeof(unsigned char) * (params->n));
+	unsigned char* pk = (unsigned char*)alloca(sizeof(unsigned char) * (params->wots_par.keysize));
+#else
     unsigned char seed[params->n];
     unsigned char pk[params->wots_par.keysize];
+#endif
 
     get_seed(hash_func, seed, sk_seed, params->n, ots_addr);
     wots_pkgen(hash_func, pk, seed, &(params->wots_par), pub_seed, ots_addr);
@@ -129,9 +138,14 @@ static void treehash_setup(eHashFunction hash_func,
     setType(node_addr, 2);
 
     uint32_t lastnode, i;
+#if(_WIN32)
+	unsigned char* stack = (unsigned char*)alloca(sizeof(unsigned char) * ((height + 1) * n));
+	unsigned int* stacklevels = (unsigned int*)alloca(sizeof(unsigned int) * (height + 1));
+#else
     unsigned char stack[(height + 1) * n];
     unsigned int stacklevels[height + 1];
-    unsigned int stackoffset = 0;
+#endif
+	unsigned int stackoffset = 0;
     unsigned int nodeh;
 
     lastnode = idx + (1 << height);
@@ -203,7 +217,11 @@ treehash_update(eHashFunction hash_func,
     setLtreeADRS(ltree_addr, treehash->next_idx);
     setOTSADRS(ots_addr, treehash->next_idx);
 
+#if(_WIN32)
+	unsigned char* nodebuffer = (unsigned char*)alloca(sizeof(unsigned char) * (2 * n));
+#else
     unsigned char nodebuffer[2 * n];
+#endif
     unsigned int nodeheight = 0;
     gen_leaf_wots(hash_func, nodebuffer, sk_seed, params, pub_seed, ltree_addr, ots_addr);
     while (treehash->stackusage > 0 && state->stacklevels[state->stackoffset - 1] == nodeheight) {
@@ -240,7 +258,11 @@ validate_authpath(eHashFunction hash_func,
     unsigned int n = params->n;
 
     uint32_t i, j;
+#if(_WIN32)
+	unsigned char* buffer = (unsigned char*)alloca(sizeof(unsigned char) * (2 * n));
+#else
     unsigned char buffer[2 * n];
+#endif
 
     // If leafidx is odd (last bit = 1), current path element is a right child and authpath has to go to the left.
     // Otherwise, it is the other way around
@@ -427,7 +449,11 @@ bds_round(eHashFunction hash_func,
     unsigned int tau = h;
     unsigned int startidx;
     unsigned int offset, rowidx;
+#if(_WIN32)
+	unsigned char* buf = (unsigned char*)alloca(sizeof(unsigned char) * (2 * n));
+#else
     unsigned char buf[2 * n];
+#endif
 
     uint32_t ots_addr[8];
     uint32_t ltree_addr[8];
@@ -514,7 +540,11 @@ int xmssfast_Genkeypair(eHashFunction hash_func,
     sk[3] = 0;
 
     // Copy PUB_SEED to public key
+#if(_WIN32)
+	unsigned char* randombits = (unsigned char*)alloca(sizeof(unsigned char) * (3 * n));
+#else
     unsigned char randombits[3 * n];
+#endif
     shake256(randombits, 3 * n, seed, 48);  // FIXME: seed size has been hardcoded to 48
     size_t rnd = 96;
     size_t pks = 32;
@@ -603,18 +633,34 @@ int xmssfast_Signmsg(eHashFunction hash_func,
     // Extract SK
     unsigned long idx =
         ((unsigned long) sk[0] << 24) | ((unsigned long) sk[1] << 16) | ((unsigned long) sk[2] << 8) | sk[3];
-    unsigned char sk_seed[n];
+#if(_WIN32)
+	unsigned char* sk_seed = (unsigned char*)alloca(sizeof(unsigned char) * n);
+#else
+	unsigned char sk_seed[n];
+#endif
     memcpy(sk_seed, sk + 4, n);
-    unsigned char sk_prf[n];
+#if(_WIN32)
+	unsigned char* sk_prf = (unsigned char*)alloca(sizeof(unsigned char) * n);
+#else
+	unsigned char sk_prf[n];
+#endif
     memcpy(sk_prf, sk + 4 + n, n);
-    unsigned char pub_seed[n];
+#if(_WIN32)
+	unsigned char* pub_seed = (unsigned char*)alloca(sizeof(unsigned char) * n);
+#else
+	unsigned char pub_seed[n];
+#endif
     memcpy(pub_seed, sk + 4 + 2 * n, n);
 
     // index as 32 bytes string
     unsigned char idx_bytes_32[32];
     to_byte(idx_bytes_32, idx, 32);
 
-    unsigned char hash_key[3 * n];
+#if(_WIN32)
+	unsigned char* hash_key = (unsigned char*)alloca(sizeof(unsigned char) * (3 * n));
+#else
+	unsigned char hash_key[3 * n];
+#endif
 
     // Update SK
     sk[0] = ((idx + 1) >> 24) & 255;
@@ -625,9 +671,15 @@ int xmssfast_Signmsg(eHashFunction hash_func,
     // -- A productive implementation should use a file handle instead and write the updated secret key at this point!
     unsigned long long sig_msg_len;
     // Init working params
-    unsigned char R[n];
+#if(_WIN32)
+	unsigned char* R = (unsigned char*)alloca(sizeof(unsigned char) * n);
+	unsigned char* msg_h = (unsigned char*)alloca(sizeof(unsigned char) * n);
+	unsigned char* ots_seed = (unsigned char*)alloca(sizeof(unsigned char) * n);
+#else
+	unsigned char R[n];
     unsigned char msg_h[n];
     unsigned char ots_seed[n];
+#endif
     uint32_t ots_addr[8] = {0, 0, 0, 0, 0, 0, 0, 0};
 
     // ---------------------------------

@@ -4,10 +4,18 @@
 cmake_minimum_required(VERSION 3.5)
 project(qrllib)
 
+string(REPLACE "\\" "/" CMAKE_CURRENT_SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR})
+string(REPLACE "\\" "/" CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_LIBRARY_OUTPUT_DIRECTORY})
+
 set(CMAKE_CXX_STANDARD 14)
-#set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++14 -Wall -Wextra -pedantic")
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIC -Wno-deprecated-declarations")
-set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS} -O3 -Wno-deprecated")
+
+if(WIN32)
+  add_definitions(-D_CRT_SECURE_NO_WARNINGS -D_CRT_NONSTDC_NO_DEPRECATE -DWIN32_LEAN_AND_MEAN)
+else()
+  set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fPIC")
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++14 -fPIC -Wno-deprecated-declarations")
+  set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -O3 -Wno-deprecated")
+endif()
 
 set(CMAKE_VERBOSE_MAKEFILE TRUE)
 set(CMAKE_ERROR_DEPRECATED FALSE)
@@ -333,6 +341,10 @@ if (BUILD_PYTHON)
     SWIG_LINK_LIBRARIES(dilithium
             ${SWIG_LANG_LIBRARIES})
 
+	if(WIN32)
+	SWIG_LINK_LIBRARIES(dilithium bcrypt.lib)
+	endif()
+
     add_custom_command(TARGET ${SWIG_MODULE_dilithium_REAL_NAME}
             POST_BUILD
             COMMENT "Moving SWIG files to output dir"
@@ -365,6 +377,10 @@ if (BUILD_PYTHON)
 
     SWIG_LINK_LIBRARIES(kyber
             ${SWIG_LANG_LIBRARIES})
+
+	if(WIN32)
+	SWIG_LINK_LIBRARIES(kyber bcrypt.lib)
+	endif()
 
     add_custom_command(TARGET ${SWIG_MODULE_kyber_REAL_NAME}
             POST_BUILD

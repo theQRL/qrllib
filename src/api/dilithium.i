@@ -10,6 +10,7 @@
 %include "std_except.i"
 %include "std_shared_ptr.i"
 %include "exception.i"
+%include "windows.i"
 
 %{
 SWIGEXPORT void HandleAllExceptions()
@@ -43,6 +44,7 @@ SWIGEXPORT void HandleAllExceptions()
 
 
 %array_class(unsigned char, ucharCArray)
+%array_class(unsigned int, uint)
 %array_class(uint, uintCArray)
 %array_class(uint32_t, uint32CArray)
 

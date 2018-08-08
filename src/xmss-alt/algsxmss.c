@@ -10,6 +10,10 @@
 #include "hash_address.h"
 #include "fips202.h"
 
+#if(_WIN32)
+#include <malloc.h>
+#endif
+
 /**
  * Used for pseudorandom keygeneration,
  * generates the seed for the WOTS keypair at address addr
@@ -41,8 +45,13 @@ void gen_leaf_wots(eHashFunction hash_func,
                           const unsigned char *pub_seed,
                           uint32_t ltree_addr[8],
                           uint32_t ots_addr[8]) {
+#if(_WIN32)
+	unsigned char* seed = (unsigned char*)alloca(sizeof(unsigned char) * (params->n));
+	unsigned char* pk = (unsigned char*)alloca(sizeof(unsigned char) * (params->wots_par.keysize));
+#else
     unsigned char seed[params->n];
     unsigned char pk[params->wots_par.keysize];
+#endif
 
     get_seed(hash_func, seed, sk_seed, params->n, ots_addr);
     wots_pkgen(hash_func, pk, seed, &(params->wots_par), pub_seed, ots_addr);
@@ -82,9 +91,14 @@ treehash(eHashFunction hash_func,
     setType(node_addr, 2);
 
     uint32_t lastnode, i;
+#if(_WIN32)
+	unsigned char* stack = (unsigned char*)alloca(sizeof(unsigned char) * ((height + 1) * n));
+	uint16_t* stacklevels = (uint16_t*)alloca(sizeof(uint16_t) * (height + 1));
+#else
     unsigned char stack[(height + 1) * n];
     uint16_t stacklevels[height + 1];
-    unsigned int stackoffset = 0;
+#endif
+	unsigned int stackoffset = 0;
 
     lastnode = idx + (1 << height);
 
@@ -124,7 +138,11 @@ static void compute_authpath_wots(eHashFunction hash_func,
     uint32_t n = params->n;
     uint32_t h = params->h;
 
+#if(_WIN32)
+	unsigned char* tree = (unsigned char*)alloca(sizeof(unsigned char) * (2 * (1 << h) * n));
+#else
     unsigned char tree[2 * (1 << h) * n];
+#endif
 
     uint32_t ots_addr[8];
     uint32_t ltree_addr[8];
@@ -180,7 +198,11 @@ int xmss_Genkeypair(eHashFunction hash_func,
     sk[3] = 0;
 
     //Construct SK_SEED (n byte), SK_PRF (n byte), and PUB_SEED (n byte) from n-byte seed
+#if(_WIN32)
+	unsigned char* randombits = (unsigned char*)alloca(sizeof(unsigned char) * (3 * n));
+#else
     unsigned char randombits[3 * n];
+#endif
     shake256(randombits, 3 * n, seed, 48);
 
     // Copy PUB_SEED to public key
@@ -227,19 +249,34 @@ int xmss_Signmsg(eHashFunction hash_func,
 
     // Extract SK
     uint32_t idx = ((unsigned long) sk[0] << 24) | ((unsigned long) sk[1] << 16) | ((unsigned long) sk[2] << 8) | sk[3];
+#if(_WIN32)
+	unsigned char* sk_seed = (unsigned char*)alloca(sizeof(unsigned char) * n);
+#else
     unsigned char sk_seed[n];
+#endif
     memcpy(sk_seed, sk + 4, n);
-    unsigned char sk_prf[n];
+#if(_WIN32)
+	unsigned char* sk_prf = (unsigned char*)alloca(sizeof(unsigned char) * n);
+#else
+	unsigned char sk_prf[n];
+#endif
     memcpy(sk_prf, sk + 4 + n, n);
-    unsigned char pub_seed[n];
+#if(_WIN32)
+	unsigned char* pub_seed = (unsigned char*)alloca(sizeof(unsigned char) * n);
+#else
+	unsigned char pub_seed[n];
+#endif
     memcpy(pub_seed, sk + 4 + 2 * n, n);
 
     // index as 32 bytes string
     unsigned char idx_bytes_32[32];
     to_byte(idx_bytes_32, idx, 32);
 
-
+#if(_WIN32)
+	unsigned char* hash_key = (unsigned char*)alloca(sizeof(unsigned char) * (3 * n));
+#else
     unsigned char hash_key[3 * n];
+#endif
 
     // Update SK
     sk[0] = ((idx + 1) >> 24) & 255;
@@ -250,10 +287,17 @@ int xmss_Signmsg(eHashFunction hash_func,
     // -- A productive implementation should use a file handle instead and write the updated secret key at this point!
 
     // Init working params
+#if(_WIN32)
+	unsigned char* R = (unsigned char*)alloca(sizeof(unsigned char) * n);
+	unsigned char* msg_h = (unsigned char*)alloca(sizeof(unsigned char) * n);
+	unsigned char* root = (unsigned char*)alloca(sizeof(unsigned char) * n);
+	unsigned char* ots_seed = (unsigned char*)alloca(sizeof(unsigned char) * n);
+#else
     unsigned char R[n];
     unsigned char msg_h[n];
     unsigned char root[n];
     unsigned char ots_seed[n];
+#endif
     uint32_t ots_addr[8] = {0, 0, 0, 0, 0, 0, 0, 0};
 
     // ---------------------------------
