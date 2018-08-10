@@ -41,7 +41,6 @@ gtest\.pc
 qrllib_test
 
 cmake-build-onlylib/
-build/
 \.idea/workspace\.xml
 \.coverage
 coverage\.xml
@@ -67,3 +66,9 @@ pyqrllib/kyber\.py
 pyqrllib/kyberPYTHON_wrap\.cxx
 
 pyqrllib/qrlPYTHON_wrap\.cxx
+.pytest_cache
+tests/js/node_modules
+tests/js/tmp/*.js
+tests/js/tmp/*.wasm
+
+\.npmrc

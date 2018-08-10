@@ -143,7 +143,8 @@ static void treehash_setup(eHashFunction hash_func,
 
     lastnode = idx + (1 << height);
 
-    for (i = 0; i < h - k; i++) {
+    const int bound = h - k;
+    for (i = 0; i < bound; i++) {
         state->treehash[i].h = i;
         state->treehash[i].completed = 1;
         state->treehash[i].stackusage = 0;

@@ -57,7 +57,7 @@ def setup_package():
     cmake = []
 
     # noinspection PyInterpreter
-    setup(setup_requires=['six', 'pytest-runner', 'pyscaffold>=2.5a0,<2.6a0'] + sphinx + cmake,
+    setup(setup_requires=['six', 'pytest-runner', 'pyscaffold>3'] + sphinx + cmake,
           packages=['pyqrllib', ],
           tests_require=['pytest', 'pytest-cov'],
           ext_modules=[CMakeExtension('pyqrllib')],
