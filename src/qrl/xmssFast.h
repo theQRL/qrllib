@@ -10,20 +10,20 @@
 #include <xmss-alt/algsxmss_fast.h>
 
 class XmssFast : public XmssBase {
+    void _initialize_tree();
 public:
-    // TODO: Fix constness / passing by copy, this requires changes in the underlying lib
-    XmssFast(const TSEED &seed,
-             unsigned char height,
-             eHashFunction hashFunction = eHashFunction::SHAKE_128,
-             eAddrFormatType addrFormatType = eAddrFormatType::SHA256_2X ) throw(std::invalid_argument);
+    XmssFast(const TSEED& seed,
+            unsigned char height,
+            eHashFunction hashFunction = eHashFunction::SHAKE_128,
+            eAddrFormatType addrFormatType = eAddrFormatType::SHA256_2X);
 
-    TSIGNATURE sign(const TMESSAGE &message) override;
+    XmssFast(const TSEED& extended_seed);
 
-    unsigned int setIndex(unsigned int new_index) throw(std::invalid_argument);
+    TSIGNATURE sign(const TMESSAGE& message) override;
+
+    unsigned int setIndex(unsigned int new_index) override;
 
 protected:
-    // FIXME: This needs refactoring (encapsulate)
-
     bds_state _state;
     unsigned int _stackoffset = 0;
     std::vector<unsigned char> _stack;

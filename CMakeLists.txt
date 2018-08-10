@@ -6,15 +6,21 @@ project(qrllib)
 
 set(CMAKE_CXX_STANDARD 14)
 
-set(CMAKE_VERBOSE_MAKEFILE FALSE)
+set(CMAKE_VERBOSE_MAKEFILE TRUE)
 set(CMAKE_ERROR_DEPRECATED FALSE)
 set(CMAKE_WARN_DEPRECATED FALSE)
 
 option(BUILD_TESTS "Enable tests" ON )
 option(BUILD_GO "Enable go wrapper" OFF )
 option(BUILD_PYTHON "Enable python wrapper" OFF)
-option(BUILD_PYTHON_LOCALDEPLOY "Deploy python locally" OFF)
 option(BUILD_WEBASSEMBLY "Enable emscripten build" OFF)
+
+if (BUILD_WEBASSEMBLY)
+    message(WARNING "webassembly enabled. Disabling other modules")
+    set(BUILD_PYTHON 0)
+    set(BUILD_GO 0)
+    set(BUILD_TESTS 0)
+endif ()
 
 message(STATUS "BUILD_TESTS    " ${BUILD_TESTS})
 message(STATUS "GOLANG WRAPPER " ${BUILD_GO})
@@ -32,13 +38,15 @@ else()
 endif()
 
 if (BUILD_PYTHON OR BUILD_GO)
-    set(Python_ADDITIONAL_VERSIONS 3 3.6 3.5)
-    find_package(PythonLibs REQUIRED)
-    find_package(PythonInterp REQUIRED)
-
     find_package(SWIG REQUIRED)
     INCLUDE(${SWIG_USE_FILE})
     unset(SWIG_LANG_TYPE)
+endif ()
+
+if (BUILD_PYTHON)
+    set(Python_ADDITIONAL_VERSIONS 3 3.6 3.5)
+    find_package(PythonLibs REQUIRED)
+    find_package(PythonInterp REQUIRED)
 endif ()
 
 set(REF_KYBER_SRC
@@ -248,35 +256,45 @@ if (BUILD_PYTHON)
 
     ###########################################################################
     ## qrllib
-    set(SWIG_INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/src/api/qrl.i)
+    set(SWIG_INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/src/api/pyqrllib.i)
     set(SWIG_MODULE_NAME pyqrllib)
 
     set_source_files_properties(${SWIG_INTERFACE} PROPERTIES
-        CPLUSPLUS ON
-        SWIG_FLAGS "-I${PROJECT_SOURCE_DIR}/src")
+            CPLUSPLUS ON
+            SWIG_FLAGS "-I${PROJECT_SOURCE_DIR}/src")
 
-    # Intentionally use a deprecated version to provide support for the raspberry pi
-    # Basic pyqrllib - XmssBasic, etc.
-    swig_add_module(${SWIG_MODULE_NAME} python ${SWIG_INTERFACE})
-    set(SWIG_MODULE ${SWIG_MODULE_${SWIG_MODULE_NAME}_REAL_NAME})
+    if(${CMAKE_VERSION} VERSION_LESS 3.12.0)
+        # Intentionally use a deprecated version to provide support for the raspberry pi
+        # Basic pyqrllib - XmssBasic, etc.
+        swig_add_module(${SWIG_MODULE_NAME} python ${SWIG_INTERFACE})
+        set(SWIG_MODULE ${SWIG_MODULE_${SWIG_MODULE_NAME}_REAL_NAME})
+
+        add_custom_command(TARGET ${SWIG_MODULE}
+                POST_BUILD
+                COMMENT "Moving SWIG files to output dir"
+                COMMAND ${CMAKE_COMMAND} -E
+                copy_if_different $<TARGET_FILE:${SWIG_MODULE}>
+                ${PROJECT_SOURCE_DIR}/pyqrllib/$<TARGET_LINKER_FILE_NAME:${SWIG_MODULE}>)
+
+        add_custom_command(TARGET ${SWIG_MODULE}
+                POST_BUILD
+                COMMENT ${swig_extra_generated_files}
+                COMMAND ${CMAKE_COMMAND} -E
+                copy_if_different ${swig_extra_generated_files}
+                ${PROJECT_SOURCE_DIR}/pyqrllib/pyqrllib.py)
+    else()
+        swig_add_library(${SWIG_MODULE_NAME}
+                LANGUAGE python
+                OUTPUT_DIR ${PROJECT_SOURCE_DIR}/pyqrllib
+                OUTFILE_DIR ${PROJECT_SOURCE_DIR}/pyqrllib
+                SOURCES ${SWIG_INTERFACE}
+                )
+        set(SWIG_MODULE ${SWIG_MODULE_${SWIG_MODULE_NAME}_REAL_NAME})
+    endif()
 
     set_target_properties(${SWIG_MODULE} PROPERTIES DEBUG_POSTFIX "_d")
     target_link_libraries(${SWIG_MODULE} ${PYTHON_LIBRARIES} qrllib util PicoSHA2)
     target_include_directories(${SWIG_MODULE} PRIVATE ${PYTHON_INCLUDE_DIRS})
-
-    add_custom_command(TARGET ${SWIG_MODULE}
-        POST_BUILD
-        COMMENT "Moving SWIG files to output dir"
-        COMMAND ${CMAKE_COMMAND} -E
-            copy_if_different $<TARGET_FILE:${SWIG_MODULE}>
-            ${PROJECT_SOURCE_DIR}/pyqrllib/$<TARGET_LINKER_FILE_NAME:${SWIG_MODULE}>)
-
-    add_custom_command(TARGET ${SWIG_MODULE}
-        POST_BUILD
-        COMMENT ${swig_extra_generated_files}
-        COMMAND ${CMAKE_COMMAND} -E
-            copy_if_different ${swig_extra_generated_files}
-            ${PROJECT_SOURCE_DIR}/pyqrllib/pyqrllib.py)
 
     ###########################################################################
     ## dilithium
@@ -287,25 +305,35 @@ if (BUILD_PYTHON)
         CPLUSPLUS ON
         SWIG_FLAGS "-I${PROJECT_SOURCE_DIR}/src/dilithium")
 
-    swig_add_module(${SWIG_MODULE_NAME} python ${SWIG_INTERFACE})
-    set(SWIG_MODULE ${SWIG_MODULE_${SWIG_MODULE_NAME}_REAL_NAME})
-    set_target_properties(${SWIG_MODULE} PROPERTIES DEBUG_POSTFIX "_d")
+    if(${CMAKE_VERSION} VERSION_LESS 3.12.0)
+        swig_add_module(${SWIG_MODULE_NAME} python ${SWIG_INTERFACE})
+        set(SWIG_MODULE ${SWIG_MODULE_${SWIG_MODULE_NAME}_REAL_NAME})
 
+        add_custom_command(TARGET ${SWIG_MODULE}
+                POST_BUILD
+                COMMENT "Moving SWIG files to output dir"
+                COMMAND ${CMAKE_COMMAND} -E
+                copy_if_different $<TARGET_FILE:${SWIG_MODULE}>
+                ${PROJECT_SOURCE_DIR}/pyqrllib/$<TARGET_LINKER_FILE_NAME:${SWIG_MODULE}>)
+
+        add_custom_command(TARGET ${SWIG_MODULE}
+                POST_BUILD
+                COMMENT ${swig_extra_generated_files}
+                COMMAND ${CMAKE_COMMAND} -E
+                copy_if_different ${swig_extra_generated_files} ${PROJECT_SOURCE_DIR}/pyqrllib/dilithium.py)
+    else()
+        swig_add_library(${SWIG_MODULE_NAME}
+                LANGUAGE python
+                OUTPUT_DIR ${PROJECT_SOURCE_DIR}/pyqrllib
+                OUTFILE_DIR ${PROJECT_SOURCE_DIR}/pyqrllib
+                SOURCES ${SWIG_INTERFACE}
+                )
+        set(SWIG_MODULE ${SWIG_MODULE_${SWIG_MODULE_NAME}_REAL_NAME})
+    endif()
+
+    set_target_properties(${SWIG_MODULE} PROPERTIES DEBUG_POSTFIX "_d")
     target_link_libraries(${SWIG_MODULE} ${PYTHON_LIBRARIES} dilithium_ref dilithium)
     target_include_directories(${SWIG_MODULE} PRIVATE ${PYTHON_INCLUDE_DIRS})
-
-    add_custom_command(TARGET ${SWIG_MODULE}
-        POST_BUILD
-        COMMENT "Moving SWIG files to output dir"
-        COMMAND ${CMAKE_COMMAND} -E
-        copy_if_different $<TARGET_FILE:${SWIG_MODULE}>
-          ${PROJECT_SOURCE_DIR}/pyqrllib/$<TARGET_LINKER_FILE_NAME:${SWIG_MODULE}>)
-
-    add_custom_command(TARGET ${SWIG_MODULE}
-        POST_BUILD
-        COMMENT ${swig_extra_generated_files}
-        COMMAND ${CMAKE_COMMAND} -E
-        copy_if_different ${swig_extra_generated_files} ${PROJECT_SOURCE_DIR}/pyqrllib/dilithium.py)
 
     ###########################################################################
     ## kyber
@@ -316,25 +344,35 @@ if (BUILD_PYTHON)
         CPLUSPLUS ON
         SWIG_FLAGS "-I${PROJECT_SOURCE_DIR}/src/kyber")
 
-    swig_add_module(${SWIG_MODULE_NAME} python ${SWIG_INTERFACE})
-    set(SWIG_MODULE ${SWIG_MODULE_${SWIG_MODULE_NAME}_REAL_NAME})
-    set_target_properties(${SWIG_MODULE} PROPERTIES DEBUG_POSTFIX "_d")
+    if(${CMAKE_VERSION} VERSION_LESS 3.12.0)
+        swig_add_module(${SWIG_MODULE_NAME} python ${SWIG_INTERFACE})
+        set(SWIG_MODULE ${SWIG_MODULE_${SWIG_MODULE_NAME}_REAL_NAME})
 
+        add_custom_command(TARGET ${SWIG_MODULE}
+                POST_BUILD
+                COMMENT "Moving SWIG files to output dir"
+                COMMAND ${CMAKE_COMMAND} -E
+                copy_if_different $<TARGET_FILE:${SWIG_MODULE}>
+                ${PROJECT_SOURCE_DIR}/pyqrllib/$<TARGET_LINKER_FILE_NAME:${SWIG_MODULE}>)
+
+        add_custom_command(TARGET ${SWIG_MODULE}
+                POST_BUILD
+                COMMENT ${swig_extra_generated_files}
+                COMMAND ${CMAKE_COMMAND} -E
+                copy_if_different ${swig_extra_generated_files} ${PROJECT_SOURCE_DIR}/pyqrllib/kyber.py)
+    else()
+        swig_add_library(${SWIG_MODULE_NAME}
+                LANGUAGE python
+                OUTPUT_DIR ${PROJECT_SOURCE_DIR}/pyqrllib
+                OUTFILE_DIR ${PROJECT_SOURCE_DIR}/pyqrllib
+                SOURCES ${SWIG_INTERFACE}
+                )
+        set(SWIG_MODULE ${SWIG_MODULE_${SWIG_MODULE_NAME}_REAL_NAME})
+    endif()
+
+    set_target_properties(${SWIG_MODULE} PROPERTIES DEBUG_POSTFIX "_d")
     target_link_libraries(${SWIG_MODULE} ${PYTHON_LIBRARIES} kyber_ref kyber)
     target_include_directories(${SWIG_MODULE} PRIVATE ${PYTHON_INCLUDE_DIRS})
-
-    add_custom_command(TARGET ${SWIG_MODULE}
-        POST_BUILD
-        COMMENT "Moving SWIG files to output dir"
-        COMMAND ${CMAKE_COMMAND} -E
-        copy_if_different $<TARGET_FILE:${SWIG_MODULE}>
-          ${PROJECT_SOURCE_DIR}/pyqrllib/$<TARGET_LINKER_FILE_NAME:${SWIG_MODULE}>)
-
-    add_custom_command(TARGET ${SWIG_MODULE}
-        POST_BUILD
-        COMMENT ${swig_extra_generated_files}
-        COMMAND ${CMAKE_COMMAND} -E
-          copy_if_different ${swig_extra_generated_files} ${PROJECT_SOURCE_DIR}/pyqrllib/kyber.py)
 endif ()
 
 if (BUILD_WEBASSEMBLY)
@@ -342,7 +380,8 @@ if (BUILD_WEBASSEMBLY)
     set(JS_DILITHIUM_INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/src/jswrapper/jsdilwrapper.cpp)
     set(JS_KYBINTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/src/jswrapper/jskybwrapper.cpp)
 
-    message(STATUS "webassembly enabled")
+    message(WARNING "webassembly enabled")
+
     add_library(jsqrl SHARED
             ${JS_QRL_INTERFACE}
             ${LIB_QRL_SRC}
@@ -350,6 +389,7 @@ if (BUILD_WEBASSEMBLY)
             ${LIBXMSSALT_SRC}
             ${LIBUTIL_SRC}
             )
+
     set_target_properties(jsqrl PROPERTIES COMPILE_FLAGS "--emscripten-cxx")
     target_include_directories(jsqrl PRIVATE
       $<TARGET_PROPERTY:qrllib,INTERFACE_INCLUDE_DIRECTORIES>
@@ -359,11 +399,10 @@ if (BUILD_WEBASSEMBLY)
       $<TARGET_PROPERTY:dilithium_ref,INTERFACE_INCLUDE_DIRECTORIES>
       )
 
-    add_library(jsdilithium SHARED
-            ${JS_DILITHIUM_INTERFACE}
-            ${LIB_KYBER_SRC}
-            ${LIBDILITHIUM_SRC}
+    set_target_properties(jsqrl
+            PROPERTIES LINK_FLAGS "-s DISABLE_EXCEPTION_CATCHING=0"
             )
+
     target_include_directories(jsdilithium PRIVATE
       $<TARGET_PROPERTY:kyber_ref,INTERFACE_INCLUDE_DIRECTORIES>
       $<TARGET_PROPERTY:dilithium,INTERFACE_INCLUDE_DIRECTORIES>

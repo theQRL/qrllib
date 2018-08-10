@@ -37,52 +37,56 @@ namespace {
         EXPECT_EQ(mnemonic, "");
     }
 
-    TEST(Misc, bin2mnemonic_simple1) {
+    TEST(Misc, bin2mnemonic_3_bytes) {
+        std::vector<unsigned char> input = {0x00, 0x00, 0x00};
+
+        auto mnemonic = bin2mnemonic(input);
+        EXPECT_EQ(mnemonic, "aback aback");
+    }
+
+    TEST(Misc, bin2mnemonic_3_bytes_b) {
+        std::vector<unsigned char> input = {0x00, 0x01, 0x00};
+
+        auto mnemonic = bin2mnemonic(input);
+        EXPECT_EQ(mnemonic, "aback badge");
+    }
+
+    TEST(Misc, bin2mnemonic_3_bytes_c) {
+        std::vector<unsigned char> input = {0x00, 0x02, 0x00};
+
+        auto mnemonic = bin2mnemonic(input);
+        EXPECT_EQ(mnemonic, "aback bunny");
+    }
+
+    TEST(Misc, bin2mnemonic_4_bytes_a) {
         std::vector<unsigned char> input = {0x12, 0x34, 0x56, 0x78};
 
-        auto mnemonic = bin2mnemonic(input);
-        EXPECT_EQ(mnemonic, "base elbow knew");
+        EXPECT_THROW(bin2mnemonic(input), std::invalid_argument);
     }
 
-    TEST(Misc, bin2mnemonic_simple2) {
+    TEST(Misc, bin2mnemonic_5_bytes_b) {
         std::vector<unsigned char> input = {0x12, 0x34, 0x56, 0x78, 0x00};
-
-        auto mnemonic = bin2mnemonic(input);
-        EXPECT_EQ(mnemonic, "base elbow knew aback");
+        EXPECT_THROW(bin2mnemonic(input), std::invalid_argument);
     }
 
-    TEST(Misc, bin2mnemonic_simple3) {
-        std::vector<unsigned char> input = {0x12, 0x34, 0x56, 0x78, 0x01};
-
-        auto mnemonic = bin2mnemonic(input);
-        EXPECT_EQ(mnemonic, "base elbow knew badge");
-    }
-
-    TEST(Misc, bin2mnemonic_simple3b) {
+    TEST(Misc, bin2mnemonic_6_bytes_a) {
         std::vector<unsigned char> input = {0x12, 0x34, 0x56, 0x78, 0x01, 0x00};
 
         auto mnemonic = bin2mnemonic(input);
         EXPECT_EQ(mnemonic, "base elbow knew badge");
     }
 
-    TEST(Misc, bin2mnemonic_simple4) {
-        std::vector<unsigned char> input = {0x00};
+    TEST(Misc, bin2mnemonic_6_bytes_b) {
+        std::vector<unsigned char> input = {0x12, 0x34, 0x56, 0x78, 0x01, 0x09};
 
         auto mnemonic = bin2mnemonic(input);
-        EXPECT_EQ(mnemonic, "aback");
-    }
-
-    TEST(Misc, bin2mnemonic_simple5) {
-        std::vector<unsigned char> input = {0x01};
-
-        auto mnemonic = bin2mnemonic(input);
-        EXPECT_EQ(mnemonic, "absorb");
+        EXPECT_EQ(mnemonic, "base elbow knew bald");
     }
 
     TEST(Misc, mnemonic2bin_simple1) {
-        std::string input = "base elbow knew aback";
+        std::string input = "base elbow knew aback bag bunny";
         auto data = mnemonic2bin(input);
-        EXPECT_EQ(bin2hstr(data), "123456780000");
+        EXPECT_EQ(bin2hstr(data), "123456780000102200");
     }
 
     TEST(Misc, mnemonic2bin_simple2) {
@@ -91,6 +95,12 @@ namespace {
 
         EXPECT_EQ(bin2hstr(data), "123456780102");
     }
+
+    TEST(Misc, mnemonic2bin_unknown) {
+        std::string input = "base elbow knew unknown";
+        EXPECT_THROW(mnemonic2bin(input), std::invalid_argument);
+    }
+
 
     TEST(Misc, mnemonic2bin_long) {
         std::string input = "law bruise screen lunar than loft but franc strike asleep dwarf tavern dragon alarm "

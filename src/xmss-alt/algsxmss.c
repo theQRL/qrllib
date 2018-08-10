@@ -42,7 +42,7 @@ void get_seed(eHashFunction hash_func,
  * Computes the leaf at a given address. First generates the WOTS key pair, then computes leaf using l_tree. As this happens position independent, we only require that addr encodes the right ltree-address.
  */
 
-static void gen_leaf_wots(eHashFunction hash_func,
+void gen_leaf_wots(eHashFunction hash_func,
                           unsigned char *leaf,
                           const unsigned char *sk_seed,
                           const xmss_params *params,

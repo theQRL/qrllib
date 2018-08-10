@@ -195,7 +195,6 @@ class TestDilithium(TestCase):
         print(bin2hstr(dilithium.getPK()))
         print(bin2hstr(dilithium.getSK()))
 
-
     def test_dilithium_reference2(self):
         pk = bytes(hstr2bin(self.PK1_HSTR))
         sk = bytes(hstr2bin(self.SK1_HSTR))

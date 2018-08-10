@@ -11,6 +11,36 @@
 %include "std_shared_ptr.i"
 %include "exception.i"
 
+%{
+SWIGEXPORT void HandleAllExceptions()
+{
+    try
+    {
+        throw;
+    }
+    catch(const std::invalid_argument& e)
+    {
+        SWIG_Error(SWIG_ValueError, e.what());
+    }
+    catch(const std::exception& e)
+    {
+        SWIG_Error(SWIG_RuntimeError, e.what());
+    }
+    catch (...)
+    {
+        SWIG_Error(SWIG_UnknownError, "unknown error");
+    }
+}
+%}
+
+%exception {
+    try {   $action }
+    catch (...) {
+        HandleAllExceptions();
+        SWIG_fail;
+    }
+}
+
 %array_class(unsigned char, ucharCArray)
 %array_class(unsigned int, uintCArray)
 %array_class(uint32_t, uint32CArray)

@@ -47,7 +47,7 @@ unsigned char getHexValue(char c) {
     return (unsigned char) (tmp - 'a' + 10);
 }
 
-std::vector<unsigned char> hstr2bin(const std::string &s) throw(std::invalid_argument) {
+std::vector<unsigned char> hstr2bin(const std::string &s) {
     if (s.size() % 2 != 0) {
         throw std::invalid_argument("hex string is expected to have an even number of characters");
     }
@@ -65,7 +65,12 @@ std::vector<unsigned char> hstr2bin(const std::string &s) throw(std::invalid_arg
     return result;
 }
 
-std::string bin2mnemonic(const std::vector<unsigned char> &vec) {
+std::string bin2mnemonic(const std::vector<unsigned char> &vec)
+{
+    if (vec.size() % 3 != 0) {
+        throw std::invalid_argument("byte count needs to be a multiple of 3");
+    }
+
     std::stringstream ss;
     std::string separator;
     for (int nibble = 0; nibble < vec.size() * 2; nibble += 3) {
@@ -80,7 +85,14 @@ std::string bin2mnemonic(const std::vector<unsigned char> &vec) {
     return ss.str();
 }
 
-std::vector<unsigned char> mnemonic2bin(const std::string &mnemonic) {
+std::vector<unsigned char> mnemonic2bin(const std::string &mnemonic)
+{
+    auto word_count = std::count(mnemonic.cbegin(), mnemonic.cend(), ' ') + 1;
+    if (word_count%2!=0)
+    {
+        throw std::invalid_argument("word count = " + std::to_string(word_count) + " must be even ");
+    }
+
     // Prepare lookup
     // FIXME: Create the look up in advance
     std::unordered_map<std::string, int> word_lookup;

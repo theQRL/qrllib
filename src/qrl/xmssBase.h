@@ -13,12 +13,26 @@
 #define TSEED std::vector<uint8_t>
 #define TKEY std::vector<uint8_t>
 
+// TODO: Use a union? to operate on partial fields
+//    PK format
+//    32 root address
+//    32 pub_seed
+//
+//    SK format
+//    4  idx
+//    32 sk_seed
+//    32 sk_prf
+//    32 pub_seed
+//    32 root
+
 class XmssBase {
 public:
     XmssBase(const TSEED &seed,
              uint8_t height,
              eHashFunction hashFunction,
-             eAddrFormatType formatType) throw(std::invalid_argument);
+             eAddrFormatType formatType);
+
+    XmssBase(const TSEED &extended_seed);
 
     virtual ~XmssBase() = default;
 
@@ -26,7 +40,7 @@ public:
 
     static bool verify(const TMESSAGE &message,
                        const TSIGNATURE &signature,
-                       const TKEY &pk) throw(std::invalid_argument);
+                       const TKEY &pk);
 
     // TODO: Differentiate between XMSS and WOTS+ keys
     TKEY getSK();
@@ -59,7 +73,7 @@ public:
 
     unsigned int getIndex();
 
-    virtual unsigned int setIndex(uint32_t new_index) throw(std::invalid_argument);
+    virtual unsigned int setIndex(uint32_t new_index);
 
     unsigned int getSignatureSize();
 

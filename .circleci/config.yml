@@ -20,41 +20,106 @@ jobs:
 
   build_emscripten:
     docker:
-      - image: zondax/qrl-build-images:xenial-emscripten
+      - image: zondax/qrl-build-images:emscripten
     environment:
       BASH_ENV: ".circleci/bash_env.sh"
     steps:
       - checkout
-      - run: git submodule update --init --recursive
+      - run:
+          name: Update submodules
+          command: git submodule update --init --recursive
 
-      # FIXME: Move this to the image to save time
-      - run: .circleci/setup_emscripten.sh
+      - run:
+          name: Build webassembly
+          command: ./.circleci/build_emscripten.sh
 
-      # Build
-      - run: emconfigure cmake -DBUILD_WEBASSEMBLY=ON -DCMAKE_BUILD_TYPE=Release
-      - run: emmake make
-      # FIXME: Disable .mem for node.js until this gets fixed: https://github.com/kripken/emscripten/issues/2542
-      - run: emcc --bind libjsqrl.so -O3 --memory-init-file 0  -o libjsqrl.js
-      - run: emcc --bind libjsqrl.so -O3 -s WASM=1 -o web-libjsqrl.js
-      - run: echo "QRLLIB=Module;" >> web-libjsqrl.js
-      # Fix paths of web-libjsqrl.wasm for web clients
-      - run: sed -i 's/web-libjsqrl\.wasm/\/web-libjsqrl\.wasm/g' web-libjsqrl.js
+      - run:
+          name: Install latest node/npm
+          command: ./.circleci/install_node.sh
 
-      - run: node tests/js/test.js
+      - run:
+          name: run the tests
+          command: cd tests/js && npm install && npm test
 
   deploy_pypi:
     docker:
-      - image: zondax/qrl-build-images:xenial-qrllib
+      - image: qrledger/qrl-docker:xenial
     steps:
       - checkout
       - run: git submodule update --init --recursive
-      - run: python3 setup.py test
+      - run: python3 setup.py build sdist
+      - run: pip install twine
+      - run: twine upload -u $PYPI_USERNAME -p $PYPI_PASSWORD dist/*
+
+  deploy_npm:
+    docker:
+      - image: zondax/qrl-build-images:emscripten
+    environment:
+      BASH_ENV: ".circleci/bash_env.sh"
+    steps:
+      - checkout
+      - run:
+          name: Update submodules
+          command: git submodule update --init --recursive
+
+        # Building again and avoiding complex workspaces until they are supported in the CLI
+      - run:
+          name: Build webassembly
+          command: ./.circleci/build_emscripten.sh
+
+      - run:
+          name: Install latest node/npm
+          command: ./.circleci/install_node.sh
+
+      - run:
+          name: Authenticate with registry
+          command: echo "//registry.npmjs.org/:_authToken=$NPM_TOKEN" > /root/project/.npmrc
+
+      - run:
+          name: Update tag
+          command: npm --no-git-tag-version version $CIRCLE_TAG
+
+      - run:
+          name: Publish package
+          command: npm publish
 
 workflows:
   version: 2
   build_all:
     jobs:
-      - build
-      - test_python
-      #- build_emscripten
+      - build:
+          filters:
+            tags:
+              only: /.*/
 
+      - test_python:
+          filters:
+            tags:
+              only: /.*/
+
+      - build_emscripten:
+          filters:
+            tags:
+              only: /.*/
+
+      - deploy_pypi:
+          requires:
+            - build
+            - test_python
+            - build_emscripten
+          filters:
+            branches:
+              ignore: /.*/
+            tags:
+              only: /^v[0-9]+(\.[0-9]+)*/
+
+      - deploy_npm:
+          requires:
+            - build
+            - test_python
+            - build_emscripten
+          filters:
+            branches:
+              ignore: /.*/
+            tags:
+              only: /^v[0-9]+(\.[0-9]+)*/
