@@ -41,6 +41,14 @@ SWIGEXPORT void HandleAllExceptions()
         SWIG_fail;
     }
 }
+#else
+%exception {
+    try {   $action }
+    catch (std::exception &e) {
+        _swig_gopanic(e.what());
+    }
+}
+
 #endif
 
 %array_class(unsigned char, ucharCArray)
