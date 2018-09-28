@@ -4,6 +4,33 @@
 #include <PicoSHA2/picosha2.h>
 #include "qrlHelper.h"
 
+//    PK format
+//     2 QRL_DESCRIPTOR
+//    32 root address
+//    32 pub_seed
+//
+//    SK format
+//    4  idx
+//    32 sk_seed
+//    32 sk_prf
+//    32 pub_seed
+//    32 root
+
+constexpr size_t SIGNATURE_BASE_SIZE  = 4+32+67*32;
+
+constexpr size_t XMSS_MAX_HEIGHT=254;
+
+// FIXME: Use a union for this
+constexpr size_t OFFSET_IDX = 0;
+
+constexpr size_t OFFSET_SK_SEED = OFFSET_IDX+4;
+
+constexpr size_t OFFSET_SK_PRF = OFFSET_SK_SEED+32;
+
+constexpr size_t OFFSET_PUB_SEED = OFFSET_SK_PRF+32;
+
+constexpr size_t OFFSET_ROOT = OFFSET_PUB_SEED+32;
+
 XmssBase::XmssBase(const TSEED& seed,
         uint8_t height,
         eHashFunction hashFunction,
@@ -15,6 +42,10 @@ XmssBase::XmssBase(const TSEED& seed,
 {
     if (seed.size()!=48) {
         throw std::invalid_argument("Seed should be 48 bytes. Other values are not currently supported");
+    }
+
+    if (height>XMSS_MAX_HEIGHT) {
+        throw std::invalid_argument("Height should be <= 254");
     }
 }
 
@@ -38,13 +69,12 @@ XmssBase::XmssBase(const TSEED& extended_seed)
 uint32_t XmssBase::getSignatureSize()
 {
     // 4 + n + (len + h) * n)
-    return static_cast<uint32_t>(4+32+67*32+_height*32);
+    return static_cast<uint32_t>(SIGNATURE_BASE_SIZE+_height*32);
 }
 
 uint8_t XmssBase::getHeightFromSigSize(size_t sigSize)
 {
-    const uint32_t min_size = 4+32+67*32;    // FIXME: Move these values to constants
-    if (sigSize < min_size)
+    if (sigSize < SIGNATURE_BASE_SIZE)
     {
         throw std::invalid_argument("Invalid signature size");
     }
@@ -53,7 +83,7 @@ uint8_t XmssBase::getHeightFromSigSize(size_t sigSize)
         throw std::invalid_argument("Invalid signature size");
     }
 
-    auto height = (sigSize - min_size)/32;
+    auto height = (sigSize - SIGNATURE_BASE_SIZE)/32;
 
     return static_cast<uint8_t>(height);
 }
@@ -67,29 +97,6 @@ uint32_t XmssBase::getSecretKeySize()
 {
     return 132;
 }
-
-//    PK format
-//     2 QRL_DESCRIPTOR
-//    32 root address
-//    32 pub_seed
-//
-//    SK format
-//    4  idx
-//    32 sk_seed
-//    32 sk_prf
-//    32 pub_seed
-//    32 root
-
-// FIXME: Use a union for this
-constexpr size_t OFFSET_IDX = 0;
-
-constexpr size_t OFFSET_SK_SEED = OFFSET_IDX+4;
-
-constexpr size_t OFFSET_SK_PRF = OFFSET_SK_SEED+32;
-
-constexpr size_t OFFSET_PUB_SEED = OFFSET_SK_PRF+32;
-
-constexpr size_t OFFSET_ROOT = OFFSET_PUB_SEED+32;
 
 TKEY XmssBase::getSKSeed()
 {
@@ -118,8 +125,8 @@ TKEY XmssBase::getRoot()
 uint32_t XmssBase::getIndex()
 {
     return (_sk[0] << 24)+
-            (_sk[1] << 16)+
-            (_sk[2] << 8)+
+           (_sk[1] << 16)+
+           (_sk[2] << 8)+
             _sk[3];
 }
 
@@ -193,6 +200,11 @@ bool XmssBase::verify(const TMESSAGE& message,
     {
         if (extended_pk.size()!=67) {
             throw std::invalid_argument("Invalid extended_pk size. It should be 67 bytes");
+        }
+
+        if (signature.size()>SIGNATURE_BASE_SIZE+XMSS_MAX_HEIGHT*32)
+        {
+            throw std::invalid_argument("invalid signature size. Height<=254");
         }
 
         auto desc = QRLDescriptor::fromExtendedPK(extended_pk);
