@@ -18,6 +18,31 @@ jobs:
       - run: git submodule update --init --recursive
       - run: python3 setup.py test
 
+  test_golang:
+    docker:
+      - image: zondax/qrl-build-images:xenial-qrllib
+    steps:
+      - checkout
+      - run: add-apt-repository ppa:ubuntu-toolchain-r/test
+      - run: apt update
+      - run: apt install g++-7 -y
+      - run: update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-7 60 --slave /usr/bin/g++ g++ /usr/bin/g++-7
+      - run: git submodule update --init --recursive
+
+      - run: cd / && curl -O https://storage.googleapis.com/golang/go1.8.linux-amd64.tar.gz && tar zxvf go1.8.linux-amd64.tar.gz
+      - run:
+          name: Setting up Environment Variables for Golang
+          command: |
+            echo 'export GOROOT="/go"' >> $BASH_ENV
+            echo 'export PATH="$PATH:/go/bin/"' >> $BASH_ENV
+
+      - run: go get github.com/magiconair/properties/assert
+      - run: mkdir -p ~/go/src/github.com/theQRL/qrllib/
+      - run: cp -r . ~/go/src/github.com/theQRL/qrllib/
+      - run: cd ~/go/src/github.com/theQRL/qrllib/ && cmake -DBUILD_GO=ON
+      - run: cd ~/go/src/github.com/theQRL/qrllib/ && make
+      - run: cd ~/go/src/github.com/theQRL/qrllib/tests/golang/tests/ && go test -v
+
   build_emscripten:
     docker:
       - image: zondax/qrl-build-images:emscripten
@@ -93,6 +118,11 @@ workflows:
               only: /.*/
 
       - test_python:
+          filters:
+            tags:
+              only: /.*/
+
+      - test_golang:
           filters:
             tags:
               only: /.*/
