@@ -6,7 +6,7 @@ emmake make
 # FIXME: Disable .mem for node.js until this gets fixed: https://github.com/kripken/emscripten/issues/2542
 emcc --bind libjsqrl.so -s DISABLE_EXCEPTION_CATCHING=0 -O3 --memory-init-file 0  -o libjsqrl.js
 emcc --bind libjsqrl.so -s DISABLE_EXCEPTION_CATCHING=0 -O3 -s WASM=1 -o web-libjsqrl.js
-emcc --bind libjsqrl.so -s DISABLE_EXCEPTION_CATCHING=0 -O3 -s WASM=1 -s -s SINGLE_FILE=1 -o offline-libjsqrl.js
+emcc --bind libjsqrl.so -s DISABLE_EXCEPTION_CATCHING=0 -O3 -s WASM=1 -s SINGLE_FILE=1 -o offline-libjsqrl.js
 echo "QRLLIB=Module;" >> web-libjsqrl.js
 echo "QRLLIB=Module;" >> offline-libjsqrl.js
 
