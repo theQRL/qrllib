@@ -11,6 +11,7 @@
 %include "std_shared_ptr.i"
 %include "exception.i"
 
+#if defined(SWIGPYTHON)
 %{
 SWIGEXPORT void HandleAllExceptions()
 {
@@ -40,6 +41,15 @@ SWIGEXPORT void HandleAllExceptions()
         SWIG_fail;
     }
 }
+#else
+%exception {
+    try {   $action }
+    catch (std::exception &e) {
+        _swig_gopanic(e.what());
+    }
+}
+
+#endif
 
 %array_class(unsigned char, ucharCArray)
 %array_class(uint, uintCArray)
@@ -55,13 +65,19 @@ namespace std {
   %template(_string_list_list) vector<vector<unsigned char>>;
 }
 
+#if defined(SWIGPYTHON)
 %shared_ptr(XmssBase)
 %shared_ptr(XmssBasic)
 %shared_ptr(XmssFast)
+#endif
 
 // %array_functions(uint32_t, uint32ArrayRaw)
 
+#if defined(SWIGPYTHON)
 %module pyqrllib
+#else
+%module goqrllib
+#endif
 %{
     #include "qrl/misc.h"
     #include "qrl/hashing.h"
