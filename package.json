@@ -16,7 +16,8 @@
   "files": [
     "build/web-libjsqrl.js",
     "build/web-libjsqrl.wasm",
-    "build/libjsqrl.js"
+    "build/libjsqrl.js",
+    "build/offline-libjsqrl.js"
   ],
   "engines": {
     "node": ">=4.2.4"
