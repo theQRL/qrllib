@@ -72,3 +72,4 @@ tests/js/tmp/*.js
 tests/js/tmp/*.wasm
 
 \.npmrc
+.vscode/*
