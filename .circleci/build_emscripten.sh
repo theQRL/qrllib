@@ -7,8 +7,10 @@ emmake make
 emcc --bind libjsqrl.so -s DISABLE_EXCEPTION_CATCHING=0 -O3 --memory-init-file 0  -o libjsqrl.js
 emcc --bind libjsqrl.so -s DISABLE_EXCEPTION_CATCHING=0 -O3 -s WASM=1 -o web-libjsqrl.js
 emcc --bind libjsqrl.so -s DISABLE_EXCEPTION_CATCHING=0 -O3 -s WASM=1 -s SINGLE_FILE=1 -o offline-libjsqrl.js
+emcc --bind libjsdilithium.so -s DISABLE_EXCEPTION_CATCHING=0 -O3 -s WASM=1 -s SINGLE_FILE=1 -o offline-libjsdilithium.js
 echo "QRLLIB=Module;" >> web-libjsqrl.js
 echo "QRLLIB=Module;" >> offline-libjsqrl.js
+echo "DILLIB=Module;" >> offline-libjsdilithium.js
 
 # Fix paths of web-libjsqrl.wasm for web clients
 sed -i 's/web-libjsqrl\.wasm/\/web-libjsqrl\.wasm/g' web-libjsqrl.js
