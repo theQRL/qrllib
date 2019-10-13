@@ -11,14 +11,19 @@ namespace {
     
     public:
 
-        std::vector<uint8_t> getSK()
-        {
-            return _dilithium.getSK();
-        }
-
         static DilithiumWrapper empty()
         {
             return DilithiumWrapper();
+        }
+
+        std::vector<uint8_t> getSKRaw()
+        {   
+            return _dilithium.getSK() ;
+        }
+
+        std::string getSK()
+        {
+            return bin2hstr( _dilithium.getSK() );
         }
 
         std::vector<uint8_t> getPKRaw()
@@ -67,6 +72,7 @@ EMSCRIPTEN_BINDINGS(my_module) {
         .class_function("empty", &DilithiumWrapper::empty)
         .function("getPKRaw", &DilithiumWrapper::getPKRaw)
         .function("getPK", &DilithiumWrapper::getPK)
+        .function("getSKRaw", &DilithiumWrapper::getSKRaw)
         .function("getSK", &DilithiumWrapper::getSK);
     }
 
