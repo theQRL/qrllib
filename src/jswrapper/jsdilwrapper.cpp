@@ -44,7 +44,7 @@ _bin2hstr(const std::vector<unsigned char>& input)
 std::string EMSCRIPTEN_KEEPALIVE
 _getString()
 {
-    return "Another Test from Dilithium JS Wrapper";
+    return "Test String from Dilithium JS Wrapper";
 }
 
 int EMSCRIPTEN_KEEPALIVE
