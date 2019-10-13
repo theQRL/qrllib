@@ -566,14 +566,17 @@ if (BUILD_WEBASSEMBLY)
         ${LIB_QRL_INCLUDES}
         ${LIB_DILITHIUM_INCLUDES} )
 
-#    set(JS_KYBINTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/src/jswrapper/jskybwrapper.cpp)
-#
-#    add_library(jskyber SHARED
-#            ${JS_KYBER_INTERFACE}
-#            ${LIB_KYBER_SRC}
-#            ${LIBKYBER_SRC}
-#            )
-#    target_include_directories( jskyber PRIVATE
-#            ${LIB_KYBER_INCLUDES} )
+   set(JS_KYBER_INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/src/jswrapper/jskybwrapper.cpp)
+
+   add_library(jskyber SHARED
+           ${JS_KYBER_INTERFACE}
+           ${LIB_KYBER_SRC}
+           ${LIBKYBER_SRC}
+           ${REF_KYBER_SRC}
+           ${LIB_QRL_SRC}
+           )
+   target_include_directories( jskyber PRIVATE
+           ${LIB_QRL_INCLUDES}
+           ${LIB_KYBER_INCLUDES} )
 
 endif ()
