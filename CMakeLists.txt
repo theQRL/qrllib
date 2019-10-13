@@ -552,15 +552,21 @@ if (BUILD_WEBASSEMBLY)
             PROPERTIES LINK_FLAGS "-s DISABLE_EXCEPTION_CATCHING=0"
             )
 
-#    set(JS_DILITHIUM_INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/src/jswrapper/jsdilwrapper.cpp)
+
+   set(JS_DILITHIUM_INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/src/jswrapper/jsdilwrapper.cpp)
+
+   add_library(jsdilithium SHARED
+           ${JS_DILITHIUM_INTERFACE}
+           ${LIB_DILITHIUM_SRC}
+           ${LIBDILITHIUM_SRC}
+           ${REF_DILITHIUM_SRC}
+           ${LIB_QRL_SRC}
+           )
+   target_include_directories( jsdilithium PRIVATE
+        ${LIB_QRL_INCLUDES}
+        ${LIB_DILITHIUM_INCLUDES} )
+
 #    set(JS_KYBINTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/src/jswrapper/jskybwrapper.cpp)
-#    add_library(jsdilithium SHARED
-#            ${JS_DILITHIUM_INTERFACE}
-#            ${LIB_KYBER_SRC}
-#            ${LIBDILITHIUM_SRC}
-#            )
-#    target_include_directories( jsdilithium PRIVATE
-#            ${LIB_DILITHIUM_INCLUDES} )
 #
 #    add_library(jskyber SHARED
 #            ${JS_KYBER_INTERFACE}
