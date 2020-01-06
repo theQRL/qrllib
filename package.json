@@ -17,7 +17,9 @@
     "build/web-libjsqrl.js",
     "build/web-libjsqrl.wasm",
     "build/libjsqrl.js",
-    "build/offline-libjsqrl.js"
+    "build/offline-libjsqrl.js",
+    "build/offline-libjsdilithium.js",
+    "build/offline-libjskyber.js"
   ],
   "engines": {
     "node": ">=4.2.4"
