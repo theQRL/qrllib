@@ -9,7 +9,8 @@
 XmssBasic::XmssBasic(const TSEED &seed,
                      unsigned char height,
                      eHashFunction hashFunction,
-                     eAddrFormatType addrFormatType)
+                     eAddrFormatType addrFormatType,
+                     uint32_t wotsParamW)
         : XmssBase(seed, height, hashFunction, addrFormatType) {
 //    PK format
 //    32 root address
@@ -31,7 +32,7 @@ XmssBasic::XmssBasic(const TSEED &seed,
     }
 
     const uint32_t k = 2;
-    const uint32_t w = 16;
+    const uint32_t w = wotsParamW;
     const uint32_t n = 32;
 
     if (k >= height || (height - k) % 2) {
@@ -49,7 +50,7 @@ XmssBasic::XmssBasic(const TSEED &seed,
 
 
 TSIGNATURE XmssBasic::sign(const TMESSAGE &message) {
-    auto signature = TSIGNATURE(getSignatureSize(), 0);
+    auto signature = TSIGNATURE(getSignatureSize(params.wots_par.len), 0);
 
     xmss_Signmsg(_hashFunction,
                  &params,

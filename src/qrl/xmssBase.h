@@ -40,7 +40,9 @@ public:
 
     static bool verify(const TMESSAGE &message,
                        const TSIGNATURE &signature,
-                       const TKEY &pk);
+                       const TKEY &pk,
+                       uint32_t wotsParamW=16,
+                       uint32_t wotsParamLen=67);
 
     // TODO: Differentiate between XMSS and WOTS+ keys
     TKEY getSK();
@@ -75,9 +77,11 @@ public:
 
     virtual unsigned int setIndex(uint32_t new_index);
 
-    unsigned int getSignatureSize();
+    unsigned int getSignatureSize(uint32_t wotsParamLen=67);
 
-    static uint8_t getHeightFromSigSize(size_t sigSize);
+    static uint32_t calculateSignatureBaseSize(uint32_t wotsParamLen);
+
+    static uint8_t getHeightFromSigSize(size_t sigSize, uint32_t wotsParamLen=67);
 
     unsigned int getSecretKeySize();
 

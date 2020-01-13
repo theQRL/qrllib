@@ -10,22 +10,22 @@ XmssFast::XmssFast(const TSEED &seed,
                    eAddrFormatType addrFormatType)
     : XmssBase(seed, height, hashFunction, addrFormatType)
 {
-    _initialize_tree();
+    initialize_tree();
 }
 
 XmssFast::XmssFast(const TSEED& extended_seed)
     : XmssBase(extended_seed)
 {
-    _initialize_tree();
+    initialize_tree();
 }
 
-void XmssFast::_initialize_tree()
+void XmssFast::initialize_tree(uint32_t wotsParamW)
 {
     _sk = TKEY(132, 0);
     auto tmp = TKEY(64, 0);
 
     const uint32_t k = 2;
-    const uint32_t w = 16;
+    const uint32_t w = wotsParamW;
     const uint32_t n = 32;
 
     if (k >= _height || (_height - k) % 2) {
@@ -78,7 +78,7 @@ unsigned int XmssFast::setIndex(unsigned int new_index)
 
 TSIGNATURE XmssFast::sign(const TMESSAGE &message)
 {
-    auto signature = TSIGNATURE(getSignatureSize(), 0);
+    auto signature = TSIGNATURE(getSignatureSize(params.wots_par.len), 0);
 
     auto index = getIndex();
     setIndex(index);

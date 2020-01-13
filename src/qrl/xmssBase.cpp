@@ -16,7 +16,7 @@
 //    32 pub_seed
 //    32 root
 
-constexpr size_t SIGNATURE_BASE_SIZE  = 4+32+67*32;
+//constexpr size_t SIGNATURE_BASE_SIZE  = 4+32+67*32;
 
 constexpr size_t XMSS_MAX_HEIGHT=254;
 
@@ -66,14 +66,20 @@ XmssBase::XmssBase(const TSEED& extended_seed)
     _addrFormatType = desc.getAddrFormatType();
 }
 
-uint32_t XmssBase::getSignatureSize()
+uint32_t XmssBase::calculateSignatureBaseSize(uint32_t wotsParamLen) {
+  return 4 + 32 + wotsParamLen * 32;
+}
+
+uint32_t XmssBase::getSignatureSize(uint32_t wotsParamLen)
 {
+    const uint32_t SIGNATURE_BASE_SIZE = calculateSignatureBaseSize(wotsParamLen);
     // 4 + n + (len + h) * n)
     return static_cast<uint32_t>(SIGNATURE_BASE_SIZE+_height*32);
 }
 
-uint8_t XmssBase::getHeightFromSigSize(size_t sigSize)
+uint8_t XmssBase::getHeightFromSigSize(size_t sigSize, uint32_t wotsParamLen)
 {
+    const uint32_t SIGNATURE_BASE_SIZE = calculateSignatureBaseSize(wotsParamLen);
     if (sigSize < SIGNATURE_BASE_SIZE)
     {
         throw std::invalid_argument("Invalid signature size");
@@ -194,14 +200,16 @@ std::vector<uint8_t> XmssBase::getAddress()
 
 bool XmssBase::verify(const TMESSAGE& message,
         const TSIGNATURE& signature,
-        const TKEY& extended_pk)
+        const TKEY& extended_pk,
+        uint32_t wotsParamW,
+        uint32_t wotsParamLen)
 {
     try
     {
         if (extended_pk.size()!=67) {
             throw std::invalid_argument("Invalid extended_pk size. It should be 67 bytes");
         }
-
+        const uint32_t SIGNATURE_BASE_SIZE = calculateSignatureBaseSize(wotsParamLen);
         if (signature.size()>SIGNATURE_BASE_SIZE+XMSS_MAX_HEIGHT*32)
         {
             throw std::invalid_argument("invalid signature size. Height<=254");
@@ -213,7 +221,8 @@ bool XmssBase::verify(const TMESSAGE& message,
             return false;
         }
 
-        const auto height = static_cast<const uint8_t> (XmssBase::getHeightFromSigSize(signature.size()));
+        const auto height = static_cast<const uint8_t> (XmssBase::getHeightFromSigSize(
+                signature.size(), wotsParamLen));
 
         if (height==0 || desc.getHeight()!=height) {
             return false;
@@ -223,7 +232,7 @@ bool XmssBase::verify(const TMESSAGE& message,
 
         xmss_params params{};
         const uint32_t k = 2;
-        const uint32_t w = 16;
+        const uint32_t w = wotsParamW;
         const uint32_t n = 32;
 
         if (k>=height || (height-k)%2) {
