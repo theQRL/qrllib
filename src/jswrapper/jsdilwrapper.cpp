@@ -41,11 +41,21 @@ namespace {
             return bin2hstr( _dilithium.sign( hstr2bin(message) ) );
         }
 
-        static bool sign_open(const std::string& message_signed,
+        static std::string sign_open( std::string message_output,
+                          const std::string& message_signed,
                           const std::string& pk)
         { 
-            std::vector<uint8_t> message_output;
-            return Dilithium::sign_open( message_output, hstr2bin(message_signed), hstr2bin(pk));
+            std::vector<uint8_t> vec;
+            vec.assign(message_output.begin(), message_output.end());
+            Dilithium::sign_open( vec, hstr2bin(message_signed), hstr2bin(pk));
+            return bin2hstr(vec);
+        }
+
+        static std::string extract_message(const std::string& message_output)
+        {
+            std::vector<uint8_t> vec;
+            vec.assign( hstr2bin(message_output).begin(), hstr2bin(message_output).end());
+            return bin2hstr( Dilithium::extract_message( vec ) );
         }
 
     private:
@@ -89,6 +99,7 @@ EMSCRIPTEN_BINDINGS(my_module) {
     class_<DilithiumWrapper>("Dilithium")
         .class_function("empty", &DilithiumWrapper::empty)
         .class_function("sign_open", &DilithiumWrapper::sign_open)
+        .class_function("extract_message", &DilithiumWrapper::extract_message)
         .function("getPKRaw", &DilithiumWrapper::getPKRaw)
         .function("getPK", &DilithiumWrapper::getPK)
         .function("getSKRaw", &DilithiumWrapper::getSKRaw)

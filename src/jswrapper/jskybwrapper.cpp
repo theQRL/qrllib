@@ -60,12 +60,6 @@ namespace {
         Kyber _kyber;
 };
 
-// bool EMSCRIPTEN_KEEPALIVE
-// kem_encode(const std::vector<uint8_t> &other_pk)
-// {
-//     return kem_encode(other_pk);
-// }
-
 std::string EMSCRIPTEN_KEEPALIVE
 _bin2hstr(const std::vector<unsigned char>& input)
 {
