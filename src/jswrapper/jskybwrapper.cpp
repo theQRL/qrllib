@@ -36,14 +36,46 @@ namespace {
             return bin2hstr( _kyber.getPK() );
         }
 
+        bool kem_encode(const std::string& input)
+        {
+            return _kyber.kem_encode( hstr2bin(input) );
+        }
+
+        bool kem_decode(const std::string& input)
+        {
+            return _kyber.kem_decode( hstr2bin(input) );
+        }
+
+        std::string getCypherText()
+        {
+            return bin2hstr( _kyber.getCypherText() );
+        }
+
+        std::string getMyKey()
+        {
+            return bin2hstr( _kyber.getMyKey() );
+        }
+
     private:
         Kyber _kyber;
 };
+
+// bool EMSCRIPTEN_KEEPALIVE
+// kem_encode(const std::vector<uint8_t> &other_pk)
+// {
+//     return kem_encode(other_pk);
+// }
 
 std::string EMSCRIPTEN_KEEPALIVE
 _bin2hstr(const std::vector<unsigned char>& input)
 {
     return bin2hstr(input, 0);
+}
+
+std::vector<unsigned char> EMSCRIPTEN_KEEPALIVE
+_hstr2bin(const std::string& input)
+{
+    return hstr2bin(input);
 }
 
 std::string EMSCRIPTEN_KEEPALIVE
@@ -70,10 +102,14 @@ EMSCRIPTEN_BINDINGS(my_module) {
 
     class_<KyberWrapper>("Kyber")
         .class_function("empty", &KyberWrapper::empty)
+        .function("kem_encode", &KyberWrapper::kem_encode)
+        .function("kem_decode", &KyberWrapper::kem_decode)
         .function("getPKRaw", &KyberWrapper::getPKRaw)
         .function("getPK", &KyberWrapper::getPK)
         .function("getSKRaw", &KyberWrapper::getSKRaw)
-        .function("getSK", &KyberWrapper::getSK);
+        .function("getSK", &KyberWrapper::getSK)
+        .function("getCypherText", &KyberWrapper::getCypherText)
+        .function("getMyKey", &KyberWrapper::getMyKey);
     }
 
 }
