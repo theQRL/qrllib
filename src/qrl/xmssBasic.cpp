@@ -50,7 +50,7 @@ XmssBasic::XmssBasic(const TSEED &seed,
 
 
 TSIGNATURE XmssBasic::sign(const TMESSAGE &message) {
-    auto signature = TSIGNATURE(getSignatureSize(params.wots_par.len), 0);
+    auto signature = TSIGNATURE(getSignatureSize(params.wots_par.w), 0);
 
     xmss_Signmsg(_hashFunction,
                  &params,

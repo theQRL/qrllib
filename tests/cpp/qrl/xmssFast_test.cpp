@@ -135,12 +135,13 @@ TEST(XmssFast, VerifyWithW4)
 {
     std::vector<unsigned char> seed(48, 0);
 
-    XmssBasic xmss(seed, XMSS_HEIGHT, eHashFunction::SHAKE_128,
+    XmssBasic xmss(seed, 10, eHashFunction::SHA2_256,
             eAddrFormatType::SHA256_2X, 4);
 
-    std::string message = "This is a test message";
+    std::string message = "56454c9621c549cd05c112de496ba32f";
+
     std::vector<unsigned char> data_ref(message.begin(), message.end());
-    std::vector<unsigned char> data(message.begin(), message.end());
+    std::vector<unsigned char> data = hstr2bin("56454c9621c549cd05c112de496ba32f");
 
     auto pk = xmss.getPK();
     auto sk = xmss.getSK();
@@ -151,19 +152,16 @@ TEST(XmssFast, VerifyWithW4)
 
     auto signature = xmss.sign(data);
 
-    EXPECT_EQ(data, data_ref);
-
     std::cout << std::endl;
     std::cout << std::endl;
     std::cout << "data       :" << data.size() << " bytes\n" << bin2hstr(data, 64) << std::endl;
     std::cout << "signature  :" << signature.size() << " bytes\n" << bin2hstr(signature, 64) << std::endl;
 
-    EXPECT_TRUE(XmssBasic::verify(data, signature, pk, 4, 133));
+    EXPECT_TRUE(XmssBasic::verify(data, signature, pk, 4));
     EXPECT_FALSE(XmssBasic::verify(data, signature, xmss.getPK()));
 
-
     signature[1] += 1;
-    EXPECT_FALSE(XmssBasic::verify(data, signature, xmss.getPK(), 4, 133));
+    EXPECT_FALSE(XmssBasic::verify(data, signature, xmss.getPK(), 4));
 }
 
 TEST(XmssFast, SignIndexShift)
