@@ -138,7 +138,7 @@ int xmss_Verifysig(eHashFunction hash_func,
                    const unsigned char *pk,
                    unsigned char h) {
 
-    auto sig_msg_len = static_cast<unsigned long long int>(4 + 32 + 67 * 32 + h * 32);
+    auto sig_msg_len = static_cast<unsigned long long int>(4 + 32 + wotsParams->len * 32 + h * 32);
 
     uint32_t n = wotsParams->n;
 

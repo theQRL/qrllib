@@ -10,8 +10,8 @@
 #include <xmss-alt/algsxmss_fast.h>
 
 class XmssFast : public XmssBase {
-    void _initialize_tree();
 public:
+    void initialize_tree(uint32_t wotsParamW = 16);
     XmssFast(const TSEED& seed,
             unsigned char height,
             eHashFunction hashFunction = eHashFunction::SHAKE_128,
