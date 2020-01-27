@@ -78,7 +78,7 @@ unsigned int XmssFast::setIndex(unsigned int new_index)
 
 TSIGNATURE XmssFast::sign(const TMESSAGE &message)
 {
-    auto signature = TSIGNATURE(getSignatureSize(params.wots_par.len), 0);
+    auto signature = TSIGNATURE(getSignatureSize(params.wots_par.w), 0);
 
     auto index = getIndex();
     setIndex(index);
