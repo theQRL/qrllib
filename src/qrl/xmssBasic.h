@@ -19,7 +19,8 @@ public:
     XmssBasic(const TSEED &seed,
               unsigned char height,
               eHashFunction hashFunction,
-              eAddrFormatType addrFormatType);
+              eAddrFormatType addrFormatType,
+              uint32_t wotsParamW=16);
 
     TSIGNATURE sign(const TMESSAGE &message) override;
 };
