@@ -254,6 +254,12 @@ _sha2_256(const std::vector<unsigned char>& data)
     return sha2_256(data);
 }
 
+std::vector<unsigned char> EMSCRIPTEN_KEEPALIVE
+_shake128(size_t hash_size, const std::vector<unsigned char>& data)
+{
+    return shake128(hash_size, data);
+}
+
 using namespace emscripten;
 
 EMSCRIPTEN_BINDINGS(my_module) {
@@ -261,6 +267,7 @@ EMSCRIPTEN_BINDINGS(my_module) {
 
         // HASH FUNCTIONS
         function("sha2_256", &_sha2_256);
+        function("shake128", &_shake128);
 
         // UTILITIES
         function("bin2hstr", &_bin2hstr);
