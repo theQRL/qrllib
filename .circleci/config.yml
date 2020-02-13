@@ -20,7 +20,7 @@ jobs:
 
   test_golang:
     docker:
-      - image: qrledger/qrl-docker-ci:xenial
+      - image: qrledger/qrl-docker-ci:bionic
     steps:
       - checkout
       - run: add-apt-repository ppa:ubuntu-toolchain-r/test
@@ -45,7 +45,7 @@ jobs:
 
   build_emscripten:
     docker:
-      - image: qrledger/qrl-docker-ci:emscripten
+      - image: zondax/qrl-build-images:emscripten
     environment:
       BASH_ENV: ".circleci/bash_env.sh"
     steps:
@@ -78,7 +78,7 @@ jobs:
 
   deploy_npm:
     docker:
-      - image: qrledger/qrl-docker-ci:emscripten
+      - image: zondax/qrl-build-images:emscripten
     environment:
       BASH_ENV: ".circleci/bash_env.sh"
     steps:
@@ -126,7 +126,7 @@ workflows:
           filters:
             tags:
               only: /.*/
-
+s
       - build_emscripten:
           filters:
             tags:
