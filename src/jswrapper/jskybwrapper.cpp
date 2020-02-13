@@ -5,16 +5,18 @@
 #include <misc.h>
 
 namespace {
+
     class KyberWrapper {
+        
+    explicit KyberWrapper(
+        const std::vector<uint8_t>& pk,
+        const std::vector<uint8_t>& sk)
+        :_kyber(pk, sk) { }
+
     explicit KyberWrapper()
         :_kyber() { }
     
     public:
-
-        static KyberWrapper empty()
-        {
-            return KyberWrapper();
-        }
 
         std::vector<uint8_t> getSKRaw()
         {   
@@ -56,6 +58,21 @@ namespace {
             return bin2hstr( _kyber.getMyKey() );
         }
 
+        /////////////////////////////////////
+        /////////////////////////////////////
+
+        static KyberWrapper empty()
+        {
+            return KyberWrapper();
+        }
+
+        static KyberWrapper fromKeys(
+            const std::string& pk,
+            const std::string& sk)
+        {
+            return KyberWrapper( hstr2bin(pk), hstr2bin(sk) );
+        }
+
     private:
         Kyber _kyber;
 };
@@ -95,6 +112,7 @@ EMSCRIPTEN_BINDINGS(my_module) {
     function("bin2hstr", &_bin2hstr);
 
     class_<KyberWrapper>("Kyber")
+        .class_function("fromKeys", &KyberWrapper::fromKeys)
         .class_function("empty", &KyberWrapper::empty)
         .function("kem_encode", &KyberWrapper::kem_encode)
         .function("kem_decode", &KyberWrapper::kem_decode)

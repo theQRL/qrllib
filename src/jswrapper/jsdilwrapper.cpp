@@ -8,12 +8,24 @@ namespace {
     class DilithiumWrapper {
     explicit DilithiumWrapper()
         :_dilithium() { }
+
+    explicit DilithiumWrapper(
+        const std::vector<uint8_t>& pk,
+        const std::vector<uint8_t>& sk)
+        :_dilithium(pk, sk) { }
     
     public:
 
         static DilithiumWrapper empty()
         {
             return DilithiumWrapper();
+        }
+
+        static DilithiumWrapper fromKeys(
+            const std::string& pk,
+            const std::string& sk)
+        {
+            return DilithiumWrapper( hstr2bin(pk), hstr2bin(sk) );
         }
 
         std::vector<uint8_t> getSKRaw()
@@ -98,6 +110,7 @@ EMSCRIPTEN_BINDINGS(my_module) {
 
     class_<DilithiumWrapper>("Dilithium")
         .class_function("empty", &DilithiumWrapper::empty)
+        .class_function("fromKeys", &DilithiumWrapper::fromKeys)
         .class_function("sign_open", &DilithiumWrapper::sign_open)
         .class_function("extract_message", &DilithiumWrapper::extract_message)
         .function("getPKRaw", &DilithiumWrapper::getPKRaw)
