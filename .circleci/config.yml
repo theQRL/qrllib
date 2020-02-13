@@ -2,7 +2,7 @@ version: 2
 jobs:
   build:
     docker:
-      - image: zondax/qrl-build-images:xenial-qrllib
+      - image: qrledger/qrl-docker-ci:xenial
     steps:
       - checkout
       - run: git submodule update --init --recursive
@@ -12,7 +12,7 @@ jobs:
 
   test_python:
     docker:
-      - image: zondax/qrl-build-images:xenial-qrllib
+      - image: qrledger/qrl-docker-ci:xenial
     steps:
       - checkout
       - run: git submodule update --init --recursive
@@ -20,7 +20,7 @@ jobs:
 
   test_golang:
     docker:
-      - image: zondax/qrl-build-images:xenial-qrllib
+      - image: qrledger/qrl-docker-ci:xenial
     steps:
       - checkout
       - run: add-apt-repository ppa:ubuntu-toolchain-r/test
@@ -45,7 +45,7 @@ jobs:
 
   build_emscripten:
     docker:
-      - image: zondax/qrl-build-images:emscripten
+      - image: qrledger/qrl-docker-ci:emscripten
     environment:
       BASH_ENV: ".circleci/bash_env.sh"
     steps:
@@ -78,7 +78,7 @@ jobs:
 
   deploy_npm:
     docker:
-      - image: zondax/qrl-build-images:emscripten
+      - image: qrledger/qrl-docker-ci:emscripten
     environment:
       BASH_ENV: ".circleci/bash_env.sh"
     steps:
