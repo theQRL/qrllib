@@ -2,7 +2,7 @@ version: 2
 jobs:
   build:
     docker:
-      - image: zondax/qrl-build-images:xenial-qrllib
+      - image: qrledger/qrl-docker:xenial
     steps:
       - checkout
       - run: git submodule update --init --recursive
@@ -12,7 +12,7 @@ jobs:
 
   test_python:
     docker:
-      - image: zondax/qrl-build-images:xenial-qrllib
+      - image: qrledger/qrl-docker-ci:xenial
     steps:
       - checkout
       - run: git submodule update --init --recursive
@@ -20,7 +20,7 @@ jobs:
 
   test_golang:
     docker:
-      - image: zondax/qrl-build-images:xenial-qrllib
+      - image: qrledger/qrl-docker-ci:bionic
     steps:
       - checkout
       - run: add-apt-repository ppa:ubuntu-toolchain-r/test
@@ -68,7 +68,7 @@ jobs:
 
   deploy_pypi:
     docker:
-      - image: qrledger/qrl-docker:xenial
+      - image: qrledger/qrl-docker-ci:xenial
     steps:
       - checkout
       - run: git submodule update --init --recursive
