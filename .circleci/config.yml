@@ -2,7 +2,7 @@ version: 2
 jobs:
   build:
     docker:
-      - image: zqrledger/qrl-docker:xenial
+      - image: qrledger/qrl-docker:xenial
     steps:
       - checkout
       - run: git submodule update --init --recursive
