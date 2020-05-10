@@ -163,6 +163,32 @@ public:
     {
         return _xmssbasic.sign(message);
     }
+
+    std::string getHexSeed()
+    {
+        auto extended_seed = _xmssbasic.getExtendedSeed();
+        return bin2hstr(extended_seed);
+    }
+
+    int getHeight()
+    {
+        return _xmssbasic.getHeight();
+    }
+
+    std::string getPK()
+    {
+        return bin2hstr( _xmssbasic.getPK() );
+    }
+
+    static bool verify(
+            const TMESSAGE& message,
+            const TSIGNATURE& signature,
+            const TKEY& pk,
+            const uint32_t wotsParamW)
+    {
+        return XmssFast::verify(message, signature, pk, wotsParamW);
+    }
+
 private:
     XmssBasic _xmssbasic;
 };
@@ -358,12 +384,17 @@ EMSCRIPTEN_BINDINGS(my_module) {
         .function("sign", &XmssWrapper::sign)
         .class_function("verify", &XmssWrapper::verify);
 
-        // XmssBasic - for variable WOTS
+        // XmssBasic - for variable WOTS (enqlave: Ethereum <-> QRL)
         class_<XmssBasicWrapper>("XmssBasic")
         .class_function("fromParameters", &XmssBasicWrapper::fromParameters)
+        .class_function("verify", &XmssBasicWrapper::verify)
         .function("getIndex", &XmssBasicWrapper::getIndex)
         .function("setIndex", &XmssBasicWrapper::setIndex)
         .function("sign", &XmssBasicWrapper::sign)
+
+        .function("getPK", &XmssBasicWrapper::getPK)
+        .function("getHeight", &XmssBasicWrapper::getHeight)
+        .function("getHexSeed", &XmssBasicWrapper::getHexSeed)
         ;
 }
 }
