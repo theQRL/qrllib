@@ -2,13 +2,14 @@
 #include <emscripten/bind.h>
 #include <iostream>
 #include <xmssFast.h>
+#include <xmssBasic.h>
 #include <hashing.h>
 #include <misc.h>
 #include <wordlist.h>
 #include <qrlHelper.h>
 #include <qrlDescriptor.h>
 
-namespace {
+namespace Xmss {
 
 class XmssWrapper {
     explicit XmssWrapper(
@@ -127,6 +128,69 @@ public:
 
 private:
     XmssFast _xmss;
+};
+
+class XmssBasicWrapper {
+    explicit XmssBasicWrapper(
+            const std::vector<uint8_t>& seed,
+            uint8_t height,
+            eHashFunction hashFunction,
+            eAddrFormatType addrFormatType,
+            uint32_t wotsParamW)
+            :_xmssbasic(seed, height, hashFunction, addrFormatType, wotsParamW) { }
+public:
+    static XmssBasicWrapper fromParameters(
+            const std::vector<uint8_t>& random_bytes,
+            uint8_t height,
+            eHashFunction hash_function,
+            eAddrFormatType addrFormatType,
+            uint32_t wotsParamW)
+    {
+        return XmssBasicWrapper(random_bytes, height, hash_function, addrFormatType, wotsParamW);
+    }
+
+    unsigned int getIndex()
+    {
+        return _xmssbasic.getIndex();
+    }
+
+    unsigned int setIndex(unsigned int new_index)
+    {
+        return _xmssbasic.setIndex(new_index);
+    }
+    
+    TSIGNATURE sign(const TMESSAGE& message)
+    {
+        return _xmssbasic.sign(message);
+    }
+
+    std::string getHexSeed()
+    {
+        auto extended_seed = _xmssbasic.getExtendedSeed();
+        return bin2hstr(extended_seed);
+    }
+
+    int getHeight()
+    {
+        return _xmssbasic.getHeight();
+    }
+
+    std::string getPK()
+    {
+        return bin2hstr( _xmssbasic.getPK() );
+    }
+
+    static bool verify(
+            const TMESSAGE& message,
+            const TSIGNATURE& signature,
+            const TKEY& pk,
+            const uint32_t wotsParamW)
+    {
+        return XmssFast::verify(message, signature, pk, wotsParamW);
+    }
+
+private:
+    XmssBasic _xmssbasic;
 };
 
 std::string EMSCRIPTEN_KEEPALIVE
@@ -294,6 +358,9 @@ EMSCRIPTEN_BINDINGS(my_module) {
         enum_<eSignatureType>("eSignatureType")
             .value("XMSS", eSignatureType::XMSS)
         ;
+        enum_<eAddrFormatType>("eAddrFormatType")
+            .value("SHA256_2X", eAddrFormatType::SHA256_2X)
+        ;
 
         // XMSS
         class_<XmssWrapper>("Xmss")
@@ -316,5 +383,18 @@ EMSCRIPTEN_BINDINGS(my_module) {
         .function("setIndex", &XmssWrapper::setIndex)
         .function("sign", &XmssWrapper::sign)
         .class_function("verify", &XmssWrapper::verify);
+
+        // XmssBasic - for variable WOTS (enqlave: Ethereum <-> QRL)
+        class_<XmssBasicWrapper>("XmssBasic")
+        .class_function("fromParameters", &XmssBasicWrapper::fromParameters)
+        .class_function("verify", &XmssBasicWrapper::verify)
+        .function("getIndex", &XmssBasicWrapper::getIndex)
+        .function("setIndex", &XmssBasicWrapper::setIndex)
+        .function("sign", &XmssBasicWrapper::sign)
+
+        .function("getPK", &XmssBasicWrapper::getPK)
+        .function("getHeight", &XmssBasicWrapper::getHeight)
+        .function("getHexSeed", &XmssBasicWrapper::getHexSeed)
+        ;
 }
 }
