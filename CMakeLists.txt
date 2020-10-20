@@ -6,8 +6,15 @@ project(qrllib)
 
 set(CMAKE_CXX_STANDARD 14)
 #set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++14 -Wall -Wextra -pedantic")
+if(${CMAKE_VERSION} VERSION_GREATER "3.10.3")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pthread")  # >>>> Added
+    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -pthread")  # >>>> Added
+endif()
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIC -Wno-deprecated-declarations")
 set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS} -O3 -Wno-deprecated")
+if(${CMAKE_VERSION} VERSION_GREATER "3.10.3")
+    cmake_policy(SET CMP0078 OLD)
+endif()
 
 set(CMAKE_VERBOSE_MAKEFILE TRUE)
 set(CMAKE_ERROR_DEPRECATED FALSE)
@@ -275,12 +282,24 @@ if (BUILD_PYTHON)
 
     # Intentionally use a deprecated version to provide support for the raspberry pi
     # Basic pyqrllib - XmssBasic, etc.
-    SWIG_ADD_MODULE(pyqrllib
-            ${language}
-            ${SWIG_INTERFACE}
-            ${LIB_QRL_SRC}
-            ${LIBXMSSALT_SRC}
-            )
+    if(${CMAKE_VERSION} VERSION_LESS_EQUAL "3.10.3")
+        SWIG_ADD_MODULE(pyqrllib
+                ${language}
+                ${SWIG_INTERFACE}
+                ${LIB_QRL_SRC}
+                ${LIBXMSSALT_SRC}
+                )
+    else()
+        SWIG_ADD_LIBRARY(pyqrllib
+                LANGUAGE ${language}
+                OUTPUT_DIR ${CMAKE_CURRENT_SOURCE_DIR}/pyqrllib/
+                OUTFILE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/pyqrllib/
+                TYPE MODULE
+                SOURCES ${SWIG_INTERFACE}
+                ${LIB_QRL_SRC}
+                ${LIBXMSSALT_SRC}
+                )
+    endif()
 
     SWIG_LINK_LIBRARIES(pyqrllib
             shasha
@@ -291,21 +310,21 @@ if (BUILD_PYTHON)
             ${LIB_QRL_INCLUDES}
             ${LIB_SHASHA_INCLUDES}
     )
+    if(${CMAKE_VERSION} VERSION_LESS_EQUAL "3.10.3")
+        add_custom_command(TARGET ${SWIG_MODULE_pyqrllib_REAL_NAME}
+                POST_BUILD
+                COMMENT "Moving SWIG files to output dir"
+                COMMAND ${CMAKE_COMMAND} -E
+                copy_if_different $<TARGET_FILE:${SWIG_MODULE_pyqrllib_REAL_NAME}>
+                ${CMAKE_CURRENT_SOURCE_DIR}/pyqrllib/$<TARGET_LINKER_FILE_NAME:${SWIG_MODULE_pyqrllib_REAL_NAME}>
+                )
 
-    add_custom_command(TARGET ${SWIG_MODULE_pyqrllib_REAL_NAME}
-            POST_BUILD
-            COMMENT "Moving SWIG files to output dir"
-            COMMAND ${CMAKE_COMMAND} -E
-            copy_if_different $<TARGET_FILE:${SWIG_MODULE_pyqrllib_REAL_NAME}>
-            ${CMAKE_CURRENT_SOURCE_DIR}/pyqrllib/$<TARGET_LINKER_FILE_NAME:${SWIG_MODULE_pyqrllib_REAL_NAME}>
-            )
-
-    add_custom_command(TARGET ${SWIG_MODULE_pyqrllib_REAL_NAME}
-            POST_BUILD
-            COMMENT ${swig_extra_generated_files}
-            COMMAND ${CMAKE_COMMAND} -E copy_if_different ${swig_extra_generated_files} ${CMAKE_CURRENT_SOURCE_DIR}/pyqrllib/pyqrllib.py
-            )
-
+        add_custom_command(TARGET ${SWIG_MODULE_pyqrllib_REAL_NAME}
+                POST_BUILD
+                COMMENT ${swig_extra_generated_files}
+                COMMAND ${CMAKE_COMMAND} -E copy_if_different ${swig_extra_generated_files} ${CMAKE_CURRENT_SOURCE_DIR}/pyqrllib/pyqrllib.py
+                )
+    endif()
     ###################################################
     # Dilithium
     set(SWIG_INTERFACE src/api/dilithium.i)
@@ -323,30 +342,43 @@ if (BUILD_PYTHON)
             ${LIB_DILITHIUM_INCLUDES}
     )
 
-    SWIG_ADD_MODULE(dilithium
-            ${language}
-            ${SWIG_INTERFACE}
-            ${LIB_DILITHIUM_SRC}
-            ${REF_DILITHIUM_SRC}
-            )
+    if(${CMAKE_VERSION} VERSION_LESS_EQUAL "3.10.3")
+        SWIG_ADD_MODULE(dilithium
+                ${language}
+                ${SWIG_INTERFACE}
+                ${LIB_DILITHIUM_SRC}
+                ${REF_DILITHIUM_SRC}
+                )
+    else()
+        SWIG_ADD_LIBRARY(dilithium
+                LANGUAGE ${language}
+                OUTPUT_DIR ${CMAKE_CURRENT_SOURCE_DIR}/pyqrllib/
+                OUTFILE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/pyqrllib/
+                TYPE MODULE
+                SOURCES ${SWIG_INTERFACE}
+                ${LIB_DILITHIUM_SRC}
+                ${REF_DILITHIUM_SRC}
+                )
+    endif()
 
     SWIG_LINK_LIBRARIES(dilithium
             ${SWIG_LANG_LIBRARIES})
 
-    add_custom_command(TARGET ${SWIG_MODULE_dilithium_REAL_NAME}
-            POST_BUILD
-            COMMENT "Moving SWIG files to output dir"
-            COMMAND ${CMAKE_COMMAND} -E
-            copy_if_different $<TARGET_FILE:${SWIG_MODULE_dilithium_REAL_NAME}>
-            ${CMAKE_CURRENT_SOURCE_DIR}/pyqrllib/$<TARGET_LINKER_FILE_NAME:${SWIG_MODULE_dilithium_REAL_NAME}>
-            )
+    if(${CMAKE_VERSION} VERSION_LESS_EQUAL "3.10.3")
+        add_custom_command(TARGET ${SWIG_MODULE_dilithium_REAL_NAME}
+                POST_BUILD
+                COMMENT "Moving SWIG files to output dir"
+                COMMAND ${CMAKE_COMMAND} -E
+                copy_if_different $<TARGET_FILE:${SWIG_MODULE_dilithium_REAL_NAME}>
+                ${CMAKE_CURRENT_SOURCE_DIR}/pyqrllib/$<TARGET_LINKER_FILE_NAME:${SWIG_MODULE_dilithium_REAL_NAME}>
+                )
 
-    add_custom_command(TARGET ${SWIG_MODULE_dilithium_REAL_NAME}
-            POST_BUILD
-            COMMENT ${swig_extra_generated_files}
-            COMMAND ${CMAKE_COMMAND} -E copy_if_different ${swig_extra_generated_files} ${CMAKE_CURRENT_SOURCE_DIR}/pyqrllib/dilithium.py
-            )
-
+        add_custom_command(TARGET ${SWIG_MODULE_dilithium_REAL_NAME}
+                POST_BUILD
+                COMMENT ${swig_extra_generated_files}
+                COMMAND ${CMAKE_COMMAND} -E copy_if_different ${swig_extra_generated_files} ${CMAKE_CURRENT_SOURCE_DIR}/pyqrllib/dilithium.py
+                )
+    endif()
 
     # Kyber
     set(SWIG_INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/src/api/kyber.i)
@@ -356,30 +388,43 @@ if (BUILD_PYTHON)
     message(STATUS "CMAKE_SWIG_OUTDIR: " ${CMAKE_SWIG_OUTDIR})
     message(STATUS "CMAKE_LIBRARY_OUTPUT_DIRECTORY: " ${CMAKE_LIBRARY_OUTPUT_DIRECTORY})
 
-    SWIG_ADD_MODULE(kyber
-            ${language}
-            ${SWIG_INTERFACE}
-            ${LIB_KYBER_SRC}
-            ${REF_KYBER_SRC}
-            )
+    if(${CMAKE_VERSION} VERSION_LESS_EQUAL "3.10.3")
+        SWIG_ADD_MODULE(kyber
+                ${language}
+                ${SWIG_INTERFACE}
+                ${LIB_KYBER_SRC}
+                ${REF_KYBER_SRC}
+                )
+    else()
+        SWIG_ADD_LIBRARY(kyber
+                LANGUAGE ${language}
+                OUTPUT_DIR ${CMAKE_CURRENT_SOURCE_DIR}/pyqrllib/
+                OUTFILE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/pyqrllib/
+                TYPE MODULE
+                SOURCES ${SWIG_INTERFACE}
+                ${LIB_KYBER_SRC}
+                ${REF_KYBER_SRC}
+                )
+    endif()
 
     SWIG_LINK_LIBRARIES(kyber
             ${SWIG_LANG_LIBRARIES})
 
-    add_custom_command(TARGET ${SWIG_MODULE_kyber_REAL_NAME}
-            POST_BUILD
-            COMMENT "Moving SWIG files to output dir"
-            COMMAND ${CMAKE_COMMAND} -E
-            copy_if_different $<TARGET_FILE:${SWIG_MODULE_kyber_REAL_NAME}>
-            ${CMAKE_CURRENT_SOURCE_DIR}/pyqrllib/$<TARGET_LINKER_FILE_NAME:${SWIG_MODULE_kyber_REAL_NAME}>
-            )
+    if(${CMAKE_VERSION} VERSION_LESS_EQUAL "3.10.3")
+        add_custom_command(TARGET ${SWIG_MODULE_kyber_REAL_NAME}
+                POST_BUILD
+                COMMENT "Moving SWIG files to output dir"
+                COMMAND ${CMAKE_COMMAND} -E
+                copy_if_different $<TARGET_FILE:${SWIG_MODULE_kyber_REAL_NAME}>
+                ${CMAKE_CURRENT_SOURCE_DIR}/pyqrllib/$<TARGET_LINKER_FILE_NAME:${SWIG_MODULE_kyber_REAL_NAME}>
+                )
 
-    add_custom_command(TARGET ${SWIG_MODULE_kyber_REAL_NAME}
-            POST_BUILD
-            COMMENT ${swig_extra_generated_files}
-            COMMAND ${CMAKE_COMMAND} -E copy_if_different ${swig_extra_generated_files} ${CMAKE_CURRENT_SOURCE_DIR}/pyqrllib/kyber.py
-            )
-
+        add_custom_command(TARGET ${SWIG_MODULE_kyber_REAL_NAME}
+                POST_BUILD
+                COMMENT ${swig_extra_generated_files}
+                COMMAND ${CMAKE_COMMAND} -E copy_if_different ${swig_extra_generated_files} ${CMAKE_CURRENT_SOURCE_DIR}/pyqrllib/kyber.py
+                )
+    endif()
 endif ()
 
 ## SWIG + API - Go related stuff
