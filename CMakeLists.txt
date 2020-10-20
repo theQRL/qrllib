@@ -12,7 +12,7 @@ if(${CMAKE_VERSION} VERSION_GREATER "3.10.3")
 endif()
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIC -Wno-deprecated-declarations")
 set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS} -O3 -Wno-deprecated")
-if(${CMAKE_VERSION} VERSION_GREATER "3.10.3")
+if(${CMAKE_VERSION} VERSION_GREATER "3.13")
     cmake_policy(SET CMP0078 OLD)
 endif()
 
