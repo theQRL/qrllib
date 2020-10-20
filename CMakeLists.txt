@@ -7,8 +7,8 @@ project(qrllib)
 set(CMAKE_CXX_STANDARD 14)
 #set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++14 -Wall -Wextra -pedantic")
 if(${CMAKE_VERSION} VERSION_GREATER "3.10.3")
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pthread")  # >>>> Added
-    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -pthread")  # >>>> Added
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pthread")
+    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -pthread")
 endif()
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIC -Wno-deprecated-declarations")
 set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS} -O3 -Wno-deprecated")
