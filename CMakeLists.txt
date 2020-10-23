@@ -292,8 +292,8 @@ if (BUILD_PYTHON)
     else()
         SWIG_ADD_LIBRARY(pyqrllib
                 LANGUAGE ${language}
-                OUTPUT_DIR ${CMAKE_CURRENT_SOURCE_DIR}/pyqrllib/
-                OUTFILE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/pyqrllib/
+                OUTPUT_DIR ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}
+                OUTFILE_DIR ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}
                 TYPE MODULE
                 SOURCES ${SWIG_INTERFACE}
                 ${LIB_QRL_SRC}
@@ -352,8 +352,8 @@ if (BUILD_PYTHON)
     else()
         SWIG_ADD_LIBRARY(dilithium
                 LANGUAGE ${language}
-                OUTPUT_DIR ${CMAKE_CURRENT_SOURCE_DIR}/pyqrllib/
-                OUTFILE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/pyqrllib/
+                OUTPUT_DIR ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}
+                OUTFILE_DIR ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}
                 TYPE MODULE
                 SOURCES ${SWIG_INTERFACE}
                 ${LIB_DILITHIUM_SRC}
@@ -398,8 +398,8 @@ if (BUILD_PYTHON)
     else()
         SWIG_ADD_LIBRARY(kyber
                 LANGUAGE ${language}
-                OUTPUT_DIR ${CMAKE_CURRENT_SOURCE_DIR}/pyqrllib/
-                OUTFILE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/pyqrllib/
+                OUTPUT_DIR ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}
+                OUTFILE_DIR ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}
                 TYPE MODULE
                 SOURCES ${SWIG_INTERFACE}
                 ${LIB_KYBER_SRC}
