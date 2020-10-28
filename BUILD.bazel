@@ -1,0 +1,7 @@
+# Protobuf files
+
+load("@bazel_gazelle//:def.bzl", "gazelle")
+
+# gazelle:prefix github.com/theQRL/qrllib
+gazelle(name = "gazelle")
+
