@@ -9,6 +9,7 @@ from setuptools.command.build_ext import build_ext
 from distutils.sysconfig import get_python_inc
 import distutils.sysconfig as sysconfig
 import versioneer
+import pkg_resources  # part of setuptools
 
 
 class CMakeBuild(build_ext):
@@ -54,12 +55,17 @@ def setup_package():
     sphinx = ['sphinx'] if needs_sphinx else []
     cmake = []
 
+    try:
+        version = pkg_resources.require("pyqrllib")[0].version
+    except:
+        version = versioneer.get_version()
+
     # noinspection PyInterpreter
     setup(setup_requires=['six', 'pytest-runner', 'pyscaffold>3'] + sphinx + cmake,
           packages=['pyqrllib', ],
           tests_require=['pytest', 'pytest-cov'],
           ext_modules=[CMakeExtension('pyqrllib')],
-          version=versioneer.get_version(),
+          version=version,
           cmdclass=dict(build_ext=CMakeBuild),
           use_pyscaffold=True)
 
