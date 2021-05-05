@@ -1,4 +1,4 @@
-include README.pypi LICENSE
+include README.pypi LICENSE versioneer.py
 global-include CMakeLists.txt CMakeLists.txt.gtest.in *.cmake
 recursive-include src *
 recursive-include deps/xmss-alt *
