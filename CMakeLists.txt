@@ -44,9 +44,20 @@ if (BUILD_PYTHON OR BUILD_GO)
 endif ()
 
 if (BUILD_PYTHON)
+  if(${CMAKE_VERSION} VERSION_GREATER "3.12")
+    set(Python_ADDITIONAL_VERSIONS 3 3.7 3.8 3.9 3.6 3.5)
+    find_package(Python COMPONENTS Interpreter Development REQUIRED)
+    message("Python_FOUND:${Python_FOUND}")
+    message("Python_VERSION:${Python_VERSION}")
+    message("Python_Development_FOUND:${Python_Development_FOUND}")
+    message("Python_LIBRARIES:${Python_LIBRARIES}")
+  else ()
     set(Python_ADDITIONAL_VERSIONS 3 3.6 3.5)
     find_package(PythonLibs REQUIRED)
     find_package(PythonInterp REQUIRED)
+    set(Python_INCLUDE_DIRS "${Python_INCLUDE_DIRS}")
+    set(Python_LIBRARIES "${Python_LIBRARIES}")
+  endif ()
 endif ()
 
 include_directories(
@@ -268,13 +279,13 @@ if (BUILD_PYTHON)
     set(language python)
 
     include_directories(
-          ${PYTHON_INCLUDE_PATH}
+          ${Python_INCLUDE_DIRS}
     )
     set(CMAKE_SWIG_OUTDIR ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/pyqrllib)
     set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/pyqrllib)
 
     set(SWIG_INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/src/api/pyqrllib.i)
-    set(SWIG_LANG_LIBRARIES ${PYTHON_LIBRARIES})
+    set(SWIG_LANG_LIBRARIES ${Python_LIBRARIES})
     set_source_files_properties(${SWIG_INTERFACE} PROPERTIES CPLUSPLUS ON)
     set_property(SOURCE ${SWIG_INTERFACE} PROPERTY SWIG_FLAGS "-includeall" "-ignoremissing")
     message(STATUS "CMAKE_SWIG_OUTDIR: " ${CMAKE_SWIG_OUTDIR})
@@ -328,7 +339,7 @@ if (BUILD_PYTHON)
     ###################################################
     # Dilithium
     set(SWIG_INTERFACE src/api/dilithium.i)
-    set(SWIG_LANG_LIBRARIES ${PYTHON_LIBRARIES})
+    set(SWIG_LANG_LIBRARIES ${Python_LIBRARIES})
     set_source_files_properties(${SWIG_INTERFACE} PROPERTIES CPLUSPLUS ON)
     set_property(SOURCE ${SWIG_INTERFACE} PROPERTY SWIG_FLAGS "-includeall" "-ignoremissing")
     message(STATUS "CMAKE_SWIG_OUTDIR: " ${CMAKE_SWIG_OUTDIR})
@@ -382,7 +393,7 @@ if (BUILD_PYTHON)
 
     # Kyber
     set(SWIG_INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/src/api/kyber.i)
-    set(SWIG_LANG_LIBRARIES ${PYTHON_LIBRARIES})
+    set(SWIG_LANG_LIBRARIES ${Python_LIBRARIES})
     set_source_files_properties(${SWIG_INTERFACE} PROPERTIES CPLUSPLUS ON)
     set_property(SOURCE ${SWIG_INTERFACE} PROPERTY SWIG_FLAGS "-includeall" "-ignoremissing")
     message(STATUS "CMAKE_SWIG_OUTDIR: " ${CMAKE_SWIG_OUTDIR})
