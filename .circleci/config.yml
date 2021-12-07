@@ -10,6 +10,16 @@ jobs:
       - run: make
       - run: export GTEST_COLOR=1 && ctest -VV
 
+  test_rust:
+      docker:
+        - image: qrledger/qrl-docker-ci:xenial
+      steps:
+        - checkout
+        - run: apt update
+        - run: apt install cargo -y
+        - run: git submodule update --init --recursive
+        - run: cargo test
+
   test_python:
     docker:
       - image: qrledger/qrl-docker-ci:xenial
@@ -113,6 +123,11 @@ workflows:
   build_all:
     jobs:
       - build:
+          filters:
+            tags:
+              only: /.*/
+
+      - test_rust:
           filters:
             tags:
               only: /.*/

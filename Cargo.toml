@@ -1,0 +1,19 @@
+[package]
+name = "qrllib"
+version = "0.1.0"
+edition = "2021"
+
+[lib]
+name = "qrllib"
+path = "src/lib.rs"
+
+[dependencies]
+autocxx = "0.14.0"
+cxx = "1.0"
+
+[build-dependencies]
+cmake = "0.1"
+cc = "1.0"
+bindgen = "0.59.2"
+autocxx-build = "0.14.0"
+cxx-build = "1.0"

@@ -73,3 +73,7 @@ tests/js/tmp/*.wasm
 
 \.npmrc
 .vscode/*
+
+# Added by cargo
+
+/target
