@@ -16,6 +16,7 @@ jobs:
       steps:
         - checkout
         - run: git submodule update --init --recursive
+        - run: source $HOME/.cargo/env
         - run: cargo test
 
   test_python:
