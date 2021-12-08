@@ -15,8 +15,9 @@ fn main() {
 
     // Builds the project, installing it into $OUT_DIR
     let mut dst = Config::new("")
-        .define("CMAKE_C_COMPILER", "cc")
-        .define("CMAKE_CXX_COMPILER", "c++")
+        .define("CMAKE_C_COMPILER", "gcc")
+        .define("CMAKE_CXX_COMPILER", "g++")
+        .define("CMAKE_ASM_COMPILER", "gcc")
         .build();
 
     dst.push("build");
@@ -35,6 +36,7 @@ fn main() {
         // The input header we would like to generate
         // bindings for.
         .header(wrapper_path.to_str().unwrap())
+        .clang_args(&["-x", "c++"])
         .clang_arg(format!("-I{}", dependencies_path.to_str().unwrap()))
         // Tell cargo to invalidate the built crate whenever any of the
         // included header files changed.
