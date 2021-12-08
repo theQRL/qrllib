@@ -1,6 +1,4 @@
-version: 2.1
-orbs: 
-  rust: circleci/rust@1.6.0
+version: 2
 jobs:
   build:
     docker:
@@ -17,9 +15,8 @@ jobs:
         - image: qrledger/qrl-docker:xenial
       steps:
         - checkout
-        - run: pip install cmake --upgrade
-        - rust/install
-        - rust/test
+        - run: git submodule update --init --recursive
+        - run: cargo test
 
   test_python:
     docker:
