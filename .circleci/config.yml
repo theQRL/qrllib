@@ -16,6 +16,7 @@ jobs:
       steps:
         - checkout
         - run: git submodule update --init --recursive
+        - run: curl https://sh.rustup.rs -sSf | bash -s -- -y
         - run: source $HOME/.cargo/env
         - run: cargo test
 
