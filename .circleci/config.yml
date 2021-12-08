@@ -1,4 +1,6 @@
-version: 2
+version: 2.1
+orbs: 
+  rust: circleci/rust@1.6.0
 jobs:
   build:
     docker:
@@ -12,13 +14,12 @@ jobs:
 
   test_rust:
       docker:
-        - image: qrledger/qrl-docker-ci:xenial
+        - image: cimg/rust:1.57.0
       steps:
         - checkout
         - run: apt update
-        - run: apt install cargo -y
-        - run: git submodule update --init --recursive
-        - run: cargo test
+        - run: apt -y install swig3.0 python3-dev build-essential cmake ninja-build pkg-config
+        - rust/test
 
   test_python:
     docker:
