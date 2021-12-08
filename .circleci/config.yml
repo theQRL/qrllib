@@ -18,7 +18,7 @@ jobs:
       steps:
         - checkout
         - run: sudo apt update
-        - run: sudo apt -y install swig3.0 python3-dev build-essential cmake ninja-build pkg-config
+        - run: sudo apt -y install swig3.0 python3-dev build-essential cmake ninja-build pkg-config clang
         - rust/test
 
   test_python:
