@@ -15,8 +15,8 @@ fn main() {
 
     // Builds the project, installing it into $OUT_DIR
     let mut dst = Config::new("")
-        .define("CMAKE_C_COMPILER", "gcc")
-        .define("CMAKE_CXX_COMPILER", "g++")
+        .define("CMAKE_C_COMPILER", "cc")
+        .define("CMAKE_CXX_COMPILER", "c++")
         .build();
 
     dst.push("build");
