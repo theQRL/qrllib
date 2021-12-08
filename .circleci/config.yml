@@ -17,7 +17,6 @@ jobs:
         - image: qrledger/qrl-docker:xenial
       steps:
         - checkout
-        - run: apt remove cmake
         - run: pip install cmake --upgrade
         - rust/install
         - rust/test
