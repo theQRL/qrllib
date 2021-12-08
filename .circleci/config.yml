@@ -19,6 +19,8 @@ jobs:
         - run: apt update
         - run: apt install g++-7 -y
         - run: update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-7 60 --slave /usr/bin/g++ g++ /usr/bin/g++-7
+        - run: apt install llvm -y
+        - run: apt install clang-9 -y
         - run: git submodule update --init --recursive
         - run: curl https://sh.rustup.rs -sSf | bash -s -- -y
         - run: source $HOME/.cargo/env
