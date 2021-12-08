@@ -36,7 +36,6 @@ fn main() {
         // The input header we would like to generate
         // bindings for.
         .header(wrapper_path.to_str().unwrap())
-        .clang_args(&["-x", "g++"])
         .clang_arg(format!("-I{}", dependencies_path.to_str().unwrap()))
         // Tell cargo to invalidate the built crate whenever any of the
         // included header files changed.
