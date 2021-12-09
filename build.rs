@@ -36,6 +36,8 @@ fn main() {
         // bindings for.
         .header(wrapper_path.to_str().unwrap())
         .clang_arg(format!("-I{}", dependencies_path.to_str().unwrap()))
+        .clang_arg("-x")
+        .clang_arg("c++")
         // Tell cargo to invalidate the built crate whenever any of the
         // included header files changed.
         .parse_callbacks(Box::new(bindgen::CargoCallbacks))

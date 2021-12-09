@@ -17,9 +17,11 @@ jobs:
         - image: qrledger/qrl-docker:xenial
       steps:
         - checkout
-        - run: pip install cmake --upgrade
-        - rust/install
-        - rust/test
+        - run: apt update
+        - run: curl https://sh.rustup.rs -sSf | bash -s -- -y
+        - run: source $HOME/.cargo/env
+        - run: apt install llvm-dev libclang-dev clang -y
+        - run: $HOME/.cargo/bin/cargo test
 
   test_python:
     docker:
