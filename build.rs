@@ -24,9 +24,22 @@ fn main() {
     dst.push("build");
     println!("cargo:rustc-link-search=native={}", dst.display());
     println!("cargo:rustc-link-lib=static=kyber");
+    println!("cargo:rustc-link-lib=static=dilithium");
     println!("cargo:rerun-if-changed=build.rs");
-    let wrapper_path: PathBuf = [r"src", "rustwrapper", "wrapper.hxx"].iter().collect();
-    println!("cargo:rerun-if-changed={}", wrapper_path.to_str().unwrap());
+    let kyber_wrapper_path: PathBuf = [r"src", "rustwrapper", "kyber_wrapper.hxx"]
+        .iter()
+        .collect();
+    println!(
+        "cargo:rerun-if-changed={}",
+        kyber_wrapper_path.to_str().unwrap()
+    );
+    let dilithium_wrapper_path: PathBuf = [r"src", "rustwrapper", "dilithium_wrapper.hxx"]
+        .iter()
+        .collect();
+    println!(
+        "cargo:rerun-if-changed={}",
+        dilithium_wrapper_path.to_str().unwrap()
+    );
 
     let dependencies_path = PathBuf::from("deps");
     // The bindgen::Builder is the main entry point
@@ -36,7 +49,7 @@ fn main() {
     let bindings = bindgen::Builder::default()
         // The input header we would like to generate
         // bindings for.
-        .header(wrapper_path.to_str().unwrap())
+        .header(kyber_wrapper_path.to_str().unwrap())
         .clang_arg(format!("-I{}", dependencies_path.to_str().unwrap()))
         .clang_arg("-x")
         .clang_arg("c++")
@@ -51,6 +64,24 @@ fn main() {
     //Write the bindings to the $OUT_DIR/bindings.rs file.
     let out_path = PathBuf::from(env::var("OUT_DIR").unwrap());
     bindings
-        .write_to_file(out_path.join("bindings.rs"))
+        .write_to_file(out_path.join("kyber_bindings.rs"))
+        .expect("Couldn't write bindings!");
+
+    let dilithium_bindings = bindgen::Builder::default()
+        // The input header we would like to generate
+        // bindings for.
+        .header(dilithium_wrapper_path.to_str().unwrap())
+        .clang_arg(format!("-I{}", dependencies_path.to_str().unwrap()))
+        .clang_arg("-x")
+        .clang_arg("c++")
+        // Tell cargo to invalidate the built crate whenever any of the
+        // included header files changed.
+        .parse_callbacks(Box::new(bindgen::CargoCallbacks))
+        // Finish the builder and generate the bindings.
+        .generate()
+        // Unwrap the Result and panic on failure.
+        .expect("Unable to generate bindings");
+    dilithium_bindings
+        .write_to_file(out_path.join("dilithium_bindings.rs"))
         .expect("Couldn't write bindings!");
 }

@@ -1,7 +1,7 @@
 // Distributed under the MIT software license, see the accompanying
 // file LICENSE or http://www.opensource.org/licenses/mit-license.php.
 #![allow(dead_code)]
-include!(concat!(env!("OUT_DIR"), "/bindings.rs"));
+include!(concat!(env!("OUT_DIR"), "/kyber_bindings.rs"));
 use std::io::{Error, ErrorKind};
 
 #[derive(Clone)]
@@ -22,7 +22,7 @@ impl Kyber {
             return Err(Error::from(ErrorKind::InvalidInput));
         }
 
-        Ok(Kyber {
+        Ok(Self {
             pk,
             sk,
             key: Vec::<u8>::new(),
