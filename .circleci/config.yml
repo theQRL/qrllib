@@ -1,4 +1,6 @@
-version: 2
+version: 2.1
+orbs: 
+  rust: circleci/rust@1.6.0
 jobs:
   build:
     docker:
@@ -9,6 +11,26 @@ jobs:
       - run: cmake -DBUILD_PYTHON=ON -DCMAKE_C_COMPILER=gcc-5 -DCMAKE_CXX_COMPILER=g++-5
       - run: make
       - run: export GTEST_COLOR=1 && ctest -VV
+
+  test_rust:
+      docker:
+        - image: qrledger/qrl-docker-ci:bionic
+      steps:
+        - checkout
+        - run: apt update
+        - run: apt remove --purge --auto-remove cmake
+        - run: apt install build-essential libssl-dev
+        - run: wget https://github.com/Kitware/CMake/releases/download/v3.20.2/cmake-3.20.2.tar.gz
+        - run: tar -zxvf cmake-3.20.2.tar.gz
+        - run: cd cmake-3.20.2 && ./bootstrap
+        - run: cd cmake-3.20.2 && make
+        - run: cd cmake-3.20.2 && make install
+        - run: curl https://sh.rustup.rs -sSf | bash -s -- -y
+        - run: source $HOME/.cargo/env
+        - run: apt install llvm-dev libclang-dev clang -y
+        - run: cmake --version
+        - run: $HOME/.cargo/bin/cargo build -vv
+        - run: $HOME/.cargo/bin/cargo test
 
   test_python:
     docker:
@@ -113,6 +135,11 @@ workflows:
   build_all:
     jobs:
       - build:
+          filters:
+            tags:
+              only: /.*/
+
+      - test_rust:
           filters:
             tags:
               only: /.*/

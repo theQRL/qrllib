@@ -11,8 +11,8 @@
 #include <kyber/ref/api.h>
 #include <kyber/ref/randombytes.h>
 
-
-class Kyber {
+class Kyber
+{
 public:
     Kyber();
 
@@ -40,4 +40,4 @@ protected:
     std::vector<uint8_t> _ct;
 };
 
-#endif //QRLLIB_DILITHIUM_H
+#endif // QRLLIB_DILITHIUM_H

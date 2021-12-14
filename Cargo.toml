@@ -1,0 +1,17 @@
+# Distributed under the MIT software license, see the accompanying
+# file LICENSE or http://www.opensource.org/licenses/mit-license.php.
+[package]
+name = "qrllib"
+version = "0.1.0"
+edition = "2021"
+authors = ["Liam Arzola <liam0215@gmail.edu>"]
+
+[lib]
+name = "qrllib"
+path = "src/lib.rs"
+
+[dependencies]
+
+[build-dependencies]
+cmake = "0.1.46"
+bindgen = "0.59.2"
