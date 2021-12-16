@@ -1,20 +1,22 @@
 // Distributed under the MIT software license, see the accompanying
 // file LICENSE or http://www.opensource.org/licenses/mit-license.php.
-include!(concat!(env!("OUT_DIR"), "/dilithium_bindings.rs"));
+use qrllib::rustwrapper::dilithium::dilithium::{
+    crypto_sign, crypto_sign_keypair, crypto_sign_open, randombytes, CRYPTO_BYTES,
+    CRYPTO_PUBLICKEYBYTES, CRYPTO_SECRETKEYBYTES,
+};
 
 #[test]
 fn sign_keypair() {
     let mut message: Vec<u8> = Vec::with_capacity(100);
-
-    let mut pk: Vec<u8> = Vec::with_capacity(CRYPTO_PUBLICKEYBYTES as usize);
-    let mut sk: Vec<u8> = Vec::with_capacity(CRYPTO_SECRETKEYBYTES as usize);
-
-    let mut message_signed: Vec<u8> = Vec::with_capacity(message.len() + CRYPTO_BYTES as usize);
-    let mut message2: Vec<u8> = Vec::with_capacity(message.len() + CRYPTO_BYTES as usize);
-
     unsafe {
+        let mut pk: Vec<u8> = Vec::with_capacity(CRYPTO_PUBLICKEYBYTES as usize);
+        let mut sk: Vec<u8> = Vec::with_capacity(CRYPTO_SECRETKEYBYTES as usize);
+
+        let mut message_signed: Vec<u8> = Vec::with_capacity(message.len() + CRYPTO_BYTES as usize);
+        let mut message2: Vec<u8> = Vec::with_capacity(message.len() + CRYPTO_BYTES as usize);
+
         // Generate a random message
-        randombytes(message.as_mut_ptr(), message.len() as u64);
+        randombytes(message.as_mut_ptr(), message.len());
 
         // Generate random public/secret keys
         crypto_sign_keypair(pk.as_mut_ptr(), sk.as_mut_ptr());

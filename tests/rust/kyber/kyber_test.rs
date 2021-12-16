@@ -1,6 +1,6 @@
 // Distributed under the MIT software license, see the accompanying
 // file LICENSE or http://www.opensource.org/licenses/mit-license.php.
-use qrllib::rustwrapper::kyber::Kyber;
+use qrllib::rustwrapper::kyber::kyber::Kyber;
 
 #[test]
 fn basic_key_exchange() {
