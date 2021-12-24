@@ -1,5 +1,5 @@
 # Distributed under the MIT software license, see the accompanying
-# file LICENSE or http://www.opensource.org/licenses/mit-license.php.
+# file LICENSE or http://www.opensource.org/licenses/mit-license.php.\
 [package]
 name = "qrllib"
 version = "0.1.0"
@@ -12,6 +12,9 @@ path = "src/lib.rs"
 
 [dependencies]
 libc = "0.2.0"
+pqcrypto-kyber = "0.7.3"
+pqcrypto-dilithium = "0.4.4"
+pqcrypto-traits = "0.3.4"
 
 [build-dependencies]
 cc = { version = "1.0", features = ["parallel"] }
