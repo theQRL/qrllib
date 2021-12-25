@@ -1,3 +1,4 @@
+use pqcrypto_traits::sign::SignedMessage;
 // Distributed under the MIT software license, see the accompanying
 // file LICENSE or http://www.opensource.org/licenses/mit-license.php.
 use qrllib::rustwrapper::dilithium::dilithium::Dilithium;
@@ -11,11 +12,9 @@ fn sign_keypair() {
     let message_signed = dilithium.sign(&message);
 
     let mut message_out: Vec<u8> = Vec::with_capacity(message.len() as usize);
-    let pk = dilithium.getPK();
+    let pk = dilithium.get_pk();
 
-    let ret = Dilithium::sign_open(&mut message_out, &message_signed, &pk);
-
-    assert!(ret);
+    assert!(Dilithium::sign_open(&message_signed, &pk).is_ok());
 }
 
 #[test]
@@ -24,14 +23,12 @@ fn sign_keypair_fail() {
 
     let dilithium = Dilithium::default();
 
-    let mut message_signed = dilithium.sign(&message);
+    let mut message_signed = Vec::from(dilithium.sign(&message).as_bytes());
 
-    let mut message_out: Vec<u8> = Vec::with_capacity(message.len() as usize);
-    let pk = dilithium.getPK();
+    let pk = dilithium.get_pk();
 
     message_signed[3] ^= 1;
 
-    let ret = Dilithium::sign_open(&mut message_out, &message_signed, &pk);
-
-    assert!(!ret);
+    let modified_message_signed = SignedMessage::from_bytes(message_signed.as_slice()).unwrap();
+    assert!(Dilithium::sign_open(&modified_message_signed, &pk).is_err());
 }

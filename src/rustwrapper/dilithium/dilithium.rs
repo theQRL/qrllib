@@ -1,8 +1,11 @@
 // Distributed under the MIT software license, see the accompanying
 // file LICENSE or http://www.opensource.org/licenses/mit-license.php.
 use pqcrypto_dilithium::dilithium5::*;
-use pqcrypto_traits::sign::{PublicKey as PublicKey_t, SecretKey as SecretKey_t};
-use std::io::Error;
+use pqcrypto_traits::sign::{
+    PublicKey as PublicKey_t, SecretKey as SecretKey_t, SignedMessage as SignedMessage_t,
+    VerificationError,
+};
+use pqcrypto_traits::Error;
 
 pub const CRYPTO_PUBLICKEYBYTES: usize = public_key_bytes();
 pub const CRYPTO_SECRETKEYBYTES: usize = secret_key_bytes();
@@ -15,16 +18,16 @@ pub struct Dilithium {
 
 impl Dilithium {
     pub fn new(pk_bytes: &[u8], sk_bytes: &[u8]) -> Result<Self, Error> {
-        let mut pk = PublicKey::from_bytes(pk_bytes).unwrap();
-        let mut sk = SecretKey::from_bytes(sk_bytes).unwrap();
+        let pk = PublicKey::from_bytes(pk_bytes).unwrap();
+        let sk = SecretKey::from_bytes(sk_bytes).unwrap();
         Ok(Self { pk, sk })
     }
 
-    pub fn getPK(&self) -> PublicKey {
+    pub fn get_pk(&self) -> PublicKey {
         self.pk.clone()
     }
 
-    pub fn getSK(&self) -> SecretKey {
+    pub fn get_sk(&self) -> SecretKey {
         self.sk.clone()
     }
 
@@ -35,62 +38,45 @@ impl Dilithium {
         sign(message, &self.sk)
     }
 
-    pub fn getSecretKeySize() -> usize {
+    pub fn get_secret_key_size() -> usize {
         CRYPTO_SECRETKEYBYTES
     }
 
-    pub fn getPublicKeySize() -> usize {
+    pub fn get_public_key_size() -> usize {
         CRYPTO_PUBLICKEYBYTES
     }
 
-    pub fn sign_open(message_output: &mut &[u8], message_signed: &[u8], pk: &[u8]) -> bool {
-        let message_size = message_signed.len();
-        message_output.resize(message_size, 0);
-
-        let message_output_dummy: *mut u64 = &mut 0;
-        let ret = open(
-            message_output.as_mut_ptr(),
-            message_output_dummy,
-            message_signed.as_ptr(),
-            message_signed.len() as u64,
-            pk.as_ptr(),
-        );
-
-        // TODO Leon: message_out has size()+CRYPTO_BYTES. Should we return just the message?
-        ret == 0
+    pub fn sign_open(
+        message_signed: &SignedMessage,
+        pk: &PublicKey,
+    ) -> Result<Vec<u8>, VerificationError> {
+        open(message_signed, pk)
     }
 
-    pub fn extract_message(message_output: &Vec<u8>) -> Vec<u8> {
-        unsafe {
-            Vec::from(
-                message_output
-                    .as_slice()
-                    .get(0..(message_output.len() - CRYPTO_BYTES as usize))
-                    .unwrap(),
-            )
-        }
+    pub fn extract_message(message_output: &Vec<u8>) -> Result<Vec<u8>, Error> {
+        let valid_message_output = SignedMessage::from_bytes(message_output.as_slice())?;
+        Ok(Vec::from(
+            valid_message_output
+                .as_bytes()
+                .get(0..(valid_message_output.len() - CRYPTO_BYTES as usize))
+                .unwrap(),
+        ))
     }
 
-    pub fn extract_signature(message_output: &Vec<u8>) -> Vec<u8> {
-        unsafe {
-            Vec::from(
-                message_output
-                    .as_slice()
-                    .get((message_output.len() - CRYPTO_BYTES as usize)..(message_output.len()))
-                    .unwrap(),
-            )
-        }
+    pub fn extract_signature(message_output: &Vec<u8>) -> Result<Vec<u8>, Error> {
+        let valid_message_output = SignedMessage::from_bytes(message_output.as_slice())?;
+        Ok(Vec::from(
+            valid_message_output
+                .as_bytes()
+                .get((message_output.len() - CRYPTO_BYTES as usize)..(message_output.len()))
+                .unwrap(),
+        ))
     }
 }
 
 impl Default for Dilithium {
     fn default() -> Self {
-        unsafe {
-            let mut pk = vec![0; CRYPTO_PUBLICKEYBYTES as usize];
-            let mut sk = vec![0; CRYPTO_SECRETKEYBYTES as usize];
-            sign_keypair(pk.as_mut_ptr(), sk.as_mut_ptr());
-
-            Dilithium { pk, sk }
-        }
+        let (pk, sk) = keypair();
+        Dilithium { pk, sk }
     }
 }
