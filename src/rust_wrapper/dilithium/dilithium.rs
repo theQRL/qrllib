@@ -2,7 +2,7 @@
 // file LICENSE or http://www.opensource.org/licenses/mit-license.php.
 use pqcrypto_dilithium::dilithium5::*;
 use pqcrypto_traits::sign::{
-    PublicKey as PublicKey_t, SecretKey as SecretKey_t, SignedMessage as SignedMessage_t,
+    PublicKey as PublicKeyTrait, SecretKey as SecretKeyTrait, SignedMessage as SignedMessageTrait,
     VerificationError,
 };
 use pqcrypto_traits::Error;
