@@ -1,5 +1,5 @@
 # Distributed under the MIT software license, see the accompanying
-# file LICENSE or http://www.opensource.org/licenses/mit-license.php.
+# file LICENSE or http://www.opensource.org/licenses/mit-license.php.\
 [package]
 name = "qrllib"
 version = "0.1.0"
@@ -11,7 +11,6 @@ name = "qrllib"
 path = "src/lib.rs"
 
 [dependencies]
-
-[build-dependencies]
-cmake = "0.1.46"
-bindgen = "0.59.2"
+pqcrypto-kyber = "0.7.3"
+pqcrypto-dilithium = "0.4.4"
+pqcrypto-traits = "0.3.4"
