@@ -385,7 +385,7 @@ pub fn shake128(mut output: &mut [u8], outlen: usize, input: &[u8], inlen: u64) 
     }
 }
 
-fn shake256(mut output: &mut [u8], outlen: usize, input: &[u8], inlen: u64) {
+pub fn shake256(mut output: &mut [u8], outlen: usize, input: &[u8], inlen: u64) {
     let mut s: [u64; 25] = [0; 25];
     let mut d: [u8; SHAKE256_RATE] = [0; SHAKE256_RATE];
 
