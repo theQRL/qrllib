@@ -17,13 +17,13 @@ macro_rules! log2 {
  */
 // FIXME: Get rid of this
 pub struct WOTSParams {
-    len_1: u32,
-    len_2: u32,
-    len: u32,
-    n: u32,
-    w: u32,
-    log_w: u32,
-    keysize: u32,
+    pub len_1: u32,
+    pub len_2: u32,
+    pub len: u32,
+    pub n: u32,
+    pub w: u32,
+    pub log_w: u32,
+    pub keysize: u32,
 }
 
 impl WOTSParams {
@@ -103,8 +103,6 @@ fn gen_chain(
 
 /**
  * base_w algorithm as described in draft.
- *
- *
  */
 fn base_w(output: &mut [i32], out_len: usize, input: &[u8], params: &WOTSParams) {
     let mut in_ = 0;
