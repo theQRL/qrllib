@@ -1,5 +1,6 @@
 #![allow(non_snake_case)]
 #![allow(dead_code)]
+pub mod algsxmss;
 pub mod fips202;
 pub mod hash;
 pub mod hash_address;

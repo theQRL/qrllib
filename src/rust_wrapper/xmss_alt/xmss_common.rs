@@ -7,7 +7,7 @@ use super::{
 };
 use std::fmt;
 
-struct InitializationError;
+pub struct InitializationError;
 
 impl fmt::Display for InitializationError {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
@@ -15,11 +15,11 @@ impl fmt::Display for InitializationError {
     }
 }
 
-struct XMSSParams {
-    wots_par: WOTSParams,
-    n: u32,
-    h: u32,
-    k: u32,
+pub struct XMSSParams {
+    pub wots_par: WOTSParams,
+    pub n: u32,
+    pub h: u32,
+    pub k: u32,
 }
 
 impl XMSSParams {
