@@ -91,7 +91,7 @@ fn validate_authpath(
     hash_func: &HashFunction,
     root: &mut [u8],
     leaf: &[u8],
-    mut leafidx: u32,
+    mut leafidx: u64,
     mut authpath: &[u8],
     n: u32,
     h: u32,
@@ -122,7 +122,7 @@ fn validate_authpath(
     for i in 0..(h - 1) {
         set_tree_height(addr, i);
         leafidx >>= 1;
-        set_tree_index(addr, leafidx);
+        set_tree_index(addr, leafidx as u32);
         if (leafidx & 1) != 0 {
             let buffer_len = buffer.len();
             let input_slice = buffer.clone();
@@ -148,7 +148,7 @@ fn validate_authpath(
     }
     set_tree_height(addr, h - 1);
     leafidx >>= 1;
-    set_tree_index(addr, leafidx);
+    set_tree_index(addr, leafidx as u32);
     hash_h(hash_func, root, &buffer, pub_seed, addr, n);
 }
 
@@ -253,7 +253,7 @@ pub fn xmss_verify_sig(
         hash_func,
         &mut root,
         &pkhash,
-        idx,
+        idx as u64,
         sig_msg,
         n,
         h.into(),

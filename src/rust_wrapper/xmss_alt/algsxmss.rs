@@ -158,7 +158,7 @@ fn compute_authpath_wots(
     hash_func: &HashFunction,
     root: &mut [u8],
     authpath: &mut [u8],
-    leaf_idx: u32,
+    leaf_idx: u64,
     sk_seed: &[u8],
     params: &XMSSParams,
     pub_seed: &mut [u8],
@@ -218,7 +218,7 @@ fn compute_authpath_wots(
         let dest = authpath
             .get_mut((i * n) as usize..((i * n) + n) as usize)
             .unwrap();
-        let src_start = (((1 << h) >> i) * n + ((leaf_idx >> i) ^ 1) * n) as usize;
+        let src_start = (((1 << h) >> i) * n + (((leaf_idx >> i) ^ 1) as u32) * n) as usize;
         let src_end = src_start + n as usize;
         let src = tree.get(src_start..src_end).unwrap();
         dest.copy_from_slice(src);
@@ -281,12 +281,12 @@ pub fn xmss_gen_keypair(
     0
 }
 
-pub fn xmss_update_sk(sk: &mut [u8], k: u32) -> i32 {
+pub fn xmss_update_sk(sk: &mut [u8], k: u64) -> i32 {
     //unsigned long idxkey=0;
     //idxkey = ((unsigned long)sig_msg[0] << 24) | ((unsigned long)sig_msg[1] << 16) | ((unsigned long)sig_msg[2] << 8) | sig_msg[3];
     let idxkey: u32 =
         ((sk[0] as u32) << 24) | ((sk[1] as u32) << 16) | ((sk[2] as u32) << 8) | sk[3] as u32;
-    if idxkey >= k {
+    if idxkey as u64 >= k {
         return -1;
         //the secret key is updated more than the blockchain, so all fine
     } else {
@@ -433,7 +433,7 @@ pub fn xmss_sign_msg(
         hash_func,
         &mut root,
         sig_msg,
-        idx,
+        idx as u64,
         &sk_seed,
         params,
         &mut pub_seed,

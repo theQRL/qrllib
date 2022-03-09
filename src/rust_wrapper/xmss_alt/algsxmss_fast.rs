@@ -660,7 +660,7 @@ fn bds_round(
  * Format sk: [(32bit) idx || SK_SEED || SK_PRF || PUB_SEED || root]
  * Format pk: [root || PUB_SEED] omitting algo oid.
  */
-fn xmssfast_Genkeypair(
+fn xmss_fast_gen_keypair(
     hash_func: &HashFunction,
     params: &XMSSParams, // TODO: Refactor this. Remove params, etc.
     pk: &mut [u8],
@@ -718,7 +718,7 @@ fn xmssfast_Genkeypair(
     return 0;
 }
 
-fn xmssfast_update(
+fn xmss_fast_update(
     hash_func: &HashFunction,
     params: &XMSSParams,
     sk: &mut [u8],
@@ -778,7 +778,7 @@ fn xmssfast_update(
     return 0;
 }
 
-fn xmssfast_Signmsg(
+fn xmss_fast_sign_msg(
     hash_func: &HashFunction,
     params: &XMSSParams,
     sk: &mut [u8],
