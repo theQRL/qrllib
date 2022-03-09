@@ -187,9 +187,9 @@ pub fn xmss_verify_sig(
     set_type(node_addr, 2);
 
     // Extract index
-    let idx = (sig_msg[0] << 24) as u32
-        | (sig_msg[1] << 16) as u32
-        | (sig_msg[2] << 8) as u32
+    let idx = ((sig_msg[0] as u32) << 24)
+        | ((sig_msg[1] as u32) << 16)
+        | ((sig_msg[2] as u32) << 8)
         | sig_msg[3] as u32;
 
     // printf("verify:: idx = %lu\n", idx);
