@@ -7,6 +7,7 @@ use super::hash_address::{
 use super::hash_functions::HashFunction;
 use super::wots::{wots_pkgen, wots_sign};
 use super::xmss_common::{l_tree, to_byte, XMSSParams};
+use crate::rust_wrapper::errors::QRLErrors;
 
 #[derive(Clone)]
 pub struct TreeHashInst {
@@ -724,7 +725,7 @@ fn xmss_fast_update(
     sk: &mut [u8],
     state: &mut BDSState,
     new_idx: u32,
-) -> i32 {
+) -> Result<i32, QRLErrors> {
     let num_elems = 1 << params.h;
 
     let current_idx =
@@ -732,11 +733,11 @@ fn xmss_fast_update(
 
     // Verify ranges
     if new_idx >= num_elems {
-        panic!("index too high");
+        return Err(QRLErrors::InvalidArgument("index too high".to_string()));
     }
 
     if new_idx < current_idx {
-        panic!("cannot rewind");
+        return Err(QRLErrors::InvalidArgument("cannot rewind".to_string()));
     }
 
     // Change index
@@ -752,7 +753,7 @@ fn xmss_fast_update(
 
     for j in current_idx..new_idx {
         if j >= num_elems {
-            return -1;
+            return Ok(-1);
         }
 
         bds_round(
@@ -775,7 +776,7 @@ fn xmss_fast_update(
     sk[2] = ((new_idx) >> 8) as u8 & 255;
     sk[3] = (new_idx) as u8 & 255;
 
-    return 0;
+    return Ok(0);
 }
 
 fn xmss_fast_sign_msg(

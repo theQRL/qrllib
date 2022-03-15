@@ -5,15 +5,7 @@ use super::{
     hash_functions::HashFunction,
     wots::{wots_pk_from_sig, WOTSParams},
 };
-use std::fmt;
-
-pub struct InitializationError;
-
-impl fmt::Display for InitializationError {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "For BDS traversal, H - K must be even, with H > K >= 2!")
-    }
-}
+use crate::rust_wrapper::errors::QRLErrors;
 
 pub struct XMSSParams {
     pub wots_par: WOTSParams,
@@ -27,9 +19,11 @@ impl XMSSParams {
      * Initialize xmss params struct
      * parameter names are the same as in the draft
      */
-    pub fn new(n: u32, h: u32, w: u32, k: u32) -> Result<Self, InitializationError> {
+    pub fn new(n: u32, h: u32, w: u32, k: u32) -> Result<Self, QRLErrors> {
         if k >= h || k < 2 || (h - k) % 2 != 0 {
-            Err(InitializationError)
+            Err(QRLErrors::InvalidArgument(
+                "For BDS traversal, H - K must be even, with H > K >= 2!".to_owned(),
+            ))
         } else {
             let wots_par = WOTSParams::new(n, w);
             Ok(XMSSParams { wots_par, n, h, k })
