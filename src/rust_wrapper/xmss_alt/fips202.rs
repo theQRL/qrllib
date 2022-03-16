@@ -24,7 +24,7 @@ fn load64(x: &[u8]) -> u64 {
     let mut r: u64 = 0;
 
     for i in 0..8 {
-        r |= (x[i] << 8 * i) as u64;
+        r |= ((x[i] as usize) << 8 * i) as u64;
     }
     r
 }

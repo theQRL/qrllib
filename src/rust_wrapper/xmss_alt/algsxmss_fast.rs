@@ -9,7 +9,7 @@ use super::wots::{wots_pkgen, wots_sign};
 use super::xmss_common::{l_tree, to_byte, XMSSParams};
 use crate::rust_wrapper::errors::QRLErrors;
 
-#[derive(Clone)]
+#[derive(Clone, Default)]
 pub struct TreeHashInst {
     h: u32,
     next_idx: u32,
@@ -19,14 +19,14 @@ pub struct TreeHashInst {
 }
 
 pub struct BDSState {
-    stack: Vec<u8>,
-    stackoffset: u32,
-    stacklevels: Vec<u8>,
-    auth: Vec<u8>,
-    keep: Vec<u8>,
-    treehash: Vec<TreeHashInst>,
-    retain: Vec<u8>,
-    next_leaf: u32,
+    pub stack: Vec<u8>,
+    pub stackoffset: u32,
+    pub stacklevels: Vec<u8>,
+    pub auth: Vec<u8>,
+    pub keep: Vec<u8>,
+    pub treehash: Vec<TreeHashInst>,
+    pub retain: Vec<u8>,
+    pub next_leaf: u32,
 }
 
 /**
@@ -127,10 +127,10 @@ fn treehash_setup(
     let ltree_addr: &mut [u32; 8] = &mut [0; 8];
     let node_addr: &mut [u32; 8] = &mut [0; 8];
     // only copy layer and tree address parts
-    ots_addr.copy_from_slice(&addr[0..3]);
+    ots_addr[0..3].copy_from_slice(&addr[0..3]);
     // type = ots
     set_type(ots_addr, 0);
-    ltree_addr.copy_from_slice(&addr[0..3]);
+    ltree_addr[0..3].copy_from_slice(&addr[0..3]);
     set_type(ltree_addr, 1);
     node_addr.copy_from_slice(addr);
     set_type(node_addr, 2);
@@ -162,49 +162,58 @@ fn treehash_setup(
         stacklevels[stackoffset as usize] = 0;
         stackoffset += 1;
         if h - k > 0 && i == 3 {
-            let dest = state.treehash[0].node.get_mut(0..n as usize).unwrap();
+            let dest_option = state.treehash[0].node.get_mut(0..n as usize);
             let src = stack
                 .get((stackoffset * n) as usize..((stackoffset * n) + n) as usize)
                 .unwrap();
-            dest.copy_from_slice(src);
+            if let Some(dest) = dest_option {
+                dest.copy_from_slice(src);
+            } else {
+                state.treehash[0].node = src.to_vec();
+            }
         }
         while stackoffset > 1
             && stacklevels[stackoffset as usize - 1] == stacklevels[stackoffset as usize - 2]
         {
             let nodeh: u32 = stacklevels[stackoffset as usize - 1].into();
             if i >> nodeh == 1 {
-                let dest = state
+                let dest_option = state
                     .auth
-                    .get_mut((nodeh * n) as usize..((nodeh * n) + n) as usize)
-                    .unwrap();
+                    .get_mut((nodeh * n) as usize..((nodeh * n) + n) as usize);
                 let src = stack
                     .get(((stackoffset - 1) * n) as usize..(((stackoffset - 1) * n) + n) as usize)
                     .unwrap();
-                dest.copy_from_slice(src);
+                if let Some(dest) = dest_option {
+                    dest.copy_from_slice(src);
+                } else {
+                    state.auth = src.to_vec();
+                }
             } else {
                 if nodeh < h - k && i >> nodeh == 3 {
-                    let dest = state.treehash[nodeh as usize]
-                        .node
-                        .get_mut(0..n as usize)
-                        .unwrap();
+                    let dest_option = state.treehash[nodeh as usize].node.get_mut(0..n as usize);
                     let src = stack
                         .get(
                             ((stackoffset - 1) * n) as usize
                                 ..(((stackoffset - 1) * n) + n) as usize,
                         )
                         .unwrap();
-                    dest.copy_from_slice(src);
+                    if let Some(dest) = dest_option {
+                        dest.copy_from_slice(src);
+                    } else {
+                        state.treehash[nodeh as usize].node = src.to_vec();
+                    }
                 } else if nodeh >= h - k {
                     let dest_start = (((1 << (h - 1 - nodeh)) + nodeh - h
                         + (((i >> nodeh) - 3) >> 1))
                         * n) as usize;
-                    let dest = state
-                        .retain
-                        .get_mut(dest_start..dest_start + n as usize)
-                        .unwrap();
+                    let dest_option = state.retain.get_mut(dest_start..dest_start + n as usize);
                     let src_start = ((stackoffset - 1) * n) as usize;
                     let src = stack.get(src_start..src_start + n as usize).unwrap();
-                    dest.copy_from_slice(src);
+                    if let Some(dest) = dest_option {
+                        dest.copy_from_slice(src);
+                    } else {
+                        state.retain = src.to_vec();
+                    }
                 }
             }
             set_tree_height(node_addr, stacklevels[stackoffset as usize - 1].into());
@@ -212,10 +221,10 @@ fn treehash_setup(
                 node_addr,
                 idx >> (stacklevels[stackoffset as usize - 1] + 1),
             );
-            let mut input: Vec<u8> = vec![];
+            let mut input: Vec<u8> = Vec::new();
             let start_idx = ((stackoffset - 2) * n) as usize;
             let stack_len = stack.len();
-            input.copy_from_slice(stack.get(start_idx..stack_len).unwrap());
+            input.extend_from_slice(stack.get(start_idx..stack_len).unwrap());
             let output = stack.get_mut(start_idx..stack_len).unwrap();
             hash_h(hash_func, output, &input, pub_seed, node_addr, n);
             stacklevels[stackoffset as usize - 2] += 1;
@@ -244,10 +253,10 @@ fn treehash_update(
     let ltree_addr: &mut [u32; 8] = &mut [0; 8];
     let node_addr: &mut [u32; 8] = &mut [0; 8];
     // only copy layer and tree address parts
-    ots_addr.copy_from_slice(&addr[0..3]);
+    ots_addr[0..3].copy_from_slice(&addr[0..3]);
     // type = ots
     set_type(ots_addr, 0);
-    ltree_addr.copy_from_slice(&addr[0..3]);
+    ltree_addr[0..3].copy_from_slice(&addr[0..3]);
     set_type(ltree_addr, 1);
     node_addr.copy_from_slice(addr);
     set_type(node_addr, 2);
@@ -439,10 +448,10 @@ fn bds_state_update(
     }
 
     // only copy layer and tree address parts
-    ots_addr.copy_from_slice(&addr[0..3]);
+    ots_addr[0..3].copy_from_slice(&addr[0..3]);
     // type = ots
     set_type(ots_addr, 0);
-    ltree_addr.copy_from_slice(&addr[0..3]);
+    ltree_addr[0..3].copy_from_slice(&addr[0..3]);
     set_type(ltree_addr, 1);
     node_addr.copy_from_slice(addr);
     set_type(node_addr, 2);
@@ -565,10 +574,10 @@ fn bds_round(
     let node_addr: &mut [u32; 8] = &mut [0; 8];
 
     // only copy layer and tree address parts
-    ots_addr.copy_from_slice(&addr[0..3]);
+    ots_addr[0..3].copy_from_slice(&addr[0..3]);
     // type = ots
     set_type(ots_addr, 0);
-    ltree_addr.copy_from_slice(&addr[0..3]);
+    ltree_addr[0..3].copy_from_slice(&addr[0..3]);
     set_type(ltree_addr, 1);
     node_addr.copy_from_slice(addr);
     set_type(node_addr, 2);
@@ -661,7 +670,7 @@ fn bds_round(
  * Format sk: [(32bit) idx || SK_SEED || SK_PRF || PUB_SEED || root]
  * Format pk: [root || PUB_SEED] omitting algo oid.
  */
-fn xmss_fast_gen_keypair(
+pub fn xmss_fast_gen_keypair(
     hash_func: &HashFunction,
     params: &XMSSParams, // TODO: Refactor this. Remove params, etc.
     pk: &mut [u8],
@@ -719,7 +728,7 @@ fn xmss_fast_gen_keypair(
     return 0;
 }
 
-fn xmss_fast_update(
+pub fn xmss_fast_update(
     hash_func: &HashFunction,
     params: &XMSSParams,
     sk: &mut [u8],
@@ -779,7 +788,7 @@ fn xmss_fast_update(
     return Ok(0);
 }
 
-fn xmss_fast_sign_msg(
+pub fn xmss_fast_sign_msg(
     hash_func: &HashFunction,
     params: &XMSSParams,
     sk: &mut [u8],

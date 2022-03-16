@@ -58,7 +58,7 @@ pub fn l_tree(
             set_tree_index(addr, i);
             let wots_pk_length = wots_pk.len();
             let mut input = Vec::new();
-            input.copy_from_slice(wots_pk.get((i * 2 * n) as usize..wots_pk_length).unwrap());
+            input.extend(wots_pk.get((i * 2 * n) as usize..wots_pk_length).unwrap());
             let out = wots_pk.get_mut((i * n) as usize..wots_pk_length).unwrap();
             hash_h(hash_func, out, &input, pub_seed, addr, n);
         }
@@ -189,10 +189,10 @@ pub fn xmss_verify_sig(
     // printf("verify:: idx = %lu\n", idx);
 
     // Generate hash key (R || root || idx)
-    hash_key.copy_from_slice(sig_msg.get(4..n as usize).unwrap());
+    hash_key[0..(n - 4) as usize].copy_from_slice(sig_msg.get(4..n as usize).unwrap());
     let hash_key_len = hash_key.len();
     let hash_key_segment = hash_key.get_mut(n as usize..hash_key_len).unwrap();
-    hash_key_segment.copy_from_slice(pk.get(0..n as usize).unwrap());
+    hash_key_segment[0..n as usize].copy_from_slice(pk.get(0..n as usize).unwrap());
     let to_byte_out = hash_key.get_mut(2 * n as usize..hash_key_len).unwrap();
     to_byte(to_byte_out, idx.into(), n);
 
