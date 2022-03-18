@@ -2,7 +2,7 @@ use super::qrl_address_format::AddrFormatType;
 use crate::rust_wrapper::errors::QRLErrors;
 use crate::rust_wrapper::xmss_alt::hash_functions::HashFunction;
 
-#[derive(Clone, Copy, PartialEq)]
+#[derive(Clone, Copy, PartialEq, Debug)]
 pub enum SignatureType {
     XMSS = 0,
 }

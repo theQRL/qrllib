@@ -7,7 +7,7 @@ use qrllib::rust_wrapper::xmss_alt::{
 };
 
 #[test]
-fn xmss_fast_leons_test() {
+fn xmss_fast_leons() {
     let h: u8 = 4;
     let siglen: u64 = (4 + 32 + 67 * 32 + (h as u64) * 32);
 

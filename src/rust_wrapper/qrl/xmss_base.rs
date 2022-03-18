@@ -12,10 +12,10 @@ use crate::rust_wrapper::{
     },
 };
 
-type TSIGNATURE = Vec<u8>;
-type TMESSAGE = Vec<u8>;
-type TSEED = Vec<u8>;
-type TKEY = Vec<u8>;
+pub type TSIGNATURE = Vec<u8>;
+pub type TMESSAGE = Vec<u8>;
+pub type TSEED = Vec<u8>;
+pub type TKEY = Vec<u8>;
 
 // TODO: Use a union? to operate on partial fields
 //    PK format
@@ -45,11 +45,11 @@ const OFFSET_PUB_SEED: usize = OFFSET_SK_PRF + 32;
 const OFFSET_ROOT: usize = OFFSET_PUB_SEED + 32;
 
 pub struct XMSSBase {
-    hash_function: HashFunction,
-    addr_format_type: AddrFormatType,
-    height: u8,
-    sk: TKEY,
-    seed: TSEED,
+    pub hash_function: HashFunction,
+    pub addr_format_type: AddrFormatType,
+    pub height: u8,
+    pub sk: TKEY,
+    pub seed: TSEED,
 }
 
 impl XMSSBase {
@@ -315,5 +315,5 @@ impl XMSSBase {
 }
 
 pub trait XMSSBaseTrait {
-    fn sign(message: &TMESSAGE) -> TSIGNATURE;
+    fn sign(&mut self, message: &mut TMESSAGE) -> TSIGNATURE;
 }
