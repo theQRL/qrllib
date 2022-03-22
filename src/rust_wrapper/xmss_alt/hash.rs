@@ -71,7 +71,10 @@ pub fn core_hash(
             0
         }
         HashFunction::SHA2_256 if n == 32 => {
-            out.copy_from_slice(sha2_256(&buf).as_slice());
+            let buf_sha2_256 = sha2_256(&buf);
+            out.get_mut(0..buf_sha2_256.len())
+                .unwrap()
+                .copy_from_slice(buf_sha2_256.as_slice());
             0
         }
         _ => 1,

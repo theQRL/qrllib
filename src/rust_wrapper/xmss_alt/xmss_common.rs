@@ -189,7 +189,7 @@ pub fn xmss_verify_sig(
     // printf("verify:: idx = %lu\n", idx);
 
     // Generate hash key (R || root || idx)
-    hash_key[0..(n - 4) as usize].copy_from_slice(sig_msg.get(4..n as usize).unwrap());
+    hash_key[0..n as usize].copy_from_slice(sig_msg.get(4..(4 + n) as usize).unwrap());
     let hash_key_len = hash_key.len();
     let hash_key_segment = hash_key.get_mut(n as usize..hash_key_len).unwrap();
     hash_key_segment[0..n as usize].copy_from_slice(pk.get(0..n as usize).unwrap());
@@ -262,8 +262,8 @@ pub fn xmss_verify_sig(
         if root[i] != pk[i] {
             for i in 0..sig_msg_len as usize {
                 msg[i] = 0;
-                return -1;
             }
+            return -1;
         }
     }
 

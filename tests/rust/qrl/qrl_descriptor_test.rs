@@ -45,7 +45,7 @@ fn check_attributes_2() {
 }
 
 #[test]
-fn check_attributes_3() {
+fn check_attributes_from_bytes() {
     let bytes: Vec<u8> = vec![0x01, 0x08, 0x00];
     let desc = QRLDescriptor::from_bytes(&bytes).unwrap();
 

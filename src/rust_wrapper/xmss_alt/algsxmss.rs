@@ -89,13 +89,13 @@ fn treehash(
     let mut ltree_addr: [u32; 8] = [0; 8];
     let mut node_addr: [u32; 8] = [0; 8];
     // only copy layer and tree address parts
-    ots_addr.copy_from_slice(&addr[0..3]);
+    ots_addr[0..3].copy_from_slice(&addr[0..3]);
     // type = ots
 
     set_type(&mut ots_addr, 0);
-    ltree_addr.copy_from_slice(&addr[0..3]);
+    ltree_addr[0..3].copy_from_slice(&addr[0..3]);
     set_type(&mut ltree_addr, 1);
-    node_addr.copy_from_slice(&addr[0..3]);
+    node_addr[0..3].copy_from_slice(&addr[0..3]);
     set_type(&mut node_addr, 2);
 
     let mut stack: Vec<u8> = vec![0; ((height + 1) as u32 * n) as usize];
@@ -130,7 +130,7 @@ fn treehash(
                 &mut node_addr,
                 idx >> (stacklevels[stackoffset as usize - 1] + 1),
             );
-            let mut input = vec![0 as u8];
+            let mut input = vec![0 as u8; stack_length - ((stackoffset - 2) * n) as usize];
             input.copy_from_slice(
                 stack
                     .get(((stackoffset - 2) * n) as usize..stack_length)
@@ -174,11 +174,11 @@ fn compute_authpath_wots(
     let ltree_addr: &mut [u32; 8] = &mut [0; 8];
     let node_addr: &mut [u32; 8] = &mut [0; 8];
 
-    ots_addr.copy_from_slice(&addr[0..3]);
+    ots_addr[0..3].copy_from_slice(&addr[0..3]);
     set_type(ots_addr, 0);
-    ltree_addr.copy_from_slice(&addr[0..3]);
+    ltree_addr[0..3].copy_from_slice(&addr[0..3]);
     set_type(ltree_addr, 1);
-    node_addr.copy_from_slice(&addr[0..3]);
+    node_addr[0..3].copy_from_slice(&addr[0..3]);
     set_type(node_addr, 2);
 
     // Compute all leaves
@@ -203,7 +203,7 @@ fn compute_authpath_wots(
         for j in (0..i).step_by(2) {
             set_tree_index(node_addr, j >> 1);
             let tree_length = tree.len();
-            let mut input = vec![0];
+            let mut input = vec![0; tree_length - (i * n + j * n) as usize];
             input.copy_from_slice(tree.get((i * n + j * n) as usize..tree_length).unwrap());
             let out_start = ((i >> 1) * n + (j >> 1) * n) as usize;
             let out = tree.get_mut(out_start..tree_length).unwrap();

@@ -10,7 +10,7 @@ use crate::rust_wrapper::{
 };
 
 pub struct XMSSBasic {
-    base: XMSSBase,
+    pub base: XMSSBase,
     params: XMSSParams,
 }
 
@@ -20,7 +20,7 @@ impl XMSSBasic {
         height: u8,
         hash_function: HashFunction,
         addr_format_type: AddrFormatType,
-        wots_param_w: u32,
+        wots_param_w_option: Option<u32>,
     ) -> Result<Self, QRLErrors> {
         //    PK format
         //    32 root address
@@ -44,7 +44,7 @@ impl XMSSBasic {
         }
 
         let k: u32 = 2;
-        let w: u32 = wots_param_w;
+        let w: u32 = wots_param_w_option.unwrap_or(16);
         let n: u32 = 32;
 
         if k >= height as u32 || (height as u32 - k) % 2 != 0 {

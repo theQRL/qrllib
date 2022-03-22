@@ -277,8 +277,6 @@ impl XMSSBase {
 
         let params = XMSSParams::new(n, height.into(), w, k)?;
 
-        let tmp: &TSIGNATURE = signature;
-
         let verify_pk = &extended_pk[QRLDescriptor::get_size() as usize..extended_pk.len()];
         let message_len = message.len();
         if xmss_verify_sig(
@@ -286,7 +284,7 @@ impl XMSSBase {
             &params.wots_par,
             message,
             message_len,
-            tmp,
+            signature,
             verify_pk,
             height,
         ) == 0
