@@ -40,17 +40,15 @@ fn xmss_fast_leons() {
     };
 
     let params = XMSSParams::new(32, h.into(), 16, 2).unwrap();
-    assert_eq!(
-        xmss_fast_gen_keypair(
-            &HashFunction::Shake128,
-            &params,
-            &mut pk,
-            &mut sk,
-            &mut state,
-            &mut seed,
-        ),
-        0
-    );
+    assert!(xmss_fast_gen_keypair(
+        &HashFunction::Shake128,
+        &params,
+        &mut pk,
+        &mut sk,
+        &mut state,
+        &mut seed,
+    )
+    .is_ok());
 
     let mut msg: [u8; 32] = [0; 32];
     let mut sign: [u8; 10000] = [0; 10000];

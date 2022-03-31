@@ -15,9 +15,10 @@ pub struct TreeHashInst {
     next_idx: u32,
     stackusage: u32,
     completed: u8,
-    node: Vec<u8>,
+    pub node: Vec<u8>,
 }
 
+#[derive(Default)]
 pub struct BDSState {
     pub stack: Vec<u8>,
     pub stackoffset: u32,
@@ -677,10 +678,11 @@ pub fn xmss_fast_gen_keypair(
     sk: &mut [u8],
     state: &mut BDSState,
     seed: &mut [u8],
-) -> i32 {
+) -> Result<(), QRLErrors> {
     if (params.h & 1) != 0 {
-        println!("Not a valid h, only even numbers supported! Try again with an even number");
-        return -1;
+        return Err(QRLErrors::InvalidArgument(
+            "Not a valid h, only even numbers supported! Try again with an even number".to_owned(),
+        ));
     }
     let n = params.n;
 
@@ -725,7 +727,7 @@ pub fn xmss_fast_gen_keypair(
     let src = pk.get(0..pks).unwrap();
     dest.copy_from_slice(src);
 
-    return 0;
+    return Ok(());
 }
 
 pub fn xmss_fast_update(

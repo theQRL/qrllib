@@ -25,17 +25,17 @@ fn instantiation() {
 
     println!();
     println!();
-    println!("seed: {} bytes\n {}", seed.len(), encode(seed.clone()));
-    println!("pk  : {} bytes\n {}", pk.len(), encode(pk.clone()));
-    println!("sk  : {} bytes\n {}", sk.len(), encode(sk));
-    println!("descr: {}", encode(xmss.base.get_descriptor().get_bytes()));
-    println!("addr : {}", encode(xmss.base.get_address().unwrap()));
+    println!("seed: {} bytes\n {}", seed.len(), encode(&seed));
+    println!("pk  : {} bytes\n {}", pk.len(), encode(&pk));
+    println!("sk  : {} bytes\n {}", sk.len(), encode(&sk));
+    println!("descr: {}", encode(&xmss.base.get_descriptor().get_bytes()));
+    println!("addr : {}", encode(&xmss.base.get_address().unwrap()));
 
     assert_eq!(seed, *xmss.base.get_seed());
     assert_eq!(
         "000000000000000000000000000000000000000000000000".to_owned()
             + "000000000000000000000000000000000000000000000000",
-        encode(xmss.base.get_seed())
+        encode(&xmss.base.get_seed())
     );
 
     assert_eq!(
@@ -47,11 +47,11 @@ fn instantiation() {
         AddrFormatType::SHA256_2X
     );
 
-    assert_eq!("010200", encode(xmss.base.get_descriptor().get_bytes()));
+    assert_eq!("010200", encode(&xmss.base.get_descriptor().get_bytes()));
     assert_eq!(
         "0102000000000000000000000000000000000000000000000000".to_owned()
             + "00000000000000000000000000000000000000000000000000",
-        encode(xmss.base.get_extended_seed())
+        encode(&xmss.base.get_extended_seed())
     );
 
     assert_eq!(51, xmss.base.get_extended_seed().len());
@@ -65,12 +65,12 @@ fn instantiation() {
 
     assert_eq!(
         "01020095f03f084bcb29b96b0529c17ce92c54c1e8290193a93803812ead95e8e6902506b67897",
-        encode(xmss.base.get_address().unwrap()),
+        encode(&xmss.base.get_address().unwrap()),
     );
 
     assert_eq!(
         "01020095f03f084bcb29b96b0529c17ce92c54c1e8290193a93803812ead95e8e6902506b67897",
-        encode(qrl_helper::get_address(&pk).unwrap()),
+        encode(&qrl_helper::get_address(&pk).unwrap()),
     );
 }
 
@@ -125,30 +125,30 @@ fn sign() {
     let mut data_to_sign = Vec::from(data);
     assert_eq!(xmss.base.get_index(), 0);
 
-    let signature = xmss.sign(&mut data_to_sign);
+    let signature = xmss.sign(&mut data_to_sign).unwrap();
 
     println!();
     println!();
-    println!("data       : {} bytes\n{}", data.len(), encode(data));
+    println!("data       : {} bytes\n{}", data.len(), encode(&data));
     println!(
         "signature  :{} bytes\n{}",
         signature.len(),
-        encode(signature.clone())
+        encode(&signature)
     );
     assert_eq!(xmss.base.get_index(), 1);
 
-    let signature2 = xmss.sign(&mut data_to_sign);
+    let signature2 = xmss.sign(&mut data_to_sign).unwrap();
 
     println!();
     println!();
-    println!("data       : {} bytes\n{}", data.len(), encode(data));
+    println!("data       : {} bytes\n{}", data.len(), encode(&data));
     println!(
         "signature  :{} bytes\n{}",
         signature2.len(),
-        encode(signature2.clone())
+        encode(&signature2)
     );
 
-    assert_ne!(encode(signature), encode(signature2));
+    assert_ne!(encode(&signature), encode(&signature2));
     assert_eq!(xmss.base.get_index(), 2);
 }
 
@@ -172,21 +172,21 @@ fn verify() {
     let pk = xmss.base.get_pk();
     let sk = xmss.base.get_sk();
     println!();
-    println!("seed:{} bytes\n{}", seed.len(), encode(seed));
-    println!("pk  :{} bytes\n{}", pk.len(), encode(pk.clone()));
-    println!("sk  :{} bytes\n{}", sk.len(), encode(sk));
+    println!("seed:{} bytes\n{}", seed.len(), encode(&seed));
+    println!("pk  :{} bytes\n{}", pk.len(), encode(&pk));
+    println!("sk  :{} bytes\n{}", sk.len(), encode(&sk));
 
-    let mut signature = xmss.sign(&mut data_to_sign);
+    let mut signature = xmss.sign(&mut data_to_sign).unwrap();
 
     assert_eq!(Vec::from(data), data_to_sign);
 
     println!();
     println!();
-    println!("data       :{} bytes\n{}", data.len(), encode(data));
+    println!("data       :{} bytes\n{}", data.len(), encode(&data));
     println!(
         "signature  :{} bytes\n{}",
         signature.len(),
-        encode(signature.clone())
+        encode(&signature)
     );
 
     assert!(XMSSBase::verify(&mut data_to_sign, &signature.clone(), &pk, None).is_ok());

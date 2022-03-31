@@ -63,7 +63,7 @@ impl XMSSBasic {
 }
 
 impl XMSSBaseTrait for XMSSBasic {
-    fn sign(&mut self, message: &mut TMESSAGE) -> TSIGNATURE {
+    fn sign(&mut self, message: &mut TMESSAGE) -> Result<TSIGNATURE, QRLErrors> {
         let mut signature: TSIGNATURE =
             vec![0; self.base.get_signature_size(Some(self.params.wots_par.w)) as usize];
         let message_len = message.len();
@@ -76,6 +76,6 @@ impl XMSSBaseTrait for XMSSBasic {
             message_len,
         );
 
-        return signature;
+        return Ok(signature);
     }
 }

@@ -7,6 +7,7 @@ use super::{
 };
 use crate::rust_wrapper::errors::QRLErrors;
 
+#[derive(Default)]
 pub struct XMSSParams {
     pub wots_par: WOTSParams,
     pub n: u32,

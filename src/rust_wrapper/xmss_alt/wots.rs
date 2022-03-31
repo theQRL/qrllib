@@ -16,6 +16,7 @@ macro_rules! log2 {
  * Meaning as defined in draft-irtf-cfrg-xmss-hash-based-signatures-02
  */
 // FIXME: Get rid of this
+#[derive(Default)]
 pub struct WOTSParams {
     pub len_1: u32,
     pub len_2: u32,

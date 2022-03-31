@@ -313,5 +313,5 @@ impl XMSSBase {
 }
 
 pub trait XMSSBaseTrait {
-    fn sign(&mut self, message: &mut TMESSAGE) -> TSIGNATURE;
+    fn sign(&mut self, message: &mut TMESSAGE) -> Result<TSIGNATURE, QRLErrors>;
 }

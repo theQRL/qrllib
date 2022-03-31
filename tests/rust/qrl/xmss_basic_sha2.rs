@@ -25,9 +25,9 @@ fn instantiation() {
 
     println!();
     println!();
-    println!("seed: {} bytes\n {}", seed.len(), encode(seed.clone()));
-    println!("pk  : {} bytes\n {}", pk.len(), encode(pk.clone()));
-    println!("sk  : {} bytes\n {}", sk.len(), encode(sk));
+    println!("seed: {} bytes\n {}", seed.len(), encode(&seed));
+    println!("pk  : {} bytes\n {}", pk.len(), encode(&pk));
+    println!("sk  : {} bytes\n {}", sk.len(), encode(&sk));
     println!("descr: {}", encode(xmss.base.get_descriptor().get_bytes()));
     println!("addr : {}", encode(xmss.base.get_address().unwrap()));
 
@@ -117,7 +117,7 @@ fn sign() {
     let mut data_to_sign = Vec::from(data);
     assert_eq!(xmss.base.get_index(), 0);
 
-    let signature = xmss.sign(&mut data_to_sign);
+    let signature = xmss.sign(&mut data_to_sign).unwrap();
 
     println!();
     println!();
@@ -125,11 +125,11 @@ fn sign() {
     println!(
         "signature  :{} bytes\n{}",
         signature.len(),
-        encode(signature.clone())
+        encode(&signature)
     );
     assert_eq!(xmss.base.get_index(), 1);
 
-    let signature2 = xmss.sign(&mut data_to_sign);
+    let signature2 = xmss.sign(&mut data_to_sign).unwrap();
 
     println!();
     println!();
@@ -137,7 +137,7 @@ fn sign() {
     println!(
         "signature  :{} bytes\n{}",
         signature2.len(),
-        encode(signature2.clone())
+        encode(&signature2)
     );
 
     assert_ne!(encode(signature), encode(signature2));
@@ -165,10 +165,10 @@ fn verify() {
     let sk = xmss.base.get_sk();
     println!();
     println!("seed:{} bytes\n{}", seed.len(), encode(seed));
-    println!("pk  :{} bytes\n{}", pk.len(), encode(pk.clone()));
-    println!("sk  :{} bytes\n{}", sk.len(), encode(sk));
+    println!("pk  :{} bytes\n{}", pk.len(), encode(&pk));
+    println!("sk  :{} bytes\n{}", sk.len(), encode(&sk));
 
-    let mut signature = xmss.sign(&mut data_to_sign);
+    let mut signature = xmss.sign(&mut data_to_sign).unwrap();
 
     assert_eq!(Vec::from(data), data_to_sign);
 
@@ -178,7 +178,7 @@ fn verify() {
     println!(
         "signature  :{} bytes\n{}",
         signature.len(),
-        encode(signature.clone())
+        encode(&signature)
     );
 
     assert!(XMSSBase::verify(&mut data_to_sign, &signature.clone(), &pk, None).is_ok());
