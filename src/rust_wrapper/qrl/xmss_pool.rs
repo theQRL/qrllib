@@ -1,5 +1,5 @@
 use super::xmss_fast::XMSSFast;
-use crate::rust_wrapper::errors::QRLErrors;
+use crate::rust_wrapper::errors::QRLError;
 use crate::rust_wrapper::qrl::xmss_base::TSEED;
 use crate::rust_wrapper::shasha::shasha::sha2_256;
 use crossbeam_channel::bounded;
@@ -12,7 +12,7 @@ pub struct XMSSPool {
     current_index: usize,
     max_cache_size: usize,
     pub thread_pool: rayon::ThreadPool,
-    cache: VecDeque<Receiver<Result<XMSSFast, QRLErrors>>>,
+    cache: VecDeque<Receiver<Result<XMSSFast, QRLError>>>,
 }
 
 impl XMSSPool {
@@ -35,7 +35,7 @@ impl XMSSPool {
         Ok(xmss_pool)
     }
 
-    fn prepare_tree(&self, index: usize) -> Result<XMSSFast, QRLErrors> {
+    fn prepare_tree(&self, index: usize) -> Result<XMSSFast, QRLError> {
         // FIXME: Check with Leon. The commented code is a proposal
         //    index++;
         //    while(index>0)
@@ -64,7 +64,7 @@ impl XMSSPool {
         }
     }
 
-    pub fn get_next_tree(&mut self) -> Result<XMSSFast, QRLErrors> {
+    pub fn get_next_tree(&mut self) -> Result<XMSSFast, QRLError> {
         if self.cache.is_empty() {
             let answer = self.prepare_tree(self.current_index);
             self.current_index += 1;

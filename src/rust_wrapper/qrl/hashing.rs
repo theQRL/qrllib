@@ -1,8 +1,8 @@
-use crate::rust_wrapper::{errors::QRLErrors, shasha::shasha::sha2_256};
+use crate::rust_wrapper::{errors::QRLError, shasha::shasha::sha2_256};
 
-fn sha2_256_n(input: Vec<u8>, count: usize) -> Result<Vec<u8>, QRLErrors> {
+fn sha2_256_n(input: Vec<u8>, count: usize) -> Result<Vec<u8>, QRLError> {
     if count == 0 {
-        return Err(QRLErrors::InvalidArgument(
+        return Err(QRLError::InvalidArgument(
             "Invalid count. It should be > 0".to_owned(),
         ));
     }

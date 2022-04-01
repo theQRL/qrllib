@@ -33,7 +33,7 @@ fn instantiation() {
     for i in 0..5 {
         assert_eq!(pool.get_current_index(), i);
         let xmss = pool.get_next_tree().unwrap();
-        assert_eq!(pks[i], encode(&xmss.base.get_pk()));
+        assert_eq!(pks[i], encode(&xmss.get_pk()));
     }
 }
 
@@ -50,7 +50,7 @@ fn instantiation_2() {
     for i in 0..5 {
         assert_eq!(pool.get_current_index(), i);
         let xmss = pool.get_next_tree().unwrap();
-        assert_eq!(pks[i], encode(&xmss.base.get_pk()));
+        assert_eq!(pks[i], encode(&xmss.get_pk()));
     }
 }
 
@@ -67,6 +67,6 @@ fn instantiation_3() {
     for i in 1..5 {
         assert_eq!(pool.get_current_index(), i);
         let xmss = pool.get_next_tree().unwrap();
-        assert_eq!(pks[i], encode(&xmss.base.get_pk()));
+        assert_eq!(pks[i], encode(&xmss.get_pk()));
     }
 }

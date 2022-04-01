@@ -1,13 +1,13 @@
 use super::misc::ADDRESS_HASH_SIZE;
 use super::qrl_address_format::AddrFormatType;
 use super::qrl_descriptor::QRLDescriptor;
-use crate::rust_wrapper::{errors::QRLErrors, shasha::shasha::sha2_256};
+use crate::rust_wrapper::{errors::QRLError, shasha::shasha::sha2_256};
 
-pub fn get_address(extended_pk: &Vec<u8>) -> Result<Vec<u8>, QRLErrors> {
+pub fn get_address(extended_pk: &Vec<u8>) -> Result<Vec<u8>, QRLError> {
     let descr = QRLDescriptor::from_extended_pk(extended_pk)?;
 
     if *descr.get_addr_format_type() != AddrFormatType::SHA256_2X {
-        return Err(QRLErrors::InvalidArgument(
+        return Err(QRLError::InvalidArgument(
             "Address format type not supported".to_owned(),
         ));
     }

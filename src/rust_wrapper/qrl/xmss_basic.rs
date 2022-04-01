@@ -1,16 +1,16 @@
 use super::{
     qrl_address_format::AddrFormatType,
-    xmss_base::{XMSSBase, XMSSBaseTrait, TKEY, TMESSAGE, TSEED, TSIGNATURE},
+    xmss_base::{Sign, XMSSBase, XMSSBaseTrait, TKEY, TMESSAGE, TSEED, TSIGNATURE},
 };
 use crate::rust_wrapper::xmss_alt::algsxmss::xmss_gen_keypair;
 use crate::rust_wrapper::xmss_alt::algsxmss::xmss_sign_msg;
 use crate::rust_wrapper::{
-    errors::QRLErrors,
+    errors::QRLError,
     xmss_alt::{hash_functions::HashFunction, xmss_common::XMSSParams},
 };
 
 pub struct XMSSBasic {
-    pub base: XMSSBase,
+    base: XMSSBase,
     params: XMSSParams,
 }
 
@@ -21,7 +21,7 @@ impl XMSSBasic {
         hash_function: HashFunction,
         addr_format_type: AddrFormatType,
         wots_param_w_option: Option<u32>,
-    ) -> Result<Self, QRLErrors> {
+    ) -> Result<Self, QRLError> {
         //    PK format
         //    32 root address
         //    32 pub_seed
@@ -33,12 +33,12 @@ impl XMSSBasic {
         //    32 pub_seed
         //    32 root
 
-        let mut sk: TKEY = vec![0; 1320];
+        let mut sk: TKEY = vec![0; Self::SECRET_KEY_SIZE];
         let mut tmp: TKEY = vec![0; 64];
 
         // FIXME: At the moment, the lib takes 48 bytes from the seed vector
         if seed.len() != 48 {
-            return Err(QRLErrors::InvalidArgument(
+            return Err(QRLError::InvalidArgument(
                 "Seed should be 48 bytes. Other values are not currently supported".to_owned(),
             ));
         }
@@ -48,7 +48,7 @@ impl XMSSBasic {
         let n: u32 = 32;
 
         if k >= height as u32 || (height as u32 - k) % 2 != 0 {
-            return Err(QRLErrors::InvalidArgument(
+            return Err(QRLError::InvalidArgument(
                 "For BDS traversal, H - K must be even, with H > K >= 2!".to_owned(),
             ));
         }
@@ -63,9 +63,35 @@ impl XMSSBasic {
 }
 
 impl XMSSBaseTrait for XMSSBasic {
-    fn sign(&mut self, message: &mut TMESSAGE) -> Result<TSIGNATURE, QRLErrors> {
+    fn get_height(&self) -> u8 {
+        self.base.get_height()
+    }
+
+    fn get_seed(&self) -> &TSEED {
+        self.base.get_seed()
+    }
+
+    fn hash_function(&self) -> &HashFunction {
+        self.base.hash_function()
+    }
+
+    fn addr_format_type(&self) -> &AddrFormatType {
+        self.base.addr_format_type()
+    }
+
+    fn get_sk(&self) -> &TKEY {
+        self.base.get_sk()
+    }
+
+    fn set_index(&mut self, new_index: u32) -> Result<u32, QRLError> {
+        self.base.set_index(new_index)
+    }
+}
+
+impl Sign for XMSSBasic {
+    fn sign(&mut self, message: &TMESSAGE) -> Result<TSIGNATURE, QRLError> {
         let mut signature: TSIGNATURE =
-            vec![0; self.base.get_signature_size(Some(self.params.wots_par.w)) as usize];
+            vec![0; self.get_signature_size(Some(self.params.wots_par.w)) as usize];
         let message_len = message.len();
         xmss_sign_msg(
             &self.base.hash_function,

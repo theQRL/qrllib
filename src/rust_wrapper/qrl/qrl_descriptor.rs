@@ -1,5 +1,5 @@
 use super::qrl_address_format::AddrFormatType;
-use crate::rust_wrapper::errors::QRLErrors;
+use crate::rust_wrapper::errors::QRLError;
 use crate::rust_wrapper::xmss_alt::hash_functions::HashFunction;
 
 #[derive(Clone, Copy, PartialEq, Debug)]
@@ -47,9 +47,9 @@ impl QRLDescriptor {
         return &self.addr_format_type;
     }
 
-    pub fn from_bytes(bytes: &Vec<u8>) -> Result<Self, QRLErrors> {
+    pub fn from_bytes(bytes: &Vec<u8>) -> Result<Self, QRLError> {
         if bytes.len() != 3 {
-            return Err(QRLErrors::InvalidArgument(
+            return Err(QRLError::InvalidArgument(
                 "Descriptor size should be 3 bytes".to_string(),
             ));
         }
@@ -59,7 +59,7 @@ impl QRLDescriptor {
             1 => HashFunction::Shake128,
             2 => HashFunction::Shake256,
             _ => {
-                return Err(QRLErrors::FailedConversion(
+                return Err(QRLError::FailedConversion(
                     "Could not convert from u8 to HashFunction".to_string(),
                 ))
             }
@@ -67,7 +67,7 @@ impl QRLDescriptor {
         let signature_type: SignatureType = match (bytes[0] >> 4) & 0xF0 {
             0 => SignatureType::XMSS,
             _ => {
-                return Err(QRLErrors::FailedConversion(
+                return Err(QRLError::FailedConversion(
                     "Could not convert from u8 to SignatureType".to_string(),
                 ))
             }
@@ -76,7 +76,7 @@ impl QRLDescriptor {
         let addr_format_type: AddrFormatType = match (bytes[1] & 0xF0) >> 4 {
             0 => AddrFormatType::SHA256_2X,
             _ => {
-                return Err(QRLErrors::FailedConversion(
+                return Err(QRLError::FailedConversion(
                     "Could not convert from u8 to AddrFormatType".to_string(),
                 ))
             }
@@ -94,9 +94,9 @@ impl QRLDescriptor {
         Self::SIZE
     }
 
-    pub fn from_extended_seed(extended_seed: &Vec<u8>) -> Result<Self, QRLErrors> {
+    pub fn from_extended_seed(extended_seed: &Vec<u8>) -> Result<Self, QRLError> {
         if extended_seed.len() != 51 {
-            return Err(QRLErrors::InvalidArgument(
+            return Err(QRLError::InvalidArgument(
                 "Extended seed should be 51 bytes".to_string(),
             ));
         }
@@ -105,9 +105,9 @@ impl QRLDescriptor {
         return QRLDescriptor::from_bytes(&bytes.to_vec());
     }
 
-    pub fn from_extended_pk(extended_pk: &Vec<u8>) -> Result<Self, QRLErrors> {
+    pub fn from_extended_pk(extended_pk: &Vec<u8>) -> Result<Self, QRLError> {
         if extended_pk.len() != 67 {
-            return Err(QRLErrors::InvalidArgument(
+            return Err(QRLError::InvalidArgument(
                 "Invalid extended_pk size. It should be 67 bytes".to_string(),
             ));
         }

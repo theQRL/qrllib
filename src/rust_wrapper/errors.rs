@@ -1,5 +1,5 @@
 #[derive(Debug)]
-pub enum QRLErrors {
+pub enum QRLError {
     InvalidArgument(String),
     FailedConversion(String),
 }

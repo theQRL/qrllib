@@ -4,7 +4,7 @@ use super::{
     qrl_helper::get_address as get_address_helper,
 };
 use crate::rust_wrapper::{
-    errors::QRLErrors,
+    errors::QRLError,
     xmss_alt::{
         hash_functions::HashFunction,
         wots::WOTSParams,
@@ -53,22 +53,19 @@ pub struct XMSSBase {
 }
 
 impl XMSSBase {
-    const SECRET_KEY_SIZE: u32 = 132;
-    const PUBLIC_KEY_SIZE: u32 = QRLDescriptor::get_size() as u32 + 64;
-
     pub fn new(
         hash_function: HashFunction,
         addr_format_type: AddrFormatType,
         height: u8,
         sk: TKEY,
         seed: TSEED,
-    ) -> Result<Self, QRLErrors> {
+    ) -> Result<Self, QRLError> {
         if seed.len() != 48 {
-            Err(QRLErrors::InvalidArgument(
+            Err(QRLError::InvalidArgument(
                 "Seed should be 48 bytes. Other values are not currently supported".to_owned(),
             ))
         } else if height as usize > XMSS_MAX_HEIGHT {
-            Err(QRLErrors::InvalidArgument(
+            Err(QRLError::InvalidArgument(
                 "Height should be <= 254".to_owned(),
             ))
         } else {
@@ -82,9 +79,9 @@ impl XMSSBase {
         }
     }
 
-    pub fn from_extended_seed(extended_seed: &TSEED, sk: TKEY) -> Result<Self, QRLErrors> {
+    pub fn from_extended_seed(extended_seed: &TSEED, sk: TKEY) -> Result<Self, QRLError> {
         if extended_seed.len() != 51 {
-            return Err(QRLErrors::InvalidArgument(
+            return Err(QRLError::InvalidArgument(
                 "Extended seed should be 51 bytes. Other values are not currently supported"
                     .to_owned(),
             ));
@@ -105,32 +102,71 @@ impl XMSSBase {
             seed,
         })
     }
+}
 
-    pub fn calculate_signature_base_size(wots_param_w: Option<u32>) -> u32 {
+impl XMSSBaseTrait for XMSSBase {
+    fn get_height(&self) -> u8 {
+        self.height
+    }
+
+    fn get_seed(&self) -> &TSEED {
+        &self.seed
+    }
+
+    fn hash_function(&self) -> &HashFunction {
+        &self.hash_function
+    }
+
+    fn addr_format_type(&self) -> &AddrFormatType {
+        &self.addr_format_type
+    }
+
+    fn get_sk(&self) -> &TKEY {
+        &self.sk
+    }
+
+    fn set_index(&mut self, mut new_index: u32) -> Result<u32, QRLError> {
+        self.sk[3] = (new_index & 0xFF) as u8;
+        new_index >>= 8;
+        self.sk[2] = (new_index & 0xFF) as u8;
+        new_index >>= 8;
+        self.sk[1] = (new_index & 0xFF) as u8;
+        new_index >>= 8;
+        self.sk[0] = (new_index & 0xFF) as u8;
+
+        Ok(self.get_index())
+    }
+}
+
+pub trait XMSSBaseTrait {
+    const SECRET_KEY_SIZE: usize = 132;
+    const PUBLIC_KEY_SIZE: usize = QRLDescriptor::get_size() as usize + 64;
+
+    fn calculate_signature_base_size(wots_param_w: Option<u32>) -> u32 {
         let w = wots_param_w.unwrap_or(16);
         let wots_params = WOTSParams::new(32, w);
         4 + 32 + wots_params.keysize
     }
 
-    pub fn get_signature_size(&self, wots_param_w: Option<u32>) -> u32 {
+    fn get_signature_size(&self, wots_param_w: Option<u32>) -> u32 {
         let signature_base_size = Self::calculate_signature_base_size(wots_param_w);
         // 4 + n + (len + h) * n)
-        signature_base_size + self.height as u32 * 32
+        signature_base_size + self.get_height() as u32 * 32
     }
 
-    pub fn get_height_from_sig_size(
+    fn get_height_from_sig_size(
         sig_size: usize,
         wots_param_w: Option<u32>,
-    ) -> Result<u8, QRLErrors> {
+    ) -> Result<u8, QRLError> {
         let signature_base_size = Self::calculate_signature_base_size(wots_param_w) as usize;
         if sig_size < signature_base_size {
-            return Err(QRLErrors::InvalidArgument(
+            return Err(QRLError::InvalidArgument(
                 "Invalid signature size".to_owned(),
             ));
         }
 
         if (sig_size - 4) % 32 != 0 {
-            return Err(QRLErrors::InvalidArgument(
+            return Err(QRLError::InvalidArgument(
                 "Invalid signature size".to_owned(),
             ));
         }
@@ -140,71 +176,57 @@ impl XMSSBase {
         Ok(height as u8)
     }
 
-    pub fn get_public_key_size() -> u32 {
+    fn get_public_key_size() -> usize {
         Self::PUBLIC_KEY_SIZE
     }
 
-    pub fn get_secret_key_size() -> u32 {
+    fn get_secret_key_size() -> usize {
         Self::SECRET_KEY_SIZE
     }
 
-    pub fn get_sk_seed(&self) -> TKEY {
+    fn get_sk_seed(&self) -> TKEY {
         // FIXME: Use a union for this
-        self.sk[OFFSET_SK_SEED..OFFSET_SK_SEED + 32].to_vec()
+        self.get_sk()[OFFSET_SK_SEED..OFFSET_SK_SEED + 32].to_vec()
     }
 
-    pub fn get_sk_prf(&self) -> TKEY {
+    fn get_sk_prf(&self) -> TKEY {
         // FIXME: Use a union for this
-        self.sk[OFFSET_SK_PRF..OFFSET_SK_PRF + 32].to_vec()
+        self.get_sk()[OFFSET_SK_PRF..OFFSET_SK_PRF + 32].to_vec()
     }
 
-    pub fn get_pk_seed(&self) -> TKEY {
+    fn get_pk_seed(&self) -> TKEY {
         // FIXME: Use a union for this
-        self.sk[OFFSET_PUB_SEED..OFFSET_PUB_SEED + 32].to_vec()
+        self.get_sk()[OFFSET_PUB_SEED..OFFSET_PUB_SEED + 32].to_vec()
     }
 
-    pub fn get_root(&self) -> TKEY {
+    fn get_root(&self) -> TKEY {
         // FIXME: Use a union for this
-        self.sk[OFFSET_ROOT..OFFSET_ROOT + 32].to_vec()
+        self.get_sk()[OFFSET_ROOT..OFFSET_ROOT + 32].to_vec()
     }
 
-    pub fn get_index(&self) -> u32 {
-        ((self.sk[0] as u32) << 24)
-            + ((self.sk[1] as u32) << 16)
-            + ((self.sk[2] as u32) << 8)
-            + (self.sk[3] as u32)
+    fn get_index(&self) -> u32 {
+        let sk = self.get_sk();
+        ((sk[0] as u32) << 24) + ((sk[1] as u32) << 16) + ((sk[2] as u32) << 8) + (sk[3] as u32)
     }
 
-    pub fn set_index(&mut self, mut new_index: u32) -> u32 {
-        self.sk[3] = (new_index & 0xFF) as u8;
-        new_index >>= 8;
-        self.sk[2] = (new_index & 0xFF) as u8;
-        new_index >>= 8;
-        self.sk[1] = (new_index & 0xFF) as u8;
-        new_index >>= 8;
-        self.sk[0] = (new_index & 0xFF) as u8;
+    fn set_index(&mut self, new_index: u32) -> Result<u32, QRLError>;
 
-        return self.get_index();
-    }
+    fn get_sk(&self) -> &TKEY;
 
-    pub fn get_sk(&self) -> &TKEY {
-        return &self.sk;
-    }
-
-    pub fn get_descriptor(&self) -> QRLDescriptor {
+    fn get_descriptor(&self) -> QRLDescriptor {
         QRLDescriptor::new(
-            self.hash_function,
+            *self.hash_function(),
             SignatureType::XMSS,
-            self.height,
-            self.addr_format_type,
+            self.get_height(),
+            *self.addr_format_type(),
         )
     }
 
-    pub fn get_descriptor_bytes(&self) -> Vec<u8> {
+    fn get_descriptor_bytes(&self) -> Vec<u8> {
         self.get_descriptor().get_bytes()
     }
 
-    pub fn get_pk(&self) -> TKEY {
+    fn get_pk(&self) -> TKEY {
         //    PK format
         //     3 QRL_DESCRIPTOR
         //    32 root address
@@ -220,37 +242,37 @@ impl XMSSBase {
         pk
     }
 
-    pub fn get_extended_seed(&self) -> TSEED {
+    fn get_extended_seed(&self) -> TSEED {
         let mut extended_seed: TKEY = self.get_descriptor_bytes();
-        extended_seed.extend(self.seed.clone());
-        return extended_seed;
+        extended_seed.extend(self.get_seed().clone());
+        extended_seed
     }
 
-    pub fn get_address(&self) -> Result<Vec<u8>, QRLErrors> {
+    fn get_address(&self) -> Result<Vec<u8>, QRLError> {
         get_address_helper(&self.get_pk())
     }
 
-    pub fn verify(
+    fn verify(
         message: &mut TMESSAGE,
         signature: &TSIGNATURE,
         extended_pk: &TKEY,
         wots_param_w: Option<u32>,
-    ) -> Result<(), QRLErrors> {
+    ) -> Result<(), QRLError> {
         if extended_pk.len() != 67 {
-            return Err(QRLErrors::InvalidArgument(
+            return Err(QRLError::InvalidArgument(
                 "Invalid extended_pk size. It should be 67 bytes".to_owned(),
             ));
         }
         let signature_base_size: usize = Self::calculate_signature_base_size(wots_param_w) as usize;
         if signature.len() > signature_base_size + XMSS_MAX_HEIGHT * 32 {
-            return Err(QRLErrors::InvalidArgument(
+            return Err(QRLError::InvalidArgument(
                 "invalid signature size. Height<=254".to_owned(),
             ));
         }
 
         let desc = QRLDescriptor::from_extended_pk(extended_pk)?;
         if *desc.get_signature_type() != SignatureType::XMSS {
-            return Err(QRLErrors::InvalidArgument(
+            return Err(QRLError::InvalidArgument(
                 "Invalid signature type".to_owned(),
             ));
         }
@@ -258,7 +280,7 @@ impl XMSSBase {
         let height = Self::get_height_from_sig_size(signature.len(), wots_param_w)?;
 
         if height == 0 || desc.get_height() != height {
-            return Err(QRLErrors::InvalidArgument(
+            return Err(QRLError::InvalidArgument(
                 "Invalid height from sig size".to_owned(),
             ));
         }
@@ -270,7 +292,7 @@ impl XMSSBase {
         let n: u32 = 32;
 
         if k >= height as u32 || (height as u32 - k) % 2 != 0 {
-            return Err(QRLErrors::InvalidArgument(
+            return Err(QRLError::InvalidArgument(
                 "For BDS traversal, H - K must be even, with H > K >= 2!".to_owned(),
             ));
         }
@@ -291,27 +313,27 @@ impl XMSSBase {
         {
             Ok(())
         } else {
-            Err(QRLErrors::InvalidArgument("Failed verification".to_owned()))
+            Err(QRLError::InvalidArgument("Failed verification".to_owned()))
         }
     }
 
-    pub fn get_height(&self) -> u8 {
-        self.height
+    fn get_height(&self) -> u8;
+
+    fn get_seed(&self) -> &TSEED;
+
+    fn get_number_signatures(&self) -> u32 {
+        1 << self.get_height()
     }
 
-    pub fn get_seed(&self) -> &TSEED {
-        &self.seed
-    }
-
-    pub fn get_number_signatures(&self) -> u32 {
-        1 << self.height
-    }
-
-    pub fn get_remaining_signatures(&self) -> u32 {
+    fn get_remaining_signatures(&self) -> u32 {
         self.get_number_signatures() - self.get_index()
     }
+
+    fn hash_function(&self) -> &HashFunction;
+
+    fn addr_format_type(&self) -> &AddrFormatType;
 }
 
-pub trait XMSSBaseTrait {
-    fn sign(&mut self, message: &mut TMESSAGE) -> Result<TSIGNATURE, QRLErrors>;
+pub trait Sign {
+    fn sign(&mut self, message: &TMESSAGE) -> Result<TSIGNATURE, QRLError>;
 }

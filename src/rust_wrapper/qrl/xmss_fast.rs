@@ -1,5 +1,5 @@
-use super::xmss_base::{XMSSBase, XMSSBaseTrait, TKEY, TMESSAGE, TSEED, TSIGNATURE};
-use crate::rust_wrapper::errors::QRLErrors;
+use super::xmss_base::{Sign, XMSSBase, XMSSBaseTrait, TKEY, TMESSAGE, TSEED, TSIGNATURE};
+use crate::rust_wrapper::errors::QRLError;
 use crate::rust_wrapper::qrl::qrl_address_format::AddrFormatType;
 use crate::rust_wrapper::xmss_alt::algsxmss_fast::{
     xmss_fast_gen_keypair, xmss_fast_sign_msg, xmss_fast_update, BDSState, TreeHashInst,
@@ -8,13 +8,13 @@ use crate::rust_wrapper::xmss_alt::hash_functions::HashFunction;
 use crate::rust_wrapper::xmss_alt::xmss_common::XMSSParams;
 
 pub struct XMSSFast {
-    pub base: XMSSBase,
+    base: XMSSBase,
     params: XMSSParams,
     state: BDSState,
 }
 
 impl XMSSFast {
-    pub fn initialize_tree(&mut self, wots_param_w_option: Option<u32>) -> Result<(), QRLErrors> {
+    pub fn initialize_tree(&mut self, wots_param_w_option: Option<u32>) -> Result<(), QRLError> {
         let wots_param_w = wots_param_w_option.unwrap_or(16);
         let mut tmp: TKEY = vec![0; 64];
 
@@ -24,7 +24,7 @@ impl XMSSFast {
         let height = self.base.height as u32;
 
         if k >= height as u32 || (height - k) % 2 != 0 {
-            return Err(QRLErrors::InvalidArgument(
+            return Err(QRLError::InvalidArgument(
                 "For BDS traversal, H - K must be even, with H > K >= 2!".to_owned(),
             ));
         }
@@ -70,10 +70,10 @@ impl XMSSFast {
         hash_function_option: Option<HashFunction>,
         addr_format_type_option: Option<AddrFormatType>,
         wots_param_w_option: Option<u32>,
-    ) -> Result<Self, QRLErrors> {
+    ) -> Result<Self, QRLError> {
         // FIXME: At the moment, the lib takes 48 bytes from the seed vector
         if seed.len() != 48 {
-            return Err(QRLErrors::InvalidArgument(
+            return Err(QRLError::InvalidArgument(
                 "Seed should be 48 bytes. Other values are not currently supported".to_owned(),
             ));
         }
@@ -81,7 +81,7 @@ impl XMSSFast {
         let hash_function = hash_function_option.unwrap_or(HashFunction::Shake128);
         let addr_format_type = addr_format_type_option.unwrap_or(AddrFormatType::SHA256_2X);
         let params = XMSSParams::default();
-        let sk: TKEY = vec![0; 1320];
+        let sk: TKEY = vec![0; Self::SECRET_KEY_SIZE];
         let base = XMSSBase::new(hash_function, addr_format_type, height, sk, seed)?;
         let state = BDSState::default();
         let mut xmss_fast = XMSSFast {
@@ -93,8 +93,8 @@ impl XMSSFast {
         return Ok(xmss_fast);
     }
 
-    fn from_extended_seed(extended_seed: &TSEED) -> Result<Self, QRLErrors> {
-        let sk: TKEY = vec![0; 1320];
+    fn from_extended_seed(extended_seed: &TSEED) -> Result<Self, QRLError> {
+        let sk: TKEY = vec![0; Self::SECRET_KEY_SIZE];
         let base = XMSSBase::from_extended_seed(extended_seed, sk)?;
         let params = XMSSParams::default();
         let state = BDSState::default();
@@ -106,8 +106,30 @@ impl XMSSFast {
         xmss_fast.initialize_tree(None)?;
         return Ok(xmss_fast);
     }
+}
 
-    pub fn set_index(&mut self, new_index: u32) -> Result<u32, QRLErrors> {
+impl XMSSBaseTrait for XMSSFast {
+    fn get_height(&self) -> u8 {
+        self.base.get_height()
+    }
+
+    fn get_seed(&self) -> &TSEED {
+        self.base.get_seed()
+    }
+
+    fn hash_function(&self) -> &HashFunction {
+        self.base.hash_function()
+    }
+
+    fn addr_format_type(&self) -> &AddrFormatType {
+        self.base.addr_format_type()
+    }
+
+    fn get_sk(&self) -> &TKEY {
+        self.base.get_sk()
+    }
+
+    fn set_index(&mut self, new_index: u32) -> Result<u32, QRLError> {
         xmss_fast_update(
             &self.base.hash_function,
             &self.params,
@@ -119,8 +141,8 @@ impl XMSSFast {
     }
 }
 
-impl XMSSBaseTrait for XMSSFast {
-    fn sign(&mut self, message: &mut TMESSAGE) -> Result<TSIGNATURE, QRLErrors> {
+impl Sign for XMSSFast {
+    fn sign(&mut self, message: &TMESSAGE) -> Result<TSIGNATURE, QRLError> {
         let mut signature: TSIGNATURE =
             vec![0; self.base.get_signature_size(Some(self.params.wots_par.w)) as usize];
 

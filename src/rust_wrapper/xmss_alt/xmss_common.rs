@@ -5,7 +5,7 @@ use super::{
     hash_functions::HashFunction,
     wots::{wots_pk_from_sig, WOTSParams},
 };
-use crate::rust_wrapper::errors::QRLErrors;
+use crate::rust_wrapper::errors::QRLError;
 
 #[derive(Default)]
 pub struct XMSSParams {
@@ -20,9 +20,9 @@ impl XMSSParams {
      * Initialize xmss params struct
      * parameter names are the same as in the draft
      */
-    pub fn new(n: u32, h: u32, w: u32, k: u32) -> Result<Self, QRLErrors> {
+    pub fn new(n: u32, h: u32, w: u32, k: u32) -> Result<Self, QRLError> {
         if k >= h || k < 2 || (h - k) % 2 != 0 {
-            Err(QRLErrors::InvalidArgument(
+            Err(QRLError::InvalidArgument(
                 "For BDS traversal, H - K must be even, with H > K >= 2!".to_owned(),
             ))
         } else {

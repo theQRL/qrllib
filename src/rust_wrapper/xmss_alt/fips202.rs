@@ -375,7 +375,9 @@ pub fn shake128(mut output: &mut [u8], outlen: usize, input: &[u8], inlen: u64) 
 
     keccak_squeezeblocks(output, outlen / SHAKE128_RATE, &mut s, SHAKE128_RATE);
     let out_length = output.len();
-    output = &mut output[(outlen / SHAKE128_RATE) * SHAKE128_RATE..out_length];
+    output = output
+        .get_mut((outlen / SHAKE128_RATE) * SHAKE128_RATE..out_length)
+        .unwrap();
 
     if (outlen % SHAKE128_RATE) > 0 {
         keccak_squeezeblocks(&mut d, 1, &mut s, SHAKE128_RATE);

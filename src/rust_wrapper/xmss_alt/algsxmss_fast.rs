@@ -7,7 +7,7 @@ use super::hash_address::{
 use super::hash_functions::HashFunction;
 use super::wots::{wots_pkgen, wots_sign};
 use super::xmss_common::{l_tree, to_byte, XMSSParams};
-use crate::rust_wrapper::errors::QRLErrors;
+use crate::rust_wrapper::errors::QRLError;
 
 #[derive(Clone, Default)]
 pub struct TreeHashInst {
@@ -678,9 +678,9 @@ pub fn xmss_fast_gen_keypair(
     sk: &mut [u8],
     state: &mut BDSState,
     seed: &mut [u8],
-) -> Result<(), QRLErrors> {
+) -> Result<(), QRLError> {
     if (params.h & 1) != 0 {
-        return Err(QRLErrors::InvalidArgument(
+        return Err(QRLError::InvalidArgument(
             "Not a valid h, only even numbers supported! Try again with an even number".to_owned(),
         ));
     }
@@ -736,7 +736,7 @@ pub fn xmss_fast_update(
     sk: &mut [u8],
     state: &mut BDSState,
     new_idx: u32,
-) -> Result<i32, QRLErrors> {
+) -> Result<i32, QRLError> {
     let num_elems = 1 << params.h;
 
     let current_idx =
@@ -744,11 +744,11 @@ pub fn xmss_fast_update(
 
     // Verify ranges
     if new_idx >= num_elems {
-        return Err(QRLErrors::InvalidArgument("index too high".to_string()));
+        return Err(QRLError::InvalidArgument("index too high".to_string()));
     }
 
     if new_idx < current_idx {
-        return Err(QRLErrors::InvalidArgument("cannot rewind".to_string()));
+        return Err(QRLError::InvalidArgument("cannot rewind".to_string()));
     }
 
     // Change index
