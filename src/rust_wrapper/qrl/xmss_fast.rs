@@ -35,7 +35,7 @@ impl XMSSFast {
         let stack = vec![0; ((height + 1) * n) as usize];
         let stacklevels = vec![0; (height + 1) as usize];
         let auth = vec![0; (height * n) as usize];
-        let keep = vec![0; ((height >> 1) * n) as usize];
+        let keep = vec![0; ((height as u8 >> 1) as u32 * n) as usize];
         let mut treehash = vec![TreeHashInst::default(); (height - k) as usize];
         let retain = vec![0; (((1 << k) - k - 1) * n) as usize];
 
@@ -144,7 +144,7 @@ impl XMSSBaseTrait for XMSSFast {
 impl Sign for XMSSFast {
     fn sign(&mut self, message: &TMESSAGE) -> Result<TSIGNATURE, QRLError> {
         let mut signature: TSIGNATURE =
-            vec![0; self.base.get_signature_size(Some(self.params.wots_par.w)) as usize];
+            vec![0; self.get_signature_size(Some(self.params.wots_par.w)) as usize];
 
         let index = self.base.get_index();
         self.set_index(index)?;
@@ -156,7 +156,7 @@ impl Sign for XMSSFast {
             &mut self.state,
             &mut signature,
             message,
-            message.len() as u64,
+            message.len(),
         );
 
         return Ok(signature);

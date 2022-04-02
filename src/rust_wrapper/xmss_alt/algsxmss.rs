@@ -415,7 +415,7 @@ pub fn xmss_sign_msg(
         sig_msg,
         &msg_h,
         &ots_seed,
-        &(params.wots_par),
+        &params.wots_par,
         &pub_seed,
         ots_addr,
     );

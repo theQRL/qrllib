@@ -241,13 +241,14 @@ fn treehash_setup(
 
 fn treehash_update(
     hash_func: &HashFunction,
-    treehash: &mut TreeHashInst,
+    treehash_index: usize,
     state: &mut BDSState,
     sk_seed: &[u8],
     params: &XMSSParams,
     pub_seed: &[u8],
     addr: &[u32; 8],
 ) {
+    let treehash = &mut state.treehash[treehash_index];
     let n = params.n;
 
     let ots_addr: &mut [u32; 8] = &mut [0; 8];
@@ -259,7 +260,7 @@ fn treehash_update(
     set_type(ots_addr, 0);
     ltree_addr[0..3].copy_from_slice(&addr[0..3]);
     set_type(ltree_addr, 1);
-    node_addr.copy_from_slice(addr);
+    node_addr[0..3].copy_from_slice(&addr[0..3]);
     set_type(node_addr, 2);
 
     set_ltree_adrs(ltree_addr, treehash.next_idx);
@@ -284,10 +285,9 @@ fn treehash_update(
         let src_start = ((state.stackoffset - 1) * n) as usize;
         let src = state.stack.get(src_start..src_start + n as usize).unwrap();
         dest.copy_from_slice(src);
-        set_tree_height(node_addr, nodeheight.into());
+        set_tree_height(node_addr, nodeheight);
         set_tree_index(node_addr, treehash.next_idx >> (nodeheight + 1));
-        let mut input: Vec<u8> = vec![];
-        input.copy_from_slice(&nodebuffer);
+        let input: Vec<u8> = nodebuffer.clone();
         hash_h(hash_func, &mut nodebuffer, &input, pub_seed, node_addr, n);
         nodeheight += 1;
         treehash.stackusage -= 1;
@@ -394,19 +394,22 @@ fn bds_treehash_update(
 ) -> u8 {
     let h = params.h;
     let k = params.k;
+    let mut l_min: u32;
+    let mut level: u32;
+    let mut low: u32;
     let mut used = 0;
 
     for _j in 0..updates {
-        let mut l_min = h;
-        let mut level = h - k;
+        l_min = h;
+        level = h - k;
         for i in 0..(h - k) as usize {
-            let low = if state.treehash[i].completed != 0 {
-                h
+            if state.treehash[i].completed != 0 {
+                low = h;
             } else if state.treehash[i].stackusage == 0 {
-                i as u32
+                low = i as u32;
             } else {
-                treehash_minheight_on_stack(state, params, &(state.treehash[i]))
-            };
+                low = treehash_minheight_on_stack(state, params, &(state.treehash[i]));
+            }
             if low < l_min {
                 level = i as u32;
                 l_min = low;
@@ -415,9 +418,16 @@ fn bds_treehash_update(
         if level == h - k {
             break;
         }
-        let treehash = &mut state.treehash[level as usize].clone();
-        treehash_update(hash_func, treehash, state, sk_seed, params, pub_seed, addr);
-        state.treehash[level as usize] = treehash.to_owned();
+        let treehash_index = level as usize;
+        treehash_update(
+            hash_func,
+            treehash_index,
+            state,
+            sk_seed,
+            params,
+            pub_seed,
+            addr,
+        );
         used += 1;
     }
     return (updates - used) as u8;
@@ -580,16 +590,14 @@ fn bds_round(
     set_type(ots_addr, 0);
     ltree_addr[0..3].copy_from_slice(&addr[0..3]);
     set_type(ltree_addr, 1);
-    node_addr.copy_from_slice(addr);
+    node_addr[0..3].copy_from_slice(&addr[0..3]);
     set_type(node_addr, 2);
-
     for i in 0..h {
-        if !((leaf_idx >> i) & 1) != 0 {
+        if ((leaf_idx >> i) & 1) == 0 {
             tau = i;
             break;
         }
     }
-
     if tau > 0 {
         let dest = buf.get_mut(0..n as usize).unwrap();
         let src_start = ((tau - 1) * n) as usize;
@@ -602,7 +610,7 @@ fn bds_round(
         let src = state.keep.get(src_start..src_start + n as usize).unwrap();
         dest.copy_from_slice(src);
     }
-    if (!((leaf_idx >> (tau + 1)) & 1) != 0) && (tau < h - 1) {
+    if (((leaf_idx >> (tau + 1)) & 1) == 0) && (tau < h - 1) {
         let dest_start = ((tau >> 1) * n) as usize;
         let dest = state
             .keep
@@ -653,8 +661,8 @@ fn bds_round(
                 dest.copy_from_slice(src);
             }
         }
-
-        for i in 0..(if tau < h - k { tau } else { h - k }) as usize {
+        let loop_max = if tau < h - k { tau } else { h - k } as usize;
+        for i in 0..loop_max {
             let startidx = leaf_idx + 1 + 3 * (1 << i);
             if startidx < 1 << h {
                 state.treehash[i].h = i as u32;
@@ -740,7 +748,8 @@ pub fn xmss_fast_update(
     let num_elems = 1 << params.h;
 
     let current_idx =
-        ((sk[0] as u32) << 24) | ((sk[1] as u32) << 16) | ((sk[2] as u32) << 8) | sk[3] as u32;
+        (((sk[0] as u64) << 24) | ((sk[1] as u64) << 16) | ((sk[2] as u64) << 8) | sk[3] as u64)
+            as u32;
 
     // Verify ranges
     if new_idx >= num_elems {
@@ -797,23 +806,29 @@ pub fn xmss_fast_sign_msg(
     state: &mut BDSState,
     mut sig_msg: &mut [u8],
     msg: &[u8],
-    msglen: u64,
+    msglen: usize,
 ) -> u32 {
     let n = params.n;
 
     // Extract SK
     let idx =
-        ((sk[0] as u32) << 24) | ((sk[1] as u32) << 16) | ((sk[2] as u32) << 8) | sk[3] as u32;
+        (((sk[0] as u64) << 24) | ((sk[1] as u64) << 16) | ((sk[2] as u64) << 8) | sk[3] as u64)
+            as u32;
     let mut sk_seed: Vec<u8> = vec![0; n as usize];
-    sk_seed.copy_from_slice(sk.get(4..4 + n as usize).unwrap());
+    let src = sk.get(4..(4 + n) as usize).unwrap();
+    sk_seed.copy_from_slice(src);
+
     let mut sk_prf: Vec<u8> = vec![0; n as usize];
-    sk_prf.copy_from_slice(sk.get(4 + n as usize..4 + (n + n) as usize).unwrap());
+    let src = sk.get((4 + n) as usize..(4 + n + n) as usize).unwrap();
+    sk_prf.copy_from_slice(src);
+
     let mut pub_seed: Vec<u8> = vec![0; n as usize];
-    pub_seed.copy_from_slice(sk.get(4 + 2 * n as usize..4 + 3 * n as usize).unwrap());
+    let src = sk.get(4 + (2 * n) as usize..4 + (3 * n) as usize).unwrap();
+    pub_seed.copy_from_slice(src);
 
     // index as 32 bytes string
-    let idx_bytes_32: &mut [u8; 32] = &mut [0; 32];
-    to_byte(idx_bytes_32.as_mut_slice(), idx as u64, 32);
+    let mut idx_bytes_32: Vec<u8> = vec![0; 32];
+    to_byte(&mut idx_bytes_32, idx.into(), 32);
 
     let mut hash_key: Vec<u8> = vec![0; 3 * n as usize];
 
@@ -837,19 +852,28 @@ pub fn xmss_fast_sign_msg(
 
     // Message Hash:
     // First compute pseudorandom value
-    prf(hash_func, &mut R, idx_bytes_32, &sk_prf, n);
+    prf(hash_func, &mut R, &idx_bytes_32, &sk_prf, n);
     // Generate hash key (R || root || idx)
-    hash_key
-        .get_mut(0..n as usize)
-        .unwrap()
-        .copy_from_slice(R.get(0..n as usize).unwrap());
+    let dest = hash_key.get_mut(0..n as usize).unwrap();
+    dest.copy_from_slice(&R);
+
     let dest = hash_key.get_mut(n as usize..2 * n as usize).unwrap();
-    let src = sk.get(4 + 3 * n as usize..4 + 4 * n as usize).unwrap();
+    let src = sk.get(4 + (3 * n) as usize..4 + (4 * n) as usize).unwrap();
     dest.copy_from_slice(src);
-    let out = hash_key.get_mut(2 * n as usize..3 * n as usize).unwrap();
-    to_byte(out, idx as u64, n);
+
+    let hash_key_len = hash_key.len();
+    let out = hash_key.get_mut(2 * n as usize..hash_key_len).unwrap();
+    to_byte(out, idx.into(), n.into());
     // Then use it for message digest
-    h_msg(hash_func, &mut msg_h, msg, msglen, &hash_key, 3 * n, n);
+    h_msg(
+        hash_func,
+        &mut msg_h,
+        msg,
+        msglen.try_into().unwrap(),
+        &hash_key,
+        3 * n,
+        n,
+    );
 
     // Start collecting signature
     _sig_msg_len = 0;
@@ -860,8 +884,8 @@ pub fn xmss_fast_sign_msg(
     sig_msg[2] = (idx >> 8) as u8 & 255;
     sig_msg[3] = idx as u8 & 255;
 
-    let _sig_msg_length = sig_msg.len();
-    sig_msg = sig_msg.get_mut(4.._sig_msg_length).unwrap();
+    let sig_msg_length = sig_msg.len();
+    sig_msg = sig_msg.get_mut(4..sig_msg_length).unwrap();
     _sig_msg_len += 4;
 
     // Copy R to signature
@@ -869,8 +893,8 @@ pub fn xmss_fast_sign_msg(
         sig_msg[i] = R[i];
     }
 
-    let _sig_msg_length = sig_msg.len();
-    sig_msg = sig_msg.get_mut(n as usize.._sig_msg_length).unwrap();
+    let sig_msg_length = sig_msg.len();
+    sig_msg = sig_msg.get_mut(n as usize..sig_msg_length).unwrap();
     _sig_msg_len += n as u64;
 
     // ----------------------------------
@@ -887,27 +911,27 @@ pub fn xmss_fast_sign_msg(
     // Compute WOTS signature
     wots_sign(
         hash_func,
-        &mut sig_msg,
+        sig_msg,
         &msg_h,
         &ots_seed,
-        &(params.wots_par),
+        &params.wots_par,
         &pub_seed,
         ots_addr,
     );
-    let _sig_msg_length = sig_msg.len();
+    let sig_msg_length = sig_msg.len();
     sig_msg = sig_msg
-        .get_mut(params.wots_par.keysize as usize.._sig_msg_length)
+        .get_mut(params.wots_par.keysize as usize..sig_msg_length)
         .unwrap();
     _sig_msg_len += params.wots_par.keysize as u64;
 
     // the auth path was already computed during the previous round
-    let src = state.auth.get(0..(params.h * n) as usize).unwrap();
+    let src = state.auth.get(0..(params.h * params.n) as usize).unwrap();
     sig_msg
-        .get_mut(0..(params.h * n) as usize)
+        .get_mut(0..(params.h * params.n) as usize)
         .unwrap()
         .copy_from_slice(src);
 
-    if idx < (1 << params.h) - 1 {
+    if idx < ((1 as u32) << params.h) - 1 {
         bds_round(
             hash_func, state, idx as u64, &sk_seed, params, &pub_seed, ots_addr,
         );

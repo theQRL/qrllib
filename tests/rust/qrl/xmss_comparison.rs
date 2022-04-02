@@ -138,7 +138,7 @@ fn sign_three_times_vs_shift() {
     xmss2.sign(&data_to_sign).unwrap();
     xmss2.sign(&data_to_sign).unwrap();
     let signature2 = xmss2.sign(&data_to_sign).unwrap();
-    //assert_eq!(signature1, signature2);
+    assert_eq!(signature1, signature2);
 
     let hstr_sig1 = encode(&signature1);
     let hstr_sig2 = encode(&signature2);
