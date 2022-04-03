@@ -1,7 +1,8 @@
+use super::hashing::sha2_256;
+use super::misc::{bin2hstr, str2bin};
 use super::xmss_fast::XMSSFast;
 use crate::rust_wrapper::errors::QRLError;
 use crate::rust_wrapper::qrl::xmss_base::TSEED;
-use crate::rust_wrapper::shasha::shasha::sha2_256;
 use crossbeam_channel::bounded;
 use crossbeam_channel::Receiver;
 use rayon;
@@ -46,8 +47,8 @@ impl XMSSPool {
         //    auto stake_seed = shake256(48, tmp_seed);
 
         // This was the original approach in python
-        let seed_str = hex::encode(&self.base_seed) + &(index + 1).to_string();
-        let mut stake_seed = sha2_256(&seed_str.as_bytes().to_vec());
+        let seed_str = bin2hstr(&self.base_seed, 0) + &(index + 1).to_string();
+        let mut stake_seed = sha2_256(&str2bin(&seed_str));
         stake_seed.extend_from_within(0..16);
         Ok(XMSSFast::new(stake_seed, self.height, None, None, None)?)
     }
