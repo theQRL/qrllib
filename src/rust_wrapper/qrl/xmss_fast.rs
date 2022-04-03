@@ -93,7 +93,7 @@ impl XMSSFast {
         return Ok(xmss_fast);
     }
 
-    fn from_extended_seed(extended_seed: &TSEED) -> Result<Self, QRLError> {
+    pub fn from_extended_seed(extended_seed: &TSEED) -> Result<Self, QRLError> {
         let sk: TKEY = vec![0; Self::SECRET_KEY_SIZE];
         let base = XMSSBase::from_extended_seed(extended_seed, sk)?;
         let params = XMSSParams::default();
