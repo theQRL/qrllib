@@ -89,13 +89,13 @@ fn treehash(
     let mut ltree_addr: [u32; 8] = [0; 8];
     let mut node_addr: [u32; 8] = [0; 8];
     // only copy layer and tree address parts
-    ots_addr.copy_from_slice(&addr[0..3]);
+    ots_addr[0..3].copy_from_slice(&addr[0..3]);
     // type = ots
 
     set_type(&mut ots_addr, 0);
-    ltree_addr.copy_from_slice(&addr[0..3]);
+    ltree_addr[0..3].copy_from_slice(&addr[0..3]);
     set_type(&mut ltree_addr, 1);
-    node_addr.copy_from_slice(&addr[0..3]);
+    node_addr[0..3].copy_from_slice(&addr[0..3]);
     set_type(&mut node_addr, 2);
 
     let mut stack: Vec<u8> = vec![0; ((height + 1) as u32 * n) as usize];
@@ -130,7 +130,7 @@ fn treehash(
                 &mut node_addr,
                 idx >> (stacklevels[stackoffset as usize - 1] + 1),
             );
-            let mut input = vec![0 as u8];
+            let mut input = vec![0 as u8; stack_length - ((stackoffset - 2) * n) as usize];
             input.copy_from_slice(
                 stack
                     .get(((stackoffset - 2) * n) as usize..stack_length)
@@ -174,11 +174,11 @@ fn compute_authpath_wots(
     let ltree_addr: &mut [u32; 8] = &mut [0; 8];
     let node_addr: &mut [u32; 8] = &mut [0; 8];
 
-    ots_addr.copy_from_slice(&addr[0..3]);
+    ots_addr[0..3].copy_from_slice(&addr[0..3]);
     set_type(ots_addr, 0);
-    ltree_addr.copy_from_slice(&addr[0..3]);
+    ltree_addr[0..3].copy_from_slice(&addr[0..3]);
     set_type(ltree_addr, 1);
-    node_addr.copy_from_slice(&addr[0..3]);
+    node_addr[0..3].copy_from_slice(&addr[0..3]);
     set_type(node_addr, 2);
 
     // Compute all leaves
@@ -203,7 +203,7 @@ fn compute_authpath_wots(
         for j in (0..i).step_by(2) {
             set_tree_index(node_addr, j >> 1);
             let tree_length = tree.len();
-            let mut input = vec![0];
+            let mut input = vec![0; tree_length - (i * n + j * n) as usize];
             input.copy_from_slice(tree.get((i * n + j * n) as usize..tree_length).unwrap());
             let out_start = ((i >> 1) * n + (j >> 1) * n) as usize;
             let out = tree.get_mut(out_start..tree_length).unwrap();
@@ -305,29 +305,27 @@ pub fn xmss_sign_msg(
     params: &XMSSParams,
     sk: &mut [u8],
     mut sig_msg: &mut [u8],
-    msg: &mut [u8],
+    msg: &[u8],
     msglen: usize,
 ) -> u32 {
     let n: u16 = params.n as u16;
 
     // Extract SK
     let idx =
-        ((sk[0] as u32) << 24) | ((sk[1] as u32) << 16) | ((sk[2] as u32) << 8) | sk[3] as u32;
+        (((sk[0] as u64) << 24) | ((sk[1] as u64) << 16) | ((sk[2] as u64) << 8) | sk[3] as u64)
+            as u32;
 
     let mut sk_seed: Vec<u8> = vec![0; n as usize];
-    let dest = sk_seed.get_mut(0..n as usize).unwrap();
-    let src = sk.get(4..4 + n as usize).unwrap();
-    dest.copy_from_slice(src);
+    let src = sk.get(4..(4 + n) as usize).unwrap();
+    sk_seed.copy_from_slice(src);
 
     let mut sk_prf: Vec<u8> = vec![0; n as usize];
-    let dest = sk_prf.get_mut(0..n as usize).unwrap();
-    let src = sk.get(4 + n as usize..4 + (2 * n) as usize).unwrap();
-    dest.copy_from_slice(src);
+    let src = sk.get((4 + n) as usize..(4 + n + n) as usize).unwrap();
+    sk_prf.copy_from_slice(src);
 
     let mut pub_seed: Vec<u8> = vec![0; n as usize];
-    let dest = pub_seed.get_mut(0..n as usize).unwrap();
     let src = sk.get(4 + (2 * n) as usize..4 + (3 * n) as usize).unwrap();
-    dest.copy_from_slice(src);
+    pub_seed.copy_from_slice(src);
 
     // index as 32 bytes string
     let mut idx_bytes_32: Vec<u8> = vec![0; 32];
@@ -359,8 +357,7 @@ pub fn xmss_sign_msg(
     prf(hash_func, &mut R, &idx_bytes_32, &sk_prf, n.into());
     // Generate hash key (R || root || idx)
     let dest = hash_key.get_mut(0..n as usize).unwrap();
-    let src = R.get(0..n as usize).unwrap();
-    dest.copy_from_slice(src);
+    dest.copy_from_slice(&R);
 
     let dest = hash_key.get_mut(n as usize..2 * n as usize).unwrap();
     let src = sk.get(4 + (3 * n) as usize..4 + (4 * n) as usize).unwrap();
@@ -394,8 +391,8 @@ pub fn xmss_sign_msg(
     _sig_msg_len += 4;
 
     // Copy R to signature
-    for i in 0..n {
-        sig_msg[i as usize] = R[i as usize];
+    for i in 0..n as usize {
+        sig_msg[i] = R[i];
     }
     let sig_msg_length = sig_msg.len();
     sig_msg = sig_msg.get_mut(n as usize..sig_msg_length).unwrap();
@@ -418,7 +415,7 @@ pub fn xmss_sign_msg(
         sig_msg,
         &msg_h,
         &ots_seed,
-        &(params.wots_par),
+        &params.wots_par,
         &pub_seed,
         ots_addr,
     );

@@ -16,6 +16,7 @@ macro_rules! log2 {
  * Meaning as defined in draft-irtf-cfrg-xmss-hash-based-signatures-02
  */
 // FIXME: Get rid of this
+#[derive(Default)]
 pub struct WOTSParams {
     pub len_1: u32,
     pub len_2: u32,
@@ -140,7 +141,7 @@ pub fn wots_pkgen(
 ) {
     expand_seed(hash_func, pk, sk, params.n, params.len);
     let pk_len = pk.len();
-    let mut pk_input = Vec::with_capacity(pk_len);
+    let mut pk_input = vec![0; pk_len];
     pk_input.copy_from_slice(pk);
     for i in 0..params.len {
         set_chain_adrs(addr, i);
@@ -169,7 +170,7 @@ pub fn wots_sign(
     pub_seed: &[u8],
     addr: &mut [u32; 8],
 ) {
-    let mut basew: Vec<i32> = Vec::with_capacity(params.len as usize);
+    let mut basew: Vec<i32> = vec![0; params.len as usize];
     let mut csum = 0;
 
     base_w(&mut basew, params.len_1.try_into().unwrap(), msg, params);
@@ -182,10 +183,10 @@ pub fn wots_sign(
 
     let len_2_bytes = ((params.len_2 * params.log_w) + 7) / 8;
 
-    let mut csum_bytes: Vec<u8> = Vec::with_capacity(len_2_bytes as usize);
+    let mut csum_bytes: Vec<u8> = vec![0; len_2_bytes as usize];
     to_byte(&mut csum_bytes, csum.try_into().unwrap(), len_2_bytes);
 
-    let mut csum_basew: Vec<i32> = Vec::with_capacity(params.len_2 as usize);
+    let mut csum_basew: Vec<i32> = vec![0; params.len_2 as usize];
 
     base_w(&mut csum_basew, params.len_2 as usize, &csum_bytes, params);
 
@@ -199,7 +200,7 @@ pub fn wots_sign(
         set_chain_adrs(addr, i);
         let sig_length = sig.len();
         let sig_output_segment = sig.get_mut((i * params.n) as usize..sig_length).unwrap();
-        let mut sig_input_segment: Vec<u8> = Vec::new();
+        let mut sig_input_segment: Vec<u8> = vec![0; sig_output_segment.len()];
         sig_input_segment.copy_from_slice(sig_output_segment);
         gen_chain(
             hash_func,

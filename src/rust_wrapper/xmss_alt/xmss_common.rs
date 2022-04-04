@@ -5,16 +5,9 @@ use super::{
     hash_functions::HashFunction,
     wots::{wots_pk_from_sig, WOTSParams},
 };
-use std::fmt;
+use crate::rust_wrapper::errors::QRLError;
 
-pub struct InitializationError;
-
-impl fmt::Display for InitializationError {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "For BDS traversal, H - K must be even, with H > K >= 2!")
-    }
-}
-
+#[derive(Default)]
 pub struct XMSSParams {
     pub wots_par: WOTSParams,
     pub n: u32,
@@ -27,9 +20,11 @@ impl XMSSParams {
      * Initialize xmss params struct
      * parameter names are the same as in the draft
      */
-    pub fn new(n: u32, h: u32, w: u32, k: u32) -> Result<Self, InitializationError> {
+    pub fn new(n: u32, h: u32, w: u32, k: u32) -> Result<Self, QRLError> {
         if k >= h || k < 2 || (h - k) % 2 != 0 {
-            Err(InitializationError)
+            Err(QRLError::InvalidArgument(
+                "For BDS traversal, H - K must be even, with H > K >= 2!".to_owned(),
+            ))
         } else {
             let wots_par = WOTSParams::new(n, w);
             Ok(XMSSParams { wots_par, n, h, k })
@@ -64,7 +59,7 @@ pub fn l_tree(
             set_tree_index(addr, i);
             let wots_pk_length = wots_pk.len();
             let mut input = Vec::new();
-            input.copy_from_slice(wots_pk.get((i * 2 * n) as usize..wots_pk_length).unwrap());
+            input.extend(wots_pk.get((i * 2 * n) as usize..wots_pk_length).unwrap());
             let out = wots_pk.get_mut((i * n) as usize..wots_pk_length).unwrap();
             hash_h(hash_func, out, &input, pub_seed, addr, n);
         }
@@ -195,10 +190,10 @@ pub fn xmss_verify_sig(
     // printf("verify:: idx = %lu\n", idx);
 
     // Generate hash key (R || root || idx)
-    hash_key.copy_from_slice(sig_msg.get(4..n as usize).unwrap());
+    hash_key[0..n as usize].copy_from_slice(sig_msg.get(4..(4 + n) as usize).unwrap());
     let hash_key_len = hash_key.len();
     let hash_key_segment = hash_key.get_mut(n as usize..hash_key_len).unwrap();
-    hash_key_segment.copy_from_slice(pk.get(0..n as usize).unwrap());
+    hash_key_segment[0..n as usize].copy_from_slice(pk.get(0..n as usize).unwrap());
     let to_byte_out = hash_key.get_mut(2 * n as usize..hash_key_len).unwrap();
     to_byte(to_byte_out, idx.into(), n);
 
@@ -268,8 +263,8 @@ pub fn xmss_verify_sig(
         if root[i] != pk[i] {
             for i in 0..sig_msg_len as usize {
                 msg[i] = 0;
-                return -1;
             }
+            return -1;
         }
     }
 
