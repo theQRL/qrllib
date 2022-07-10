@@ -179,16 +179,20 @@ class TestDilithium(TestCase):
         message = bytes(b"This is a test")
         message_signed = dilithium.sign(message)
         data_out = ucharVector(len(message_signed))
-
         Dilithium.sign_open(data_out, message_signed, dilithium.getPK())
 
-        message_out = Dilithium.extract_message(message_signed)
-        signature_out = Dilithium.extract_signature(message_signed)
+        message_signed_ucv = ucharVector(len(message_signed))
+        for i, value in enumerate(message_signed):
+            message_signed_ucv[i] = value
+        print(len(message_signed_ucv))
+        message_out = Dilithium.extract_message(message_signed_ucv)
+        signature_out = Dilithium.extract_signature(message_signed_ucv)
 
-        self.assertEqual(2715, len(data_out))
-        self.assertEqual(len(message_out), len(message_out))
+        self.assertEqual(2715, len(message_signed_ucv))
+        self.assertEqual(len(message), len(message_out))
         self.assertEqual(2701, len(signature_out))
 
+        self.assertEqual(message_signed[:-len(message_out)], signature_out)
         self.assertEqual(message, bytes(message_out))
         self.assertEqual(b"This is a test", bytes(message_out))
 
@@ -210,12 +214,17 @@ class TestDilithium(TestCase):
 
         Dilithium.sign_open(data_out, message_signed, dilithium.getPK())
 
-        message_out = Dilithium.extract_message(message_signed)
-        signature_out = Dilithium.extract_signature(message_signed)
+        message_signed_ucv = ucharVector(len(message_signed))
+        for i, value in enumerate(message_signed):
+            message_signed_ucv[i] = value
 
-        self.assertEqual(2715, len(data_out))
-        self.assertEqual(len(message_out), len(message_out))
+        message_out = Dilithium.extract_message(message_signed_ucv)
+        signature_out = Dilithium.extract_signature(message_signed_ucv)
+
+        self.assertEqual(2715, len(message_signed_ucv))
+        self.assertEqual(len(message), len(message_out))
         self.assertEqual(2701, len(signature_out))
 
+        self.assertEqual(message_signed[:-len(message_out)], signature_out)
         self.assertEqual(message, bytes(message_out))
         self.assertEqual(b"This is a test", bytes(message_out))

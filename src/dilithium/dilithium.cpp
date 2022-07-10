@@ -64,5 +64,5 @@ std::vector<uint8_t> Dilithium::extract_message(std::vector<uint8_t> &message_ou
 
 std::vector<uint8_t> Dilithium::extract_signature(std::vector<uint8_t> &message_output)
 {
-    std::vector<uint8_t>(message_output.begin(), message_output.begin() + CRYPTO_BYTES);
+    return std::vector<uint8_t>(message_output.begin(), message_output.begin() + CRYPTO_BYTES);
 }
