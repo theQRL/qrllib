@@ -182,8 +182,8 @@ class TestDilithium(TestCase):
 
         Dilithium.sign_open(data_out, message_signed, dilithium.getPK())
 
-        message_out = Dilithium.extract_message(data_out)
-        signature_out = Dilithium.extract_signature(data_out)
+        message_out = Dilithium.extract_message(message_signed)
+        signature_out = Dilithium.extract_signature(message_signed)
 
         self.assertEqual(2715, len(data_out))
         self.assertEqual(len(message_out), len(message_out))
@@ -210,8 +210,8 @@ class TestDilithium(TestCase):
 
         Dilithium.sign_open(data_out, message_signed, dilithium.getPK())
 
-        message_out = Dilithium.extract_message(data_out)
-        signature_out = Dilithium.extract_signature(data_out)
+        message_out = Dilithium.extract_message(message_signed)
+        signature_out = Dilithium.extract_signature(message_signed)
 
         self.assertEqual(2715, len(data_out))
         self.assertEqual(len(message_out), len(message_out))

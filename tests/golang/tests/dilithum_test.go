@@ -185,8 +185,8 @@ func TestDilithiumReference(t *testing.T) {
 
 	dilithium.DilithiumSign_open(dataOut, messageSigned, d.GetPK())
 
-	messageOut := dilithium.DilithiumExtract_message(dataOut)
-	signatureOut := dilithium.DilithiumExtract_signature(dataOut)
+	messageOut := dilithium.DilithiumExtract_message(messageSigned)
+	signatureOut := dilithium.DilithiumExtract_signature(messageSigned)
 
 	if dataOut.Size() != 2715 {
 		t.Errorf("Incorrect dataOut Size\nExpected: %d\nFound: %d", 2715, dataOut.Size())
@@ -225,8 +225,8 @@ func TestDilithiumReference2(t *testing.T) {
 
 	dilithium.DilithiumSign_open(dataOut, messageSigned, d.GetPK())
 
-	messageOut := dilithium.DilithiumExtract_message(dataOut)
-	signatureOut := dilithium.DilithiumExtract_signature(dataOut)
+	messageOut := dilithium.DilithiumExtract_message(messageSigned)
+	signatureOut := dilithium.DilithiumExtract_signature(messageSigned)
 
 	if dataOut.Size() != 2715 {
 		t.Errorf("Incorrect dataOut Size\nExpected: %d\nFound: %d", 2715, dataOut.Size())
