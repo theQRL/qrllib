@@ -59,10 +59,10 @@ bool Dilithium::sign_open(std::vector<uint8_t> &message_output,
 
 std::vector<uint8_t> Dilithium::extract_message(std::vector<uint8_t> &message_output)
 {
-    return std::vector<uint8_t>(message_output.begin(), message_output.end() - CRYPTO_BYTES);
+    return std::vector<uint8_t>(message_output.begin() + CRYPTO_BYTES, message_output.end());
 }
 
 std::vector<uint8_t> Dilithium::extract_signature(std::vector<uint8_t> &message_output)
 {
-    return std::vector<uint8_t>(message_output.end() - CRYPTO_BYTES, message_output.end());
+    return std::vector<uint8_t>(message_output.begin(), message_output.begin() + CRYPTO_BYTES);
 }
