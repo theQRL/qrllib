@@ -2,7 +2,7 @@
 [![npm version](https://badge.fury.io/js/qrllib.svg)](https://badge.fury.io/js/qrllib)
 [![Build Status](https://travis-ci.org/theQRL/qrllib.svg?branch=master)](https://travis-ci.org/theQRL/qrllib)
 [![CircleCI](https://circleci.com/gh/theQRL/qrllib.svg?style=svg)](https://circleci.com/gh/theQRL/qrllib)
-[![Codacy Badge](https://api.codacy.com/project/badge/Grade/ec902c96d3b04e909e293e952bc19b5a)](https://www.codacy.com/manual/jplomas/qrllib?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=theQRL/qrllib&amp;utm_campaign=Badge_Grade)
+[![Codacy Badge](https://app.codacy.com/project/badge/Grade/23da5bbcb4fc4b6ba0c118f181aba24e)](https://www.codacy.com/gh/theQRL/qrllib/dashboard?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=theQRL/qrllib&amp;utm_campaign=Badge_Grade)
 [![MIT licensed](https://img.shields.io/badge/license-MIT-blue.svg)](https://raw.githubusercontent.com/theQRL/qrllib/master/LICENSE)
 
 # QRL Core Library
