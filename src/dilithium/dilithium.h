@@ -3,6 +3,8 @@
 
 #ifndef QRLLIB_DILITHIUM_H
 #define QRLLIB_DILITHIUM_H
+#include <cstdint>
+
 
 #include <string>
 #include <vector>
