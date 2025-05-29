@@ -6,6 +6,7 @@
 
 #define KYBER_K 3
 
+#include <cstdint>
 #include <string>
 #include <vector>
 #include <kyber/ref/api.h>

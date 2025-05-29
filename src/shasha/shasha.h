@@ -4,7 +4,7 @@
 #pragma once
 #include <stdint.h> // NOLINT
 #include <stddef.h> // NOLINT
-
+#include <cstdint>
 extern "C"
 {
 void sha2_256(uint8_t *hashed_output,

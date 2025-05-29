@@ -4,6 +4,7 @@
 #include <string>
 #include <vector>
 #include "dilithium.h"
+#include <cstdint>
 
 Dilithium::Dilithium()
 {

@@ -2,6 +2,7 @@
 // file LICENSE or http://www.opensource.org/licenses/mit-license.php.
 #ifndef QRLLIB_XMSS_H
 #define QRLLIB_XMSS_H
+#include <cstdint>
 
 #include <vector>
 #include <string>
