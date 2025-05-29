@@ -3,6 +3,7 @@
 
 #ifndef QRLLIB_MISC_H
 #define QRLLIB_MISC_H
+#include <cstdint>
 
 #include <string>
 #include <vector>
