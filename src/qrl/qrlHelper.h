@@ -2,7 +2,7 @@
 // file LICENSE or http://www.opensource.org/licenses/mit-license.php.
 #ifndef QRLLIB_QRLHELPER_H
 #define QRLLIB_QRLHELPER_H
-
+#include <cstdint>
 #include <vector>
 #include <cstdint>
 #include "qrlDescriptor.h"
