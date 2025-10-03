@@ -38,6 +38,7 @@ jobs:
     steps:
       - checkout
       - run: git submodule update --init --recursive
+      - run: pip install pytest pytest-cov
       - run: chown $(whoami) run_tests.sh && chmod +x run_tests.sh && ./run_tests.sh
 
   test_golang:
