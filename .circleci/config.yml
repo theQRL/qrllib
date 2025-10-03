@@ -4,17 +4,17 @@ orbs:
 jobs:
   build:
     docker:
-      - image: qrledger/qrl-docker:xenial
+      - image: qrledger/qrl-docker-ci:noble
     steps:
       - checkout
       - run: git submodule update --init --recursive
-      - run: cmake -DBUILD_PYTHON=ON -DCMAKE_C_COMPILER=gcc-5 -DCMAKE_CXX_COMPILER=g++-5
+      - run: cmake -DBUILD_PYTHON=ON .
       - run: make
       - run: export GTEST_COLOR=1 && ctest -VV
 
   test_rust:
       docker:
-        - image: qrledger/qrl-docker-ci:bionic
+        - image: qrledger/qrl-docker-ci:noble
       steps:
         - checkout
         - run: apt update
@@ -34,7 +34,7 @@ jobs:
 
   test_python:
     docker:
-      - image: qrledger/qrl-docker-ci:xenial
+      - image: qrledger/qrl-docker-ci:noble
     steps:
       - checkout
       - run: git submodule update --init --recursive
@@ -42,16 +42,14 @@ jobs:
 
   test_golang:
     docker:
-      - image: qrledger/qrl-docker-ci:bionic
+      - image: qrledger/qrl-docker-ci:noble
     steps:
       - checkout
       - run: add-apt-repository ppa:ubuntu-toolchain-r/test
       - run: apt update
-      - run: apt install g++-7 -y
-      - run: update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-7 60 --slave /usr/bin/g++ g++ /usr/bin/g++-7
       - run: git submodule update --init --recursive
 
-      - run: cd / && curl -O https://storage.googleapis.com/golang/go1.8.linux-amd64.tar.gz && tar zxvf go1.8.linux-amd64.tar.gz
+    #  - run: cd / && curl -O https://storage.googleapis.com/golang/go1.8.linux-amd64.tar.gz && tar zxvf go1.8.linux-amd64.tar.gz
       - run:
           name: Setting up Environment Variables for Golang
           command: |
@@ -90,7 +88,7 @@ jobs:
 
   deploy_pypi:
     docker:
-      - image: qrledger/qrl-docker-ci:xenial
+      - image: qrledger/qrl-docker-ci:noble
     steps:
       - checkout
       - run: git submodule update --init --recursive
