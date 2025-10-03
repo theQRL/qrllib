@@ -39,7 +39,7 @@ jobs:
       - checkout
       - run: git submodule update --init --recursive
       - run: pip install pytest pytest-cov
-      - run: chown $(whoami) ci_test.sh && chmod +x ci_test.sh && ./ci_test.sh
+      - run: chown $(whoami) *.sh && chmod +x *.sh && ./ci_test.sh
 
   test_golang:
     docker:
