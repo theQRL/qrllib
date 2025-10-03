@@ -38,7 +38,7 @@ jobs:
     steps:
       - checkout
       - run: git submodule update --init --recursive
-      - run: ./run_tests.sh
+      - run: chown $(whoami) run_tests.sh && chmod +x run_tests.sh && ./run_tests.sh
 
   test_golang:
     docker:
