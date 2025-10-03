@@ -1,12 +1,13 @@
 version: 2.1
 orbs: 
-  rust: circleci/rust@1.6.0
+  rust: circleci/rust@1.8.0
 jobs:
   build:
     docker:
       - image: qrledger/qrl-docker-ci:noble
     steps:
       - checkout
+      - rust/install
       - run: git submodule update --init --recursive
       - run: cmake -DBUILD_PYTHON=ON .
       - run: make
