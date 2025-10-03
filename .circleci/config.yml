@@ -18,7 +18,7 @@ jobs:
       steps:
         - checkout
         - run: apt update
-        - run: apt remove --purge --auto-remove cmake
+        - run: apt remove --purge --auto-remove -y cmake
         - run: apt install build-essential libssl-dev
         - run: wget https://github.com/Kitware/CMake/releases/download/v3.20.2/cmake-3.20.2.tar.gz
         - run: tar -zxvf cmake-3.20.2.tar.gz
@@ -45,7 +45,6 @@ jobs:
       - image: qrledger/qrl-docker-ci:noble
     steps:
       - checkout
-      - run: add-apt-repository ppa:ubuntu-toolchain-r/test
       - run: apt update
       - run: git submodule update --init --recursive
 
