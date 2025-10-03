@@ -20,17 +20,8 @@ jobs:
         - run: apt update
         - run: apt remove --purge --auto-remove -y cmake
         - run: apt install -y build-essential libssl-dev
-        - run: wget https://github.com/Kitware/CMake/releases/download/v3.20.2/cmake-3.20.2.tar.gz
-        - run: tar -zxvf cmake-3.20.2.tar.gz
-        - run: cd cmake-3.20.2 && ./bootstrap
-        - run: cd cmake-3.20.2 && make
-        - run: cd cmake-3.20.2 && make install
-        - run: curl https://sh.rustup.rs -sSf | bash -s -- -y
-        - run: source $HOME/.cargo/env
-        - run: apt install llvm-dev libclang-dev clang -y
-        - run: cmake --version
-        - run: $HOME/.cargo/bin/cargo build -vv
-        - run: $HOME/.cargo/bin/cargo test
+        - run: cargo build -vv
+        - run: cargo test
 
   test_python:
     docker:
