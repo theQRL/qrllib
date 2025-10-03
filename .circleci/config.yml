@@ -1,6 +1,4 @@
 version: 2.1
-orbs: 
-  rust: circleci/rust@1.8.0
 jobs:
   build:
     docker:
@@ -17,12 +15,17 @@ jobs:
         - image: qrledger/qrl-docker-ci:noble
       steps:
         - checkout
-        - rust/install
+        - run:
+            name: Setup Rust environment
+            command: |
+              source ~/.cargo/env || true
+              rustc --version
+              cargo --version
         - run: apt update
         - run: apt remove --purge --auto-remove -y cmake
         - run: apt install -y build-essential libssl-dev
-        - run: cargo build -vv
-        - run: cargo test
+        - run: source ~/.cargo/env && cargo build -vv
+        - run: source ~/.cargo/env && cargo test
 
   test_python:
     docker:
