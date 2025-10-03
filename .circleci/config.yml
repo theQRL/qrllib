@@ -38,7 +38,7 @@ jobs:
     steps:
       - checkout
       - run: git submodule update --init --recursive
-      - run: python3 setup.py test
+      - run: ./run_tests.sh
 
   test_golang:
     docker:
