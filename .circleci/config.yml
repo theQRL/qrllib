@@ -19,7 +19,7 @@ jobs:
         - checkout
         - run: apt update
         - run: apt remove --purge --auto-remove -y cmake
-        - run: apt install build-essential libssl-dev
+        - run: apt install -y build-essential libssl-dev
         - run: wget https://github.com/Kitware/CMake/releases/download/v3.20.2/cmake-3.20.2.tar.gz
         - run: tar -zxvf cmake-3.20.2.tar.gz
         - run: cd cmake-3.20.2 && ./bootstrap
@@ -48,7 +48,7 @@ jobs:
       - run: apt update
       - run: git submodule update --init --recursive
 
-    #  - run: cd / && curl -O https://storage.googleapis.com/golang/go1.8.linux-amd64.tar.gz && tar zxvf go1.8.linux-amd64.tar.gz
+      - run: cd / && curl -O https://storage.googleapis.com/golang/go1.8.linux-amd64.tar.gz && tar zxvf go1.8.linux-amd64.tar.gz
       - run:
           name: Setting up Environment Variables for Golang
           command: |
@@ -79,7 +79,7 @@ jobs:
 
       - run:
           name: Install latest node/npm
-          command: ./.circleci/install_node.sh
+          command: chmod +x ./.circleci/install_node.sh && chown $(whoami) ./.circleci/install_node.sh && ./.circleci/install_node.sh
 
       - run:
           name: run the tests
