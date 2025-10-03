@@ -11,10 +11,26 @@ if ! command -v cmake &> /dev/null; then
     exit 1
 fi
 
-# Check if swig is available
+# Check if swig is available (check swig, swig4.0, swig3.0)
 if ! command -v swig &> /dev/null; then
-    echo "Error: swig is not installed. Please install swig first."
-    exit 1
+    SWIG_CMD=""
+    if command -v swig4.0 &> /dev/null; then
+        SWIG_CMD="swig4.0"
+    elif command -v swig3.0 &> /dev/null; then
+        SWIG_CMD="swig3.0"
+    fi
+    
+    if [ -n "$SWIG_CMD" ]; then
+        echo "swig not found, but $SWIG_CMD is available. Creating temporary symlink..."
+        # Create a temporary directory for the symlink
+        mkdir -p ~/.local/bin
+        ln -sf $(which $SWIG_CMD) ~/.local/bin/swig
+        export PATH="$HOME/.local/bin:$PATH"
+        echo "Temporary swig symlink created at ~/.local/bin/swig -> $SWIG_CMD"
+    else
+        echo "Error: swig is not installed. Please install swig first."
+        exit 1
+    fi
 fi
 
 # Create build directory if it doesn't exist
