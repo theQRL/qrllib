@@ -21,9 +21,6 @@ jobs:
               source ~/.cargo/env || true
               rustc --version
               cargo --version
-        - run: apt update
-        - run: apt remove --purge --auto-remove -y cmake
-        - run: apt install -y build-essential libssl-dev
         - run: source ~/.cargo/env && cargo build -vv
         - run: source ~/.cargo/env && cargo test
 
@@ -33,8 +30,6 @@ jobs:
     steps:
       - checkout
       - run: git submodule update --init --recursive
-      - run: apt update
-      - run: apt-get -y install swig python3-dev python3-pip build-essential pkg-config libssl-dev libffi-dev libhwloc-dev libboost-dev cmake libleveldb-dev
       - run: pip install pytest pytest-cov
       - run: chown $(whoami) *.sh && chmod +x *.sh && ./ci_test.sh
 
@@ -43,16 +38,13 @@ jobs:
       - image: qrledger/qrl-docker-ci:noble
     steps:
       - checkout
-      - run: apt update
       - run: git submodule update --init --recursive
-
-      - run: cd / && curl -O https://storage.googleapis.com/golang/go1.8.linux-amd64.tar.gz && tar zxvf go1.8.linux-amd64.tar.gz
+      - run: cd ~/ && curl -O https://storage.googleapis.com/golang/go1.8.linux-amd64.tar.gz && tar zxvf go1.8.linux-amd64.tar.gz
       - run:
           name: Setting up Environment Variables for Golang
           command: |
-            echo 'export GOROOT="/go"' >> $BASH_ENV
-            echo 'export PATH="$PATH:/go/bin/"' >> $BASH_ENV
-
+            echo 'export GOROOT="~/go"' >> $BASH_ENV
+            echo 'export PATH="$PATH:~/go/bin/"' >> $BASH_ENV
       - run: go get github.com/magiconair/properties/assert
       - run: mkdir -p ~/go/src/github.com/theQRL/qrllib/
       - run: cp -r . ~/go/src/github.com/theQRL/qrllib/
