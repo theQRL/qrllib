@@ -39,12 +39,6 @@ jobs:
     steps:
       - checkout
       - run: git submodule update --init --recursive
-      - run: cd ~/ && curl -O https://storage.googleapis.com/golang/go1.8.linux-amd64.tar.gz && tar zxvf go1.8.linux-amd64.tar.gz
-      - run:
-          name: Setting up Environment Variables for Golang
-          command: |
-            echo 'export GOROOT="~/go"' >> $BASH_ENV
-            echo 'export PATH="$PATH:~/go/bin/"' >> $BASH_ENV
       - run: go get github.com/magiconair/properties/assert
       - run: mkdir -p ~/go/src/github.com/theQRL/qrllib/
       - run: cp -r . ~/go/src/github.com/theQRL/qrllib/
