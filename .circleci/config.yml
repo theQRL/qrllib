@@ -39,12 +39,12 @@ jobs:
     steps:
       - checkout
       - run: git submodule update --init --recursive
-      - run: go get github.com/magiconair/properties/assert
-      - run: mkdir -p ~/go/src/github.com/theQRL/qrllib/
-      - run: cp -r . ~/go/src/github.com/theQRL/qrllib/
-      - run: cd ~/go/src/github.com/theQRL/qrllib/ && cmake -DBUILD_GO=ON
-      - run: cd ~/go/src/github.com/theQRL/qrllib/ && make
-      - run: cd ~/go/src/github.com/theQRL/qrllib/tests/golang/tests/ && go test -v
+      - run: |
+          go mod init github.com/theQRL/qrllib
+          go get github.com/magiconair/properties@v1.8.7
+      - run: cmake -DBUILD_GO=ON .
+      - run: make
+      - run: cd tests/golang/tests/ && go test -v
 
   build_emscripten:
     docker:
