@@ -7,6 +7,7 @@
 #include <string>
 #include <vector>
 #include <stdexcept>
+#include <cstdint>
 
 #define ADDRESS_HASH_SIZE 32
 

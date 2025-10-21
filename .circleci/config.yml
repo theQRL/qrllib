@@ -1,69 +1,52 @@
 version: 2.1
-orbs: 
-  rust: circleci/rust@1.6.0
 jobs:
   build:
     docker:
-      - image: qrledger/qrl-docker:xenial
+      - image: qrledger/qrl-docker-ci:noble
     steps:
       - checkout
       - run: git submodule update --init --recursive
-      - run: cmake -DBUILD_PYTHON=ON -DCMAKE_C_COMPILER=gcc-5 -DCMAKE_CXX_COMPILER=g++-5
+      - run: cmake -DBUILD_PYTHON=ON .
       - run: make
       - run: export GTEST_COLOR=1 && ctest -VV
 
   test_rust:
       docker:
-        - image: qrledger/qrl-docker-ci:bionic
+        - image: qrledger/qrl-docker-ci:noble
       steps:
         - checkout
-        - run: apt update
-        - run: apt remove --purge --auto-remove cmake
-        - run: apt install build-essential libssl-dev
-        - run: wget https://github.com/Kitware/CMake/releases/download/v3.20.2/cmake-3.20.2.tar.gz
-        - run: tar -zxvf cmake-3.20.2.tar.gz
-        - run: cd cmake-3.20.2 && ./bootstrap
-        - run: cd cmake-3.20.2 && make
-        - run: cd cmake-3.20.2 && make install
-        - run: curl https://sh.rustup.rs -sSf | bash -s -- -y
-        - run: source $HOME/.cargo/env
-        - run: apt install llvm-dev libclang-dev clang -y
-        - run: cmake --version
-        - run: $HOME/.cargo/bin/cargo build -vv
-        - run: $HOME/.cargo/bin/cargo test
+        - run:
+            name: Setup Rust environment
+            command: |
+              source ~/.cargo/env || true
+              rustc --version
+              cargo --version
+        - run: source ~/.cargo/env && cargo build -vv
+        - run: source ~/.cargo/env && cargo test
 
   test_python:
     docker:
-      - image: qrledger/qrl-docker-ci:xenial
+      - image: qrledger/qrl-docker-ci:noble
     steps:
       - checkout
       - run: git submodule update --init --recursive
-      - run: python3 setup.py test
+      - run: pip install pytest pytest-cov
+      - run: chown $(whoami) *.sh && chmod +x *.sh && ./ci_test.sh
 
   test_golang:
     docker:
-      - image: qrledger/qrl-docker-ci:bionic
+      - image: qrledger/qrl-docker-ci:noble
     steps:
       - checkout
-      - run: add-apt-repository ppa:ubuntu-toolchain-r/test
-      - run: apt update
-      - run: apt install g++-7 -y
-      - run: update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-7 60 --slave /usr/bin/g++ g++ /usr/bin/g++-7
       - run: git submodule update --init --recursive
-
-      - run: cd / && curl -O https://storage.googleapis.com/golang/go1.8.linux-amd64.tar.gz && tar zxvf go1.8.linux-amd64.tar.gz
-      - run:
-          name: Setting up Environment Variables for Golang
-          command: |
-            echo 'export GOROOT="/go"' >> $BASH_ENV
-            echo 'export PATH="$PATH:/go/bin/"' >> $BASH_ENV
-
-      - run: go get github.com/magiconair/properties/assert
-      - run: mkdir -p ~/go/src/github.com/theQRL/qrllib/
-      - run: cp -r . ~/go/src/github.com/theQRL/qrllib/
-      - run: cd ~/go/src/github.com/theQRL/qrllib/ && cmake -DBUILD_GO=ON
-      - run: cd ~/go/src/github.com/theQRL/qrllib/ && make
-      - run: cd ~/go/src/github.com/theQRL/qrllib/tests/golang/tests/ && go test -v
+      - run: |
+          if [ ! -f go.mod ]; then
+            go mod init github.com/theQRL/qrllib
+          fi
+          go get github.com/magiconair/properties@v1.8.7
+      - run: cmake -DBUILD_GO=ON .
+      - run: make
+      - run: cd tests/golang/tests/ && go test -v
 
   build_emscripten:
     docker:
@@ -82,7 +65,7 @@ jobs:
 
       - run:
           name: Install latest node/npm
-          command: ./.circleci/install_node.sh
+          command: chmod +x ./.circleci/install_node.sh && chown $(whoami) ./.circleci/install_node.sh && ./.circleci/install_node.sh
 
       - run:
           name: run the tests
@@ -90,7 +73,7 @@ jobs:
 
   deploy_pypi:
     docker:
-      - image: qrledger/qrl-docker-ci:xenial
+      - image: qrledger/qrl-docker-ci:noble
     steps:
       - checkout
       - run: git submodule update --init --recursive

@@ -4,6 +4,7 @@
 #include <string>
 #include <vector>
 #include <stdexcept>
+#include <cstdint>
 #include "kyber.h"
 
 Kyber::Kyber(const std::vector<uint8_t> &pk,

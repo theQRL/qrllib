@@ -5,6 +5,7 @@
 #define QRLLIB_DILITHIUM_H
 
 #include <string>
+#include <cstdint>
 #include <vector>
 #include <dilithium/ref/api.h>
 #include <dilithium/ref/randombytes.h>

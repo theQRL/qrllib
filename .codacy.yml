@@ -1,0 +1,11 @@
+engines:
+  cppcheck:
+    exclude_paths:
+      - "src/**/*.h"
+      - "src/**/*.cpp"
+    rules:
+      - missingInclude: false
+      - preprocessorErrorDirective: false
+    settings:
+      suppressions:
+        - "missingIncludeSystem:*"
