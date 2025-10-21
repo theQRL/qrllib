@@ -40,7 +40,9 @@ jobs:
       - checkout
       - run: git submodule update --init --recursive
       - run: |
-          go mod init github.com/theQRL/qrllib
+          if [ ! -f go.mod ]; then
+            go mod init github.com/theQRL/qrllib
+          fi
           go get github.com/magiconair/properties@v1.8.7
       - run: cmake -DBUILD_GO=ON .
       - run: make
