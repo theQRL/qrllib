@@ -77,3 +77,4 @@ tests/js/tmp/*.wasm
 # Added by cargo
 
 /target
+/DartConfiguration.tcl
