@@ -44,6 +44,41 @@ if (BUILD_PYTHON OR BUILD_GO)
 endif ()
 
 if (BUILD_PYTHON)
+  # Improved Python Detection ===>
+  # Ensures that CMake uses the Python version that invoked pip/setup.py
+  # rather than automatically discovering the system Python (which may be wrong)
+
+  # Priority 1: Use Python_EXECUTABLE if explicitly provided via cmake -D
+  # Priority 2: Use PYTHON_EXECUTABLE if explicitly provided via cmake -D
+  # Priority 3: Use the Python interpreter that's currently running (from environment)
+  # Priority 4: Let CMake find Python automatically (fallback)
+
+  if(NOT DEFINED Python_EXECUTABLE AND NOT DEFINED Python3_EXECUTABLE)
+      # Try to get the Python executable from environment
+      # This is set by pip during install or by setup.py
+      if(DEFINED ENV{Python_EXECUTABLE})
+          set(Python_EXECUTABLE $ENV{Python_EXECUTABLE})
+          message(STATUS "Using Python from environment: ${Python_EXECUTABLE}")
+      elseif(DEFINED ENV{PYTHON})
+          set(Python_EXECUTABLE $ENV{PYTHON})
+          message(STATUS "Using Python from PYTHON env var: ${Python_EXECUTABLE}")
+      elseif(DEFINED PYTHON_EXECUTABLE)
+          set(Python_EXECUTABLE ${PYTHON_EXECUTABLE})
+          message(STATUS "Using Python from PYTHON_EXECUTABLE: ${Python_EXECUTABLE}")
+      endif()
+  endif()
+
+  # Set hints for CMake's find_package(Python)
+  if(DEFINED Python_EXECUTABLE)
+      get_filename_component(Python_ROOT_DIR "${Python_EXECUTABLE}" DIRECTORY)
+      get_filename_component(Python_ROOT_DIR "${Python_ROOT_DIR}" DIRECTORY)
+      set(Python_ROOT_DIR "${Python_ROOT_DIR}" CACHE PATH "Path to Python installation")
+      set(Python3_EXECUTABLE "${Python_EXECUTABLE}" CACHE FILEPATH "Path to Python3 executable")
+      message(STATUS "Python_ROOT_DIR set to: ${Python_ROOT_DIR}")
+  endif()
+
+  # <=== Improved Python Detection
+
   if(${CMAKE_VERSION} VERSION_GREATER "3.12")
     set(Python_ADDITIONAL_VERSIONS 3 3.7 3.8 3.9 3.6 3.5)
     find_package(Python COMPONENTS Interpreter Development REQUIRED)

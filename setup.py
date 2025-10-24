@@ -20,10 +20,18 @@ class CMakeBuild(build_ext):
         env['CXXFLAGS'] = env.get('CXXFLAGS', '')
         env['CXXFLAGS'] += ' -DVERSION_INFO=\\"' + self.distribution.get_version() + '\\"'
 
+        # Pass the Python executable to CMake to ensure correct Python version is used
+        python_executable = sys.executable
+        env['Python_EXECUTABLE'] = python_executable
+        env['PYTHON'] = python_executable
+
         for ext in self.extensions:
             extension_path = os.path.abspath(os.path.dirname(self.get_ext_fullpath(ext.name)))
 
             cmake_call = ['cmake', ext.sourcedir,
+                          '-DPYTHON_EXECUTABLE=' + python_executable,
+                          '-DPython_EXECUTABLE=' + python_executable,
+                          '-DPython3_EXECUTABLE=' + python_executable,
                           '-DBUILD_PYTHON=ON',
                           '-DBUILD_TESTS=OFF',
                           '-DCMAKE_LIBRARY_OUTPUT_DIRECTORY=' + extension_path,
