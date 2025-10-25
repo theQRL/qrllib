@@ -284,7 +284,7 @@ if (BUILD_TESTS)
             ${LIB_QRL_INCLUDES}
             ${LIB_SHASHA_INCLUDES})
     target_link_libraries(qrllib_test qrllib gtest_main)
-    add_test(gtest ${PROJECT_BINARY_DIR}/qrllib_test)
+    add_test(qrllib_test ${PROJECT_BINARY_DIR}/qrllib_test)
 
     ###########################
 
@@ -294,7 +294,7 @@ if (BUILD_TESTS)
     target_include_directories( shasha_test PRIVATE
             ${LIB_SHASHA_INCLUDES} )
     target_link_libraries(shasha_test shasha qrllib gtest_main)
-    add_test(gtest ${PROJECT_BINARY_DIR}/shasha_test)
+    add_test(shasha_test ${PROJECT_BINARY_DIR}/shasha_test)
 
     ###########################
 
@@ -305,7 +305,7 @@ if (BUILD_TESTS)
             ${LIB_DILITHIUM_INCLUDES} )
 
     target_link_libraries(dilithium_test dilithium gtest_main)
-    add_test(gtest ${PROJECT_BINARY_DIR}/dilithium_test)
+    add_test(dilithium_test ${PROJECT_BINARY_DIR}/dilithium_test)
 
     ###########################
 
@@ -316,7 +316,7 @@ if (BUILD_TESTS)
             ${LIB_KYBER_INCLUDES} )
 
     target_link_libraries(kyber_test kyber gtest_main)
-    add_test(gtest ${PROJECT_BINARY_DIR}/kyber_test)
+    add_test(kyber_test ${PROJECT_BINARY_DIR}/kyber_test)
 
 endif ()
 
