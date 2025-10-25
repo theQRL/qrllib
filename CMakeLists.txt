@@ -2,6 +2,23 @@
 # file LICENSE or http://www.opensource.org/licenses/mit-license.php.
 
 cmake_minimum_required(VERSION 3.5)
+
+# macOS-specific compiler detection
+# Apple Clang has compatibility issues with Google Test on macOS.
+# Automatically use gcc-13 if available (install via: brew install gcc@13)
+if(APPLE AND NOT DEFINED CMAKE_C_COMPILER AND NOT DEFINED CMAKE_CXX_COMPILER)
+    find_program(GCC13 gcc-13)
+    find_program(GXX13 g++-13)
+
+    if(GCC13 AND GXX13)
+        set(CMAKE_C_COMPILER ${GCC13})
+        set(CMAKE_CXX_COMPILER ${GXX13})
+        message(STATUS "macOS detected: Using gcc-13/g++-13 for better Google Test compatibility")
+    else()
+        message(WARNING "macOS detected: gcc-13 not found. Install with 'brew install gcc@13' to avoid build issues with Google Test.")
+    endif()
+endif()
+
 project(qrllib)
 
 set(CMAKE_CXX_STANDARD 14)

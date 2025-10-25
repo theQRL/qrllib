@@ -40,7 +40,7 @@ If you dont have brew yet, we think you should :) Install brew following the ins
 Now install some dependencies
 
 ```bash
-brew install cmake python3 swig
+brew install cmake python3 swig gcc@13
 pip3 install pyqrllib
 ```
 
