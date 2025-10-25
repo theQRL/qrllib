@@ -53,7 +53,7 @@ SWIGEXPORT void HandleAllExceptions()
 
 
 %array_class(unsigned char, ucharCArray)
-%array_class(uint, uintCArray)
+%array_class(unsigned int, uintCArray)
 %array_class(uint32_t, uint32CArray)
 
 namespace std {
