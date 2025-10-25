@@ -78,3 +78,18 @@ tests/js/tmp/*.wasm
 
 /target
 /DartConfiguration.tcl
+/CTestTestfile.cmake
+/dilithium_test
+/Testing/Temporary/LastTest.log
+/Testing/Temporary/CTestCostData.txt
+/kyber_test
+/lib/libgmock_main.a
+/lib/libgmock.a
+/lib/libgtest_main.a
+/lib/libgtest.a
+/libdilithium.a
+/libkyber.a
+/libqrllib.a
+/libshasha.a
+/pyqrllib/pyqrllibPYTHON_wrap.cxx
+/shasha_test
