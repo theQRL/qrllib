@@ -50,7 +50,7 @@ jobs:
 
   build_emscripten:
     docker:
-      - image: zondax/qrl-build-images:emscripten
+      - image: qrledger/qrl-docker-ci:noble
     environment:
       BASH_ENV: ".circleci/bash_env.sh"
     steps:
@@ -68,8 +68,16 @@ jobs:
           command: chmod +x ./.circleci/install_node.sh && chown $(whoami) ./.circleci/install_node.sh && ./.circleci/install_node.sh
 
       - run:
-          name: run the tests
-          command: cd tests/js && npm install && npm test
+          name: Install dependencies
+          command: cd tests/js && npm install
+
+      - run:
+          name: Run Node.js tests
+          command: cd tests/js && npm test
+
+      - run:
+          name: Run Playwright browser tests
+          command: cd tests/js && npm run test:browser
 
   deploy_pypi:
     docker:

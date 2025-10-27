@@ -1,6 +1,29 @@
 const assert = require('assert');
 const crypto = require('crypto');
-const libqrl = require('./tmp/libjsqrl.js');
+
+// Load and wait for WASM module to initialize
+let libqrl;
+let moduleReady = false;
+
+before(async function() {
+    this.timeout(10000); // Allow time for WASM to load
+    const Module = require('./tmp/libjsqrl.js');
+
+    // Wait for the module to be ready
+    await new Promise((resolve) => {
+        if (Module.calledRun) {
+            libqrl = Module;
+            moduleReady = true;
+            resolve();
+        } else {
+            Module.onRuntimeInitialized = () => {
+                libqrl = Module;
+                moduleReady = true;
+                resolve();
+            };
+        }
+    });
+});
 
 // TODO: Move this to another file with all the helper functions
 
@@ -245,10 +268,15 @@ describe('libjsqrl', function () {
     });
 
     describe('Create a tree using XMSSBasic (variable WOTS for enqlave)', function() {
-        const a = new Uint8Array(48); // null-seed
-        const height = 6;
-        const WOTSParamW = 4;
-        let xmss_basic_object = libqrl.XmssBasic.fromParameters(ToUint8Vector(a), height, libqrl.eHashFunction.SHAKE_128, libqrl.eAddrFormatType.SHA256_2X, WOTSParamW );
+        let xmss_basic_object;
+
+        before(function() {
+            const a = new Uint8Array(48); // null-seed
+            const height = 6;
+            const WOTSParamW = 4;
+            xmss_basic_object = libqrl.XmssBasic.fromParameters(ToUint8Vector(a), height, libqrl.eHashFunction.SHAKE_128, libqrl.eAddrFormatType.SHA256_2X, WOTSParamW );
+        });
+
         it('create xmss tree from parameters using WOTS param W = 4', function() {
             assert.equal(xmss_basic_object.getPK(),
                 '010300884181fe54232c3cf17c4683b6d451e9d4f54b624f11e476732bc5bbe63d9dc53191da3442686282b3d5160f25cf162a517fd2131f83fbf2698a58f9c46afc5d'
