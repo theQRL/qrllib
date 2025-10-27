@@ -4,7 +4,11 @@
   "description": "js tests for webassembly",
   "main": "index.js",
   "scripts": {
-    "test": "mocha"
+    "test": "mocha",
+    "test:browser": "playwright test",
+    "test:browser:headed": "playwright test --headed",
+    "test:browser:debug": "playwright test --debug",
+    "start": "npx http-server -p 8080 -o test.html"
   },
   "author": "",
   "license": "ISC",
@@ -13,5 +17,8 @@
     "fs-extra": "^11.2.0",
     "mocha": "^11.0.1",
     "temp": "^0.9.4"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.49.0"
   }
 }

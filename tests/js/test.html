@@ -1,0 +1,461 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QRLLIB Browser Tests</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            line-height: 1.6;
+        }
+        
+        .test-suite {
+            margin: 20px 0;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        
+        .test-suite-header {
+            background-color: #f5f5f5;
+            padding: 10px 15px;
+            font-weight: bold;
+            border-bottom: 1px solid #ddd;
+        }
+        
+        .test-case {
+            padding: 10px 15px;
+            border-bottom: 1px solid #eee;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .test-case:last-child {
+            border-bottom: none;
+        }
+        
+        .test-name {
+            flex-grow: 1;
+        }
+        
+        .test-result {
+            font-weight: bold;
+            padding: 5px 10px;
+            border-radius: 3px;
+            min-width: 60px;
+            text-align: center;
+        }
+        
+        .pass {
+            background-color: #d4edda;
+            color: #155724;
+        }
+        
+        .fail {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+        
+        .running {
+            background-color: #fff3cd;
+            color: #856404;
+        }
+        
+        .pending {
+            background-color: #e2e3e5;
+            color: #383d41;
+        }
+        
+        .test-details {
+            font-size: 0.9em;
+            color: #666;
+            margin-top: 5px;
+        }
+        
+        .summary {
+            background-color: #f8f9fa;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 20px 0;
+        }
+        
+        #test-status {
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            font-weight: bold;
+        }
+        
+        .loading {
+            background-color: #fff3cd;
+            color: #856404;
+        }
+        
+        .ready {
+            background-color: #d4edda;
+            color: #155724;
+        }
+        
+        .error {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+    </style>
+</head>
+<body>
+    <h1>QRLLIB Browser Tests</h1>
+    <div id="test-status" class="loading">Loading library...</div>
+    
+    <div class="summary" id="summary" style="display: none;">
+        <div id="summary-text"></div>
+    </div>
+
+    <div id="test-results"></div>
+
+    <script src="/build/libjsqrl.js"></script>
+    <script>
+        // Global state
+        window.libqrlReady = false;
+        window.libqrl = null;
+        let testResults = {
+            passed: 0,
+            failed: 0,
+            total: 0
+        };
+
+        // Helper functions for tests (matching test.js)
+        window.ToArray = function(vec) {
+            let arr = new Uint8Array(vec.size());
+            for (let i = 0; i < vec.size(); i++) {
+                arr[i] = vec.get(i);
+            }
+            return arr;
+        };
+
+        window.ToUint8Vector = function(arr) {
+            let vec = new window.libqrl.Uint8Vector();
+            for (let i = 0; i < arr.length; i++) {
+                vec.push_back(arr[i]);
+            }
+            return vec;
+        };
+
+        window.bytesToHex = function(byteArray) {
+            return Array.from(byteArray, function (byte) {
+                return ('00' + (byte & 0xFF).toString(16)).slice(-2);
+            }).join('');
+        };
+
+        window.binaryToBytes = function(convertMe) {
+            const thisBytes = new Uint8Array(convertMe.size());
+            for (let i = 0; i < convertMe.size(); i += 1) {
+                thisBytes[i] = convertMe.get(i);
+            }
+            return thisBytes;
+        };
+
+        window.hexToBytes = function(hex) {
+            const bytes = new Uint8Array(hex.length / 2);
+            for (let i = 0; i < hex.length; i += 2) {
+                bytes[i / 2] = parseInt(hex.substr(i, 2), 16);
+            }
+            return bytes;
+        };
+
+        // Test framework functions
+        function createTestSuite(name) {
+            const suite = document.createElement('div');
+            suite.className = 'test-suite';
+            
+            const header = document.createElement('div');
+            header.className = 'test-suite-header';
+            header.textContent = name;
+            
+            suite.appendChild(header);
+            document.getElementById('test-results').appendChild(suite);
+            
+            return suite;
+        }
+
+        function createTestCase(suite, name, testFunction) {
+            const testCase = document.createElement('div');
+            testCase.className = 'test-case';
+            
+            const nameDiv = document.createElement('div');
+            nameDiv.className = 'test-name';
+            nameDiv.textContent = name;
+            
+            const resultDiv = document.createElement('div');
+            resultDiv.className = 'test-result pending';
+            resultDiv.textContent = 'PENDING';
+            
+            testCase.appendChild(nameDiv);
+            testCase.appendChild(resultDiv);
+            suite.appendChild(testCase);
+            
+            testResults.total++;
+            
+            return { testCase, resultDiv, nameDiv, testFunction };
+        }
+
+        function runTest(testInfo) {
+            const { testCase, resultDiv, nameDiv, testFunction } = testInfo;
+            
+            try {
+                resultDiv.className = 'test-result running';
+                resultDiv.textContent = 'RUNNING';
+                
+                const result = testFunction();
+                
+                if (result === true || result === undefined) {
+                    resultDiv.className = 'test-result pass';
+                    resultDiv.textContent = 'PASS';
+                    testResults.passed++;
+                } else {
+                    throw new Error('Test returned false');
+                }
+            } catch (error) {
+                resultDiv.className = 'test-result fail';
+                resultDiv.textContent = 'FAIL';
+                testResults.failed++;
+                
+                const details = document.createElement('div');
+                details.className = 'test-details';
+                details.textContent = `Error: ${error.message}`;
+                nameDiv.appendChild(details);
+            }
+        }
+
+        function assertEqual(actual, expected, message = '') {
+            if (actual !== expected) {
+                throw new Error(`Expected ${expected}, got ${actual}. ${message}`);
+            }
+        }
+
+        function assertNotEqual(actual, expected, message = '') {
+            if (actual === expected) {
+                throw new Error(`Expected not ${expected}, but got ${actual}. ${message}`);
+            }
+        }
+
+        function updateSummary() {
+            const summaryDiv = document.getElementById('summary');
+            const summaryText = document.getElementById('summary-text');
+            
+            summaryDiv.style.display = 'block';
+            summaryText.innerHTML = `
+                <strong>Test Results Summary:</strong><br>
+                Total: ${testResults.total} | 
+                Passed: ${testResults.passed} | 
+                Failed: ${testResults.failed} | 
+                Success Rate: ${((testResults.passed / testResults.total) * 100).toFixed(1)}%
+            `;
+        }
+
+        // Define test suites
+        function defineTests() {
+            const tests = [];
+
+            // Helper functions tests
+            const helperSuite = createTestSuite('Helper Functions');
+            
+            tests.push(createTestCase(helperSuite, 'Array to Vector conversion', function() {
+                const tmpArr = Uint8Array.from([1, 2, 3, 4, 5]);
+                const tmpVec = ToUint8Vector(tmpArr);
+                
+                assertEqual(5, tmpVec.size());
+                for (let i = 0; i < tmpVec.size(); i++) {
+                    assertEqual(i + 1, tmpVec.get(i));
+                }
+            }));
+
+            tests.push(createTestCase(helperSuite, 'Data to Vector conversion', function() {
+                const tmpVec = ToUint8Vector([1, 2, 3, 4, 5]);
+                
+                assertEqual(5, tmpVec.size());
+                for (let i = 0; i < tmpVec.size(); i++) {
+                    assertEqual(i + 1, tmpVec.get(i));
+                }
+            }));
+
+            tests.push(createTestCase(helperSuite, 'Vector to Array conversion', function() {
+                const tmpVec = ToUint8Vector([1, 2, 3, 4, 5]);
+                const tmpArr = ToArray(tmpVec);
+                
+                assertEqual(5, tmpArr.length);
+                for (let i = 0; i < tmpArr.length; i++) {
+                    assertEqual(i + 1, tmpArr[i]);
+                }
+            }));
+
+            // SHA2-256 tests
+            const sha2Suite = createTestSuite('SHA2-256 Hash Function');
+            
+            tests.push(createTestCase(sha2Suite, 'Hash [1,2,3,4,5]', function() {
+                const data = [1, 2, 3, 4, 5];
+                const dataVec = ToUint8Vector(data);
+                const hashVec = libqrl.sha2_256(dataVec);
+                
+                assertEqual(32, ToArray(hashVec).length);
+                assertEqual(
+                    libqrl.bin2hstr(hashVec),
+                    '74f81fe167d99b4cb41d6d0ccda82278caee9f3e2f25d5e5a3936ff3dcec60d0'
+                );
+            }));
+
+            // Mnemonic tests
+            const mnemonicSuite = createTestSuite('Mnemonic Conversion');
+            
+            tests.push(createTestCase(mnemonicSuite, 'Binary to mnemonic [0,1,2,3,4,5]', function() {
+                const data = ToUint8Vector([0, 1, 2, 3, 4, 5]);
+                const mnemonic = libqrl.bin2mnemonic(data);
+                assertEqual('aback bag adrift dream', mnemonic);
+            }));
+
+            tests.push(createTestCase(mnemonicSuite, 'Binary to mnemonic [0,1,2]', function() {
+                const data = ToUint8Vector([0, 1, 2]);
+                const mnemonic = libqrl.bin2mnemonic(data);
+                assertEqual('aback bag', mnemonic);
+            }));
+
+            tests.push(createTestCase(mnemonicSuite, 'Mnemonic roundtrip conversion', function() {
+                const tmpBin = libqrl.mnemonic2bin('aback bag');
+                const tmpMnemonic = libqrl.bin2mnemonic(tmpBin);
+                assertEqual('aback bag', tmpMnemonic);
+            }));
+
+            // XMSS tests
+            const xmssSuite = createTestSuite('XMSS Tree Operations');
+            
+            tests.push(createTestCase(xmssSuite, 'Create tree from parameters', function() {
+                const seedVector = ToUint8Vector(new Uint8Array(48));
+                const height = 4;
+                const hashFunc = libqrl.eHashFunction.SHA2_256;
+                
+                const xmss = libqrl.Xmss.fromParameters(seedVector, height, hashFunc);
+                
+                assertEqual(0, xmss.getIndex());
+                assertEqual(4, xmss.getHeight());
+                assertEqual(
+                    xmss.getAddress(),
+                    'Q00020096e5c065cf961565169e795803c1e60f521af7a3ea0326b42aa40c0e75390e5d8f4336de'
+                );
+                assertEqual(
+                    libqrl.bin2hstr(xmss.getAddressRaw()),
+                    '00020096e5c065cf961565169e795803c1e60f521af7a3ea0326b42aa40c0e75390e5d8f4336de'
+                );
+            }));
+
+            tests.push(createTestCase(xmssSuite, 'Create tree from hex seed', function() {
+                const hexseed = '0002006963291e58d6e776fe25932964748e774fb22cff112fbf5ece45b17965704697550064a60f40ba7c742694346761d5cc';
+                const xmss = libqrl.Xmss.fromHexSeed(hexseed);
+                
+                assertEqual(0, xmss.getIndex());
+                assertEqual(4, xmss.getHeight());
+                assertEqual(
+                    xmss.getAddress(),
+                    'Q000200baea487e62a96f32a2c427def90f020880d2fb0bff756ff6450186904dcc0c88e9018879'
+                );
+                assertEqual(
+                    xmss.getHexSeed(),
+                    '0002006963291e58d6e776fe25932964748e774fb22cff112fbf5ece45b17965704697550064a60f40ba7c742694346761d5cc'
+                );
+            }));
+
+            tests.push(createTestCase(xmssSuite, 'Create tree from mnemonic', function() {
+                const mnemonic = 'aback bunny heroic crazy brown miss torch inhere cater crazy hammer ethic kidnap wire clutch vat cope walnut sodden gather lame free enable juicy aboard exert awhile artful leg during neatly employ gritty gill';
+                const xmss = libqrl.Xmss.fromMnemonic(mnemonic);
+                
+                assertEqual(0, xmss.getIndex());
+                assertEqual(4, xmss.getHeight());
+                assertEqual(
+                    xmss.getAddress(),
+                    'Q000200baea487e62a96f32a2c427def90f020880d2fb0bff756ff6450186904dcc0c88e9018879'
+                );
+                assertEqual(xmss.getMnemonic(), mnemonic);
+            }));
+
+            // Address utility tests
+            const addressSuite = createTestSuite('Address Utilities');
+            
+            tests.push(createTestCase(addressSuite, 'Get height from address', function() {
+                const address = 'Q00020096e5c065cf961565169e795803c1e60f521af7a3ea0326b42aa40c0e75390e5d8f4336de';
+                assertEqual(libqrl.getHeight(address), 4);
+            }));
+
+            tests.push(createTestCase(addressSuite, 'Get hash function from address', function() {
+                const address = 'Q00020096e5c065cf961565169e795803c1e60f521af7a3ea0326b42aa40c0e75390e5d8f4336de';
+                const hashFunction = libqrl.getHashFunction(address);
+                assertEqual(hashFunction, libqrl.eHashFunction.SHA2_256);
+            }));
+
+            tests.push(createTestCase(addressSuite, 'Get signature type from address', function() {
+                const address = 'Q00020096e5c065cf961565169e795803c1e60f521af7a3ea0326b42aa40c0e75390e5d8f4336de';
+                const signatureType = libqrl.getSignatureType(address);
+                assertEqual(signatureType, libqrl.eSignatureType.XMSS);
+            }));
+
+            tests.push(createTestCase(addressSuite, 'Get address from public key', function() {
+                const expectedAddress = 'Q000200baea487e62a96f32a2c427def90f020880d2fb0bff756ff6450186904dcc0c88e9018879';
+                const hexseed = '0002006963291e58d6e776fe25932964748e774fb22cff112fbf5ece45b17965704697550064a60f40ba7c742694346761d5cc';
+                const xmss = libqrl.Xmss.fromHexSeed(hexseed);
+                const epk = xmss.getPK();
+                const address = 'Q' + libqrl.getAddress(epk);
+                assertEqual(expectedAddress, address);
+            }));
+
+            return tests;
+        }
+
+        // Wait for the module to be ready and run tests
+        function initializeAndRunTests() {
+            if (typeof Module !== 'undefined') {
+                if (Module.calledRun) {
+                    window.libqrl = Module;
+                    window.libqrlReady = true;
+                    startTests();
+                } else {
+                    Module.onRuntimeInitialized = () => {
+                        window.libqrl = Module;
+                        window.libqrlReady = true;
+                        startTests();
+                    };
+                }
+            } else {
+                setTimeout(initializeAndRunTests, 100);
+            }
+        }
+
+        function startTests() {
+            const statusDiv = document.getElementById('test-status');
+            statusDiv.className = 'ready';
+            statusDiv.textContent = 'Library loaded successfully! Running tests...';
+            
+            const tests = defineTests();
+            
+            // Run tests with a small delay to allow UI updates
+            let testIndex = 0;
+            function runNextTest() {
+                if (testIndex < tests.length) {
+                    runTest(tests[testIndex]);
+                    testIndex++;
+                    setTimeout(runNextTest, 10); // Small delay for UI responsiveness
+                } else {
+                    // All tests completed
+                    statusDiv.textContent = 'All tests completed!';
+                    updateSummary();
+                }
+            }
+            
+            runNextTest();
+        }
+
+        // Start the initialization process
+        initializeAndRunTests();
+    </script>
+</body>
+</html>
