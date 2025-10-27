@@ -72,10 +72,6 @@ jobs:
           command: cd tests/js && npm install
 
       - run:
-          name: Install Playwright browsers
-          command: cd tests/js && npx playwright install --with-deps chromium
-
-      - run:
           name: Run Node.js tests
           command: cd tests/js && npm test
 
