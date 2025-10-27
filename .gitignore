@@ -71,6 +71,20 @@ tests/js/node_modules
 tests/js/tmp/*.js
 tests/js/tmp/*.wasm
 
+# Emscripten build artifacts (root and build directory)
+/libjsqrl.js
+/libjsqrl.wasm
+/libjsqrl.a
+/web-libjsqrl.js
+/web-libjsqrl.wasm
+/offline-libjsqrl.js
+/offline-libjsdilithium.js
+/offline-libjskyber.js
+/libjsdilithium.a
+/libjskyber.a
+/build/*.js
+/build/*.wasm
+
 \.npmrc
 .vscode/*
 

@@ -4,15 +4,14 @@
   "description": "js tests for webassembly",
   "main": "index.js",
   "scripts": {
-    "test": "./node_modules/.bin/mocha"
+    "test": "mocha"
   },
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "chai": "^4.1.2",
-    "fs-extra": "^5.0.0",
-    "grpc": "^1.9.1",
-    "mocha": "^5.0.1",
-    "temp": "^0.8.3"
+    "chai": "^5.1.2",
+    "fs-extra": "^11.2.0",
+    "mocha": "^11.0.1",
+    "temp": "^0.9.4"
   }
 }

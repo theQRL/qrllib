@@ -50,7 +50,7 @@ jobs:
 
   build_emscripten:
     docker:
-      - image: zondax/qrl-build-images:emscripten
+      - image: qrledger/qrl-docker-ci:noble
     environment:
       BASH_ENV: ".circleci/bash_env.sh"
     steps:
