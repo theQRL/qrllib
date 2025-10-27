@@ -3,6 +3,7 @@ engines:
     exclude_paths:
       - "src/**/*.h"
       - "src/**/*.cpp"
+      - "tests/js/tests/**/*.spec.js"
     rules:
       - missingInclude: false
       - preprocessorErrorDirective: false
