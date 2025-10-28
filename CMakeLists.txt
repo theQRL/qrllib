@@ -23,6 +23,21 @@ project(qrllib)
 
 set(CMAKE_CXX_STANDARD 14)
 #set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++14 -Wall -Wextra -pedantic")
+
+# Fix for GCC on macOS - ensure SDK is set for proper compilation
+# Note: If you encounter errors about missing FILE, stdio.h, etc., you may need to
+# rename the broken include-fixed directory:
+#   mv /usr/local/Cellar/gcc@13/*/lib/gcc/*/gcc/x86_64-apple-darwin23/*/include-fixed{,.bak}
+if(APPLE AND CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+    # Ensure SDK is set
+    if(NOT CMAKE_OSX_SYSROOT)
+        execute_process(COMMAND xcrun --show-sdk-path
+                        OUTPUT_VARIABLE CMAKE_OSX_SYSROOT
+                        OUTPUT_STRIP_TRAILING_WHITESPACE)
+        message(STATUS "Setting macOS SDK: ${CMAKE_OSX_SYSROOT}")
+    endif()
+endif()
+
 if(${CMAKE_VERSION} VERSION_GREATER "3.10.3")
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pthread")
     set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -pthread")
