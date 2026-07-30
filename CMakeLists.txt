@@ -660,7 +660,10 @@ if (BUILD_WEBASSEMBLY)
 
     message(WARNING "webassembly enabled")
 
-    add_library(jsqrl SHARED
+    # STATIC, not SHARED: .circleci/build_emscripten.sh links these archives
+    # into the final .js/.wasm. Older Emscripten toolchains emitted a .a for a
+    # SHARED target; newer ones emit a .so side module, which breaks that step.
+    add_library(jsqrl STATIC
             ${JS_QRL_INTERFACE}
             ${LIB_QRL_SRC}
             ${LIB_SHASHA_SRC}
@@ -678,7 +681,7 @@ if (BUILD_WEBASSEMBLY)
 
    set(JS_DILITHIUM_INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/src/jswrapper/jsdilwrapper.cpp)
 
-   add_library(jsdilithium SHARED
+   add_library(jsdilithium STATIC
            ${JS_DILITHIUM_INTERFACE}
            ${LIB_DILITHIUM_SRC}
            ${LIBDILITHIUM_SRC}
@@ -691,7 +694,7 @@ if (BUILD_WEBASSEMBLY)
 
    set(JS_KYBER_INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/src/jswrapper/jskybwrapper.cpp)
 
-   add_library(jskyber SHARED
+   add_library(jskyber STATIC
            ${JS_KYBER_INTERFACE}
            ${LIB_KYBER_SRC}
            ${LIBKYBER_SRC}
