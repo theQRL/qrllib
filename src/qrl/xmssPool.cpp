@@ -12,6 +12,7 @@ XmssPool::XmssPool(const TSEED &base_seed, uint8_t height, const size_t starting
         _height(height),
         _current_index(starting_index),
         _pool_size(pool_size) {
+    // No lock needed: the instance is not observable by another thread yet.
     fillCache();
 }
 
@@ -27,20 +28,46 @@ void XmssPool::fillCache() {
 }
 
 std::shared_ptr<XmssFast> XmssPool::getNextTree() {
-    if (_cache.empty()) {
-        return prepareTree(_current_index++);
+    std::future<std::shared_ptr<XmssFast>> pending;
+    size_t index = 0;
+    bool cache_missed = false;
+
+    {
+        std::lock_guard<std::mutex> lock(_mutex);
+
+        if (_cache.empty()) {
+            // Claim the index under the lock; build the tree outside it.
+            index = _current_index++;
+            cache_missed = true;
+        } else {
+            // Move the future out so that the wait below happens outside the
+            // critical section. Leaving it in the deque and calling get() here
+            // would both serialise every caller behind key generation and allow
+            // a second caller to get() an already-consumed future.
+            pending = std::move(_cache.front());
+            _cache.pop_front();
+            _current_index++;
+
+            fillCache();
+        }
     }
 
-    auto answer = _cache.front().get();
-    _cache.pop_front();
-    _current_index++;
+    if (cache_missed) {
+        return prepareTree(index);
+    }
 
-    fillCache();
-
-    return answer;
+    return pending.get();
 }
 
 bool XmssPool::isAvailable() {
+    std::lock_guard<std::mutex> lock(_mutex);
+
+    // front() is undefined on an empty deque, and _cache is always empty when
+    // _pool_size is 0.
+    if (_cache.empty()) {
+        return false;
+    }
+
     return _cache.front().wait_for(std::chrono::seconds(0)) == std::future_status::ready;
 }
 

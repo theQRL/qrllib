@@ -2,7 +2,11 @@
 // file LICENSE or http://www.opensource.org/licenses/mit-license.php.
 #include <xmss-alt/algsxmss.h>
 #include <xmssBasic.h>
+#include <atomic>
 #include <iostream>
+#include <set>
+#include <thread>
+#include <vector>
 #include "gtest/gtest.h"
 #include <misc.h>
 #include <xmssPool.h>
@@ -69,5 +73,80 @@ namespace {
             auto xmss = pool.getNextTree();
             EXPECT_EQ(pks[i], bin2hstr(xmss->getPK()));
         }
+    }
+
+    // isAvailable() used to call _cache.front() with no empty() guard, which is
+    // undefined behaviour and crashed in practice. _cache is always empty when
+    // pool_size is 0, so this reached a public method with no threads involved.
+    TEST(XmssPool, IsAvailableOnEmptyCache) {
+        std::vector<unsigned char> seed(48, 0);
+
+        XmssPool pool(seed, 4, 0, 0);
+
+        EXPECT_FALSE(pool.isAvailable());
+    }
+
+    TEST(XmssPool, IsAvailableWithPrecomputedTrees) {
+        std::vector<unsigned char> seed(48, 0);
+
+        XmssPool pool(seed, 4, 0, 2);
+        pool.getNextTree();
+
+        // Drains the cache one tree at a time; isAvailable() must stay callable
+        // throughout rather than depending on the cache being non-empty.
+        EXPECT_NO_THROW(pool.isAvailable());
+    }
+
+    // XMSS is a stateful one-time signature scheme, so an index must never be
+    // issued twice: two callers holding the same index can sign two different
+    // messages under the same WOTS+ key. Unsynchronised _current_index++ and
+    // deque access allowed exactly that.
+    void expectEveryIndexIssuedOnce(size_t pool_size) {
+        const int thread_count = 8;
+
+        for (int attempt = 0; attempt < 20; attempt++) {
+            std::vector<unsigned char> seed(48, 0x42);
+            XmssPool pool(seed, 4, 0, pool_size);
+
+            std::vector<std::string> collected(thread_count);
+            std::vector<std::thread> threads;
+            std::atomic<bool> go(false);
+
+            for (int i = 0; i < thread_count; i++) {
+                threads.emplace_back([&pool, &collected, &go, i] {
+                    while (!go.load(std::memory_order_acquire)) {
+                        std::this_thread::yield();
+                    }
+                    collected[i] = bin2hstr(pool.getNextTree()->getPK());
+                });
+            }
+
+            // Release the threads together. Letting them start as they are
+            // spawned staggers them enough to hide the race.
+            go.store(true, std::memory_order_release);
+
+            for (auto &t : threads) {
+                t.join();
+            }
+
+            std::set<std::string> distinct(collected.begin(), collected.end());
+            ASSERT_EQ(distinct.size(), static_cast<size_t>(thread_count))
+                << "duplicate tree issued at pool_size=" << pool_size
+                << " on attempt " << attempt;
+            ASSERT_EQ(pool.getCurrentIndex(), static_cast<size_t>(thread_count));
+        }
+    }
+
+    TEST(XmssPool, ConcurrentGetNextTreeIsUniqueWithoutCache) {
+        // pool_size 0 exercises the prepareTree(_current_index++) branch, where
+        // a lost increment used to hand two threads the same index.
+        expectEveryIndexIssuedOnce(0);
+    }
+
+    TEST(XmssPool, ConcurrentGetNextTreeIsUniqueWithCache) {
+        // pool_size 2 exercises the cached branch, where two threads could
+        // get() the same future. That is undefined behaviour, not a duplicate,
+        // and it crashed rather than returning.
+        expectEveryIndexIssuedOnce(2);
     }
 }
