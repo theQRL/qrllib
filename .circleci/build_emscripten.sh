@@ -4,7 +4,11 @@ emcmake cmake -DBUILD_WEBASSEMBLY=ON -DCMAKE_BUILD_TYPE=Release
 emmake make
 
 # Build with modern emscripten (include wrapper object files)
-emcc --bind CMakeFiles/jsqrl.dir/src/jswrapper/jsqrlwrapper.cpp.o libjsqrl.a libqrllib.a libshasha.a -s DISABLE_EXCEPTION_CATCHING=0 -O3 -o libjsqrl.js
+# libjsqrl.js must be self-contained: package.json only publishes the .js, and
+# modern emscripten defaults to WASM=1 with an external .wasm sidecar. SINGLE_FILE
+# embeds the wasm so the published module loads standalone (as the old asm.js
+# default output did) under node, browsers and bundlers alike.
+emcc --bind CMakeFiles/jsqrl.dir/src/jswrapper/jsqrlwrapper.cpp.o libjsqrl.a libqrllib.a libshasha.a -s DISABLE_EXCEPTION_CATCHING=0 -O3 -s WASM=1 -s SINGLE_FILE=1 -o libjsqrl.js
 emcc --bind CMakeFiles/jsqrl.dir/src/jswrapper/jsqrlwrapper.cpp.o libjsqrl.a libqrllib.a libshasha.a -s DISABLE_EXCEPTION_CATCHING=0 -O3 -s WASM=1 -o web-libjsqrl.js
 emcc --bind CMakeFiles/jsqrl.dir/src/jswrapper/jsqrlwrapper.cpp.o libjsqrl.a libqrllib.a libshasha.a -s DISABLE_EXCEPTION_CATCHING=0 -O3 -s WASM=1 -s SINGLE_FILE=1 -o offline-libjsqrl.js
 emcc --bind CMakeFiles/jsdilithium.dir/src/jswrapper/jsdilwrapper.cpp.o libjsdilithium.a libdilithium.a libshasha.a -s DISABLE_EXCEPTION_CATCHING=0 -O3 -s WASM=1 -s SINGLE_FILE=1 -o offline-libjsdilithium.js
