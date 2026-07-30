@@ -13,16 +13,10 @@ test.describe('libjsqrl browser tests', () => {
         // Visit the test HTML page that loads the library
         await page.goto('/tests/js/test.html');
 
-        // Wait for the library to be loaded and initialized
-        await page.waitForFunction(() => window.libqrl !== null && window.libqrl !== undefined);
-
-        // Ensure the WASM module is ready
-        await page.waitForFunction(() => {
-            if (window.libqrl.calledRun) {
-                return true;
-            }
-            return false;
-        }, { timeout: 30000 });
+        // Wait for the library to be loaded and initialized. test.html sets
+        // libqrlReady once the runtime is up; Module.calledRun is not exposed by
+        // newer emscripten releases, so it cannot be used as the ready signal.
+        await page.waitForFunction(() => window.libqrlReady === true, { timeout: 30000 });
 
         // Get libqrl reference for the test
         libqrl = await page.evaluate(() => window.libqrl);
