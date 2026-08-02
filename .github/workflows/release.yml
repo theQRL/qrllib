@@ -34,6 +34,11 @@ jobs:
       # but GitHub Actions mounts its runner directories root-owned, so
       # container steps must run as root to write action state.
       options: --user root
+    defaults:
+      run:
+        # Inside the container GHA falls back to plain `sh` (dash), which
+        # rejects `set -o pipefail`. Request bash explicitly.
+        shell: bash
     steps:
       - name: Checkout
         uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
