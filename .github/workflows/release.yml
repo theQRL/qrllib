@@ -66,16 +66,18 @@ jobs:
       - name: Pack npm tarball
         run: |
           set -euo pipefail
-          mkdir -p .release
-          npm pack --pack-destination .release
-          ls -la .release
+          # Not a dot-directory: upload-artifact excludes hidden paths by
+          # default and would silently find no files.
+          mkdir -p release-artifacts
+          npm pack --pack-destination release-artifacts
+          ls -la release-artifacts
 
       - name: Upload npm tarball (artifact handoff)
         # The publish jobs ship THESE bytes; they never rebuild.
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: npm-tarball
-          path: .release/*.tgz
+          path: release-artifacts/*.tgz
           retention-days: 5
           if-no-files-found: error
 
