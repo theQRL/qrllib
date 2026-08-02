@@ -141,6 +141,10 @@ test.describe('libjsqrl browser tests', () => {
     test.describe('xmss', () => {
         test('create tree from parameters', async ({ page }) => {
             const result = await page.evaluate(() => {
+                // KAT: fixed all-zero test vector locking in the expected
+                // outputs below. NEVER copy this pattern to create a real
+                // wallet — use libqrl.getRandomSeed() instead (see the
+                // 'entropy' tests below).
                 const seed_vector = window.ToUint8Vector(new Uint8Array(48));
                 const height = 4;
                 const hash_func = window.libqrl.eHashFunction.SHA2_256;
@@ -277,9 +281,45 @@ test.describe('libjsqrl browser tests', () => {
         });
     });
 
+    test.describe('entropy', () => {
+        test('getRandomSeed is nondeterministic and reaches the key', async ({ page }) => {
+            const result = await page.evaluate(() => {
+                const toHex = (vec) => {
+                    let s = '';
+                    for (let i = 0; i < vec.size(); i++) {
+                        s += ('00' + vec.get(i).toString(16)).slice(-2);
+                    }
+                    return s;
+                };
+
+                const a = window.libqrl.getRandomSeed();
+                const b = window.libqrl.getRandomSeed();
+
+                const xmss = window.libqrl.Xmss.fromParameters(
+                    a, 4, window.libqrl.eHashFunction.SHA2_256);
+
+                return {
+                    sizeA: a.size(),
+                    hexA: toHex(a),
+                    hexB: toHex(b),
+                    hexSeed: xmss.getHexSeed()
+                };
+            });
+
+            expect(result.sizeA).toBe(48);
+            expect(result.hexA).not.toBe(result.hexB);
+            expect(result.hexA).not.toBe('0'.repeat(96));
+            // hexseed = 3-byte descriptor || the caller's 48 seed bytes
+            expect(result.hexSeed.slice(6)).toBe(result.hexA);
+        });
+    });
+
     test.describe('XMSSBasic (variable WOTS)', () => {
         test('create xmss tree from parameters using WOTS param W = 4', async ({ page }) => {
             const pk = await page.evaluate(() => {
+                // KAT: fixed all-zero test vector locking in the expected PK
+                // below. NEVER copy this pattern for real key generation —
+                // use libqrl.getRandomSeed() instead.
                 const a = new Uint8Array(48); // null-seed
                 const height = 6;
                 const WOTSParamW = 4;

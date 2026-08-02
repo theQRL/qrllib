@@ -12,13 +12,16 @@
 #include <xmssPool.h>
 
 namespace {
+    // Regenerated 2026-08-02: prepareTree now derives the full 48-byte stake
+    // seed with shake256(base_seed || index+1) instead of duplicating the
+    // first 16 bytes of a sha2_256 digest.
     std::vector<std::string> pks =
             {
-                    "0103002dcc3803df4475334b29eaa2516d1a9b36bc19eed0542cfbb501bf8de95d939b25510d9876c7845b4694441bdc0e2be51f3d3f87f0c7775893845f25d49f9ef1",
-                    "010300be9caeafe11fa52edf722063c18616d6d0c6c30dba3e2c9369a6d9260f76818bc424a1b6db5f26ef01ffa4aac8a08440d6a569bc56180b06f51b6ff6e4cc1b2e",
-                    "0103005deb91b1d311ecc8c6954e22f3e140ff3e6c04e40cad50c940e60abba3cf766a5db9f39f58e532bea6765e4530cb581db1d6afbb7c05da3261ca4db21177afc5",
-                    "010300ea15c686e7b9691b8bac52ee4d0ed33bd75ec600f55b4476b857858460c2c98390712040a5e03bca7a46715a90270ac2f8db8694ffa943091edb9018fa1dda04",
-                    "010300cc9aa42776ce6d286003055b793223002acb42f7e6c27773dabfd54960bb7d9d1dc356395528c65ff6f444aae130176c213718dd5c4a39858ca150031fb2451e"
+                    "0103002cdddec48985cc9acd9d970781782a1c5f1000ee464370b79a8639dc669defb803eb90b52a39a2be669053476fa1bb3eb8d9514c432eb9bd1e4a78b36d271d7e",
+                    "010300e76e8a65bd7df657e91b95a9895baebbca7f003e3ab8ae6e7bcf6edc0d48f212551a7d78a5df848aa9808f39e669817362e0870178c1a70c1e835b6daa0b3d91",
+                    "01030087eb6f611bd88cf08f7948995216661e01fce87f9dcff14d58858e8770422c69691d6ce737e816c44bc21e8e7e422e8068af1d8bfb89a05db98e822178352d63",
+                    "010300e3d66e891f02bff7dcb2d87fe7126e549e0e993b6a459992fc5fcc4b752eeb4ab2428e3e0280b7da7c82db6c135ab615cddd08412246580eee32e9c692eaa318",
+                    "010300eceed296a8f2b3a25af19cfc90d3c2725a0c6b9aa263523eb9a6bd5155e80326384349175d2c5aeeeb5032b67d19150a9bb68ee43f0a58000aa7e6b2dc88d2cd"
             };
 
     TEST(XmssPool, Instantiation) {

@@ -4,6 +4,7 @@
 
 #include <misc.h>
 #include <hashing.h>
+#include <set>
 
 namespace {
 #define XMSS_HEIGHT 8
@@ -118,6 +119,28 @@ namespace {
                          auto data = mnemonic2bin(input);
                      },
                      std::invalid_argument);
+    }
+
+    // getRandomSeed is the library's only entropy-producing function. These
+    // assertions are designed to fail on a substitution to a deterministic
+    // source, not to measure entropy quality.
+    TEST(Misc, getRandomSeedIsNondeterministic) {
+        auto a = getRandomSeed(48, "");
+        auto b = getRandomSeed(48, "");
+
+        EXPECT_EQ(a.size(), 48);
+        EXPECT_EQ(b.size(), 48);
+
+        // Two draws must differ; equality means the entropy source is broken.
+        EXPECT_NE(a, b);
+
+        EXPECT_NE(a, std::vector<unsigned char>(48, 0));
+
+        // Crude dead-RNG floor: a live source yields ~38 distinct byte values
+        // in 48 draws. This would not catch a seeded PRNG; the nondeterminism
+        // assertion above is the one that matters.
+        std::set<unsigned char> distinct(a.begin(), a.end());
+        EXPECT_GE(distinct.size(), 16);
     }
 
     TEST(Misc, getHashChainSeed) {

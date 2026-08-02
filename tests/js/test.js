@@ -136,8 +136,13 @@ describe('libjsqrl', function () {
     });
 
     describe('xmss', function () {
-        it('create tree from parameters', function () {
+        it('create tree from parameters (fixed all-zero KAT vector)', function () {
 
+            // KAT: the all-zero seed below is a fixed known-answer test vector
+            // that locks in the expected address/hexseed/mnemonic. NEVER copy
+            // this pattern to create a real wallet — pass entropy from
+            // libqrl.getRandomSeed() (or crypto.getRandomValues) instead. See
+            // the 'entropy' suite below for the correct usage.
             let seed_vector = ToUint8Vector(new Uint8Array(48));
             let height = 4;
             let hash_func = libqrl.eHashFunction.SHA2_256;
@@ -267,10 +272,87 @@ describe('libjsqrl', function () {
 
     });
 
+    describe('entropy', function () {
+        // The JS build delegates 100% of seed entropy to the caller, so these
+        // tests lock in the secure path: getRandomSeed must exist, be
+        // nondeterministic, and its output must reach the key verbatim.
+
+        it('getRandomSeed returns 48 CSPRNG bytes by default', function () {
+            const seed = libqrl.getRandomSeed();
+            assert.equal(48, seed.size());
+
+            const bytes = ToArray(seed);
+            assert.notDeepEqual(bytes, new Uint8Array(48), 'seed must not be all zero');
+
+            // Crude dead-RNG floor; the nondeterminism test below is the one
+            // that matters.
+            assert.ok(new Set(bytes).size >= 16, 'seed bytes suspiciously non-distinct');
+        });
+
+        it('getRandomSeed is nondeterministic', function () {
+            const a = bytesToHex(ToArray(libqrl.getRandomSeed()));
+            const b = bytesToHex(ToArray(libqrl.getRandomSeed()));
+            assert.notEqual(a, b, 'two seed draws were identical — entropy source is broken');
+        });
+
+        it('creates distinct wallets from getRandomSeed (secure usage example)', function () {
+            // This is the pattern consumers should copy, not the all-zero KAT
+            // vectors above.
+            const height = 4;
+            const hashFunc = libqrl.eHashFunction.SHA2_256;
+
+            const xmssA = libqrl.Xmss.fromParameters(libqrl.getRandomSeed(), height, hashFunc);
+            const xmssB = libqrl.Xmss.fromParameters(libqrl.getRandomSeed(), height, hashFunc);
+
+            assert.notEqual(xmssA.getAddress(), xmssB.getAddress());
+            assert.notEqual(
+                xmssA.getHexSeed(),
+                '000200000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000');
+        });
+
+        it('caller entropy reaches the key verbatim', function () {
+            const seedBytes = new Uint8Array(48);
+            crypto.getRandomValues(seedBytes);
+
+            const xmss = libqrl.Xmss.fromParameters(
+                ToUint8Vector(seedBytes), 4, libqrl.eHashFunction.SHA2_256);
+
+            // hexseed = 3-byte descriptor || the caller's 48 seed bytes
+            assert.equal(xmss.getHexSeed().slice(6), bytesToHex(seedBytes));
+        });
+
+        it('XMSS wasm remains a pure deterministic sink (no entropy syscalls)', function () {
+            // The property that keeps any glue-level random device unreachable
+            // is that the XMSS wasm cannot open an entropy source at all. That
+            // is load-bearing, so pin it against the built artifact.
+            const fs = require('fs');
+            const path = require('path');
+            const wasm = fs.readFileSync(
+                path.join(__dirname, 'tmp', 'web-libjsqrl.wasm'), 'latin1');
+
+            for (const marker of ['urandom', 'random_device', 'getentropy']) {
+                assert.ok(!wasm.includes(marker), `wasm contains entropy marker: ${marker}`);
+            }
+        });
+
+        it('shipped bundle carries no Math.random device', function () {
+            const fs = require('fs');
+            const path = require('path');
+            const bundle = fs.readFileSync(
+                path.join(__dirname, 'tmp', 'libjsqrl.js'), 'utf8');
+
+            assert.ok(!bundle.includes('Math.random'), 'bundle contains a Math.random RNG device');
+            assert.ok(bundle.includes('getRandomValues'), 'bundle has no WebCrypto path');
+        });
+    });
+
     describe('Create a tree using XMSSBasic (variable WOTS for enqlave)', function() {
         let xmss_basic_object;
 
         before(function() {
+            // KAT: fixed all-zero test vector locking in the expected PK and
+            // signature below. NEVER copy this pattern for real key
+            // generation — use libqrl.getRandomSeed() instead.
             const a = new Uint8Array(48); // null-seed
             const height = 6;
             const WOTSParamW = 4;
