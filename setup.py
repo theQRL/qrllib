@@ -58,24 +58,26 @@ class CMakeExtension(Extension):
 
 
 def setup_package():
-    needs_sphinx = {'build_sphinx', 'upload_docs'}.intersection(sys.argv)
-    sphinx = ['sphinx'] if needs_sphinx else []
-    cmake = []
-
     version = versioneer.get_version()
+
+    # versioneer's cmdclass must be the base: its sdist command rewrites
+    # pyqrllib/_version.py with a static version inside the tarball. Without
+    # it, an install from the sdist re-runs git introspection in a tree with
+    # no .git, resolves 0+unknown, and pip rejects the package as having
+    # inconsistent metadata.
+    cmdclass = versioneer.get_cmdclass()
+    cmdclass['build_ext'] = CMakeBuild
 
     # noinspection PyInterpreter
     extras_require = {
         'testing': ['pytest', 'pytest-cov'],
     }
 
-    setup(setup_requires=['six', 'pyscaffold>3'] + sphinx + cmake,
-          packages=['pyqrllib', ],
+    setup(packages=['pyqrllib', ],
           extras_require=extras_require,
           ext_modules=[CMakeExtension('pyqrllib')],
           version=version,
-          cmdclass=dict(build_ext=CMakeBuild),
-          use_pyscaffold=True)
+          cmdclass=cmdclass)
 
 
 if __name__ == "__main__":
