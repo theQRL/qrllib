@@ -53,7 +53,24 @@ jobs:
         # source tarball, and building it first keeps the emscripten-configured
         # CMake cache and emitted artifacts out of it. Compilation of this
         # commit is already gated by the required CircleCI build job.
-        run: python3 setup.py sdist
+        #
+        # versioneer derives the version from `git describe`; if git fails
+        # (dubious-ownership refusal in the container, missing tags) it
+        # silently falls back to 0+unknown, so make git work and then assert
+        # the sdist actually carries the tag's version.
+        env:
+          TAG: ${{ github.ref_name }}
+        run: |
+          git config --global --add safe.directory "$(pwd)"
+          git fetch --tags --force origin
+          git describe --tags --match 'v*'
+          python3 setup.py sdist
+          ls -la dist/
+          VERSION="${TAG#v}"
+          if [ ! -f "dist/pyqrllib-${VERSION}.tar.gz" ]; then
+            echo "FAIL: sdist version does not match tag ${TAG} — versioneer could not resolve the version from git"
+            exit 1
+          fi
 
       - name: Build webassembly (includes RNG shim regression gate)
         run: ./.circleci/build_emscripten.sh
@@ -126,7 +143,12 @@ jobs:
         env:
           NPM_CONFIG_PROVENANCE: 'true'
           NPM_CONFIG_ACCESS: public
-        run: npm publish tarball/*.tgz
+        # The ./ prefix is load-bearing: without it npm parses a bare
+        # `dir/file.tgz` spec as a GitHub owner/repo shorthand and tries to
+        # git-clone it instead of publishing the local tarball.
+        run: |
+          TARBALL="$(ls tarball/*.tgz)"
+          npm publish "./${TARBALL}"
 
       - name: Verify release is live on npm
         env:
