@@ -2,9 +2,6 @@ version: 2.1
 jobs:
   build:
     docker:
-      # qrledger/qrl-docker-ci:noble, hash-pinned 2026-08-02. Bump the digest
-      # deliberately when the image updates; build_emscripten.sh additionally
-      # pins the emcc version this image must provide.
       - image: qrledger/qrl-docker-ci@sha256:9090f3bb83e85b59bc09d22f6c8be42a7f07b0b1ed8194f63c89ff84c1bed9b0
     steps:
       - checkout
@@ -15,10 +12,7 @@ jobs:
 
   test_rust:
       docker:
-        # qrledger/qrl-docker-ci:noble, hash-pinned 2026-08-02. Bump the digest
-      # deliberately when the image updates; build_emscripten.sh additionally
-      # pins the emcc version this image must provide.
-      - image: qrledger/qrl-docker-ci@sha256:9090f3bb83e85b59bc09d22f6c8be42a7f07b0b1ed8194f63c89ff84c1bed9b0
+        - image: qrledger/qrl-docker-ci@sha256:9090f3bb83e85b59bc09d22f6c8be42a7f07b0b1ed8194f63c89ff84c1bed9b0
       steps:
         - checkout
         - run:
@@ -32,9 +26,6 @@ jobs:
 
   test_python:
     docker:
-      # qrledger/qrl-docker-ci:noble, hash-pinned 2026-08-02. Bump the digest
-      # deliberately when the image updates; build_emscripten.sh additionally
-      # pins the emcc version this image must provide.
       - image: qrledger/qrl-docker-ci@sha256:9090f3bb83e85b59bc09d22f6c8be42a7f07b0b1ed8194f63c89ff84c1bed9b0
     steps:
       - checkout
@@ -44,9 +35,6 @@ jobs:
 
   test_golang:
     docker:
-      # qrledger/qrl-docker-ci:noble, hash-pinned 2026-08-02. Bump the digest
-      # deliberately when the image updates; build_emscripten.sh additionally
-      # pins the emcc version this image must provide.
       - image: qrledger/qrl-docker-ci@sha256:9090f3bb83e85b59bc09d22f6c8be42a7f07b0b1ed8194f63c89ff84c1bed9b0
     steps:
       - checkout
@@ -62,9 +50,6 @@ jobs:
 
   build_emscripten:
     docker:
-      # qrledger/qrl-docker-ci:noble, hash-pinned 2026-08-02. Bump the digest
-      # deliberately when the image updates; build_emscripten.sh additionally
-      # pins the emcc version this image must provide.
       - image: qrledger/qrl-docker-ci@sha256:9090f3bb83e85b59bc09d22f6c8be42a7f07b0b1ed8194f63c89ff84c1bed9b0
     environment:
       BASH_ENV: ".circleci/bash_env.sh"
@@ -98,54 +83,6 @@ jobs:
           name: Run Playwright browser tests
           command: cd tests/js && npm run test:browser
 
-  deploy_pypi:
-    docker:
-      # qrledger/qrl-docker-ci:noble, hash-pinned 2026-08-02. Bump the digest
-      # deliberately when the image updates; build_emscripten.sh additionally
-      # pins the emcc version this image must provide.
-      - image: qrledger/qrl-docker-ci@sha256:9090f3bb83e85b59bc09d22f6c8be42a7f07b0b1ed8194f63c89ff84c1bed9b0
-    steps:
-      - checkout
-      - run: git submodule update --init --recursive
-      - run: python3 setup.py build sdist
-      - run: pip install twine
-      - run: twine upload -u $PYPI_USERNAME -p $PYPI_PASSWORD dist/*
-
-  deploy_npm:
-    docker:
-      # Same hash-pinned image as build_emscripten: the npm artifacts must be
-      # produced by the exact toolchain the RNG shim gates were verified
-      # against, not a separate build image.
-      - image: qrledger/qrl-docker-ci@sha256:9090f3bb83e85b59bc09d22f6c8be42a7f07b0b1ed8194f63c89ff84c1bed9b0
-    environment:
-      BASH_ENV: ".circleci/bash_env.sh"
-    steps:
-      - checkout
-      - run:
-          name: Update submodules
-          command: git submodule update --init --recursive
-
-        # Building again and avoiding complex workspaces until they are supported in the CLI
-      - run:
-          name: Build webassembly
-          command: ./.circleci/build_emscripten.sh
-
-      - run:
-          name: Install latest node/npm
-          command: ./.circleci/install_node.sh
-
-      - run:
-          name: Authenticate with registry
-          command: echo "//registry.npmjs.org/:_authToken=$NPM_TOKEN" > ~/.npmrc
-
-      - run:
-          name: Update tag
-          command: npm --no-git-tag-version version $CIRCLE_TAG
-
-      - run:
-          name: Publish package
-          command: npm publish
-
 workflows:
   version: 2
   build_all:
@@ -174,25 +111,3 @@ workflows:
           filters:
             tags:
               only: /.*/
-
-      - deploy_pypi:
-          requires:
-            - build
-            - test_python
-            - build_emscripten
-          filters:
-            branches:
-              ignore: /.*/
-            tags:
-              only: /^v[0-9]+(\.[0-9]+)*/
-
-      - deploy_npm:
-          requires:
-            - build
-            - test_python
-            - build_emscripten
-          filters:
-            branches:
-              ignore: /.*/
-            tags:
-              only: /^v[0-9]+(\.[0-9]+)*/

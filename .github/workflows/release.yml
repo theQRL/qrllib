@@ -1,0 +1,352 @@
+name: Release
+
+# Tag-driven release with trusted publishing (OIDC) to npm and PyPI.
+# No long-lived registry credentials exist anywhere in this pipeline:
+# npm and PyPI exchange a short-lived GitHub OIDC token minted per run,
+# and both registries must list this exact workflow as a trusted
+# publisher before it can publish anything.
+on:
+  push:
+    tags:
+      - 'v[0-9]+.[0-9]+.[0-9]+'
+
+# Default-deny: each job opts in explicitly via its own `permissions:` block.
+permissions: {}
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  # ===========================================================================
+  # Build: produce the exact artifacts both publish jobs will ship.
+  # Runs inside the same hash-pinned toolchain image as CircleCI, so the
+  # published bundles are built by the pinned Emscripten and pass the RNG
+  # shim regression gate in build_emscripten.sh before anything is packed.
+  # ===========================================================================
+  build:
+    name: Build (pinned toolchain + RNG gates)
+    runs-on: ubuntu-latest
+    if: github.repository == 'theQRL/qrllib'
+    container:
+      image: qrledger/qrl-docker-ci@sha256:9090f3bb83e85b59bc09d22f6c8be42a7f07b0b1ed8194f63c89ff84c1bed9b0
+    steps:
+      - name: Checkout
+        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+        with:
+          submodules: recursive
+          # versioneer derives the Python package version from git tags
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Build webassembly (includes RNG shim regression gate)
+        run: ./.circleci/build_emscripten.sh
+
+      - name: Stamp npm version from tag
+        env:
+          TAG: ${{ github.ref_name }}
+        run: npm --no-git-tag-version version "${TAG#v}"
+
+      - name: Pack npm tarball
+        run: |
+          set -euo pipefail
+          mkdir -p .release
+          npm pack --pack-destination .release
+          ls -la .release
+
+      - name: Build sdist
+        run: python3 setup.py build sdist
+
+      - name: Upload npm tarball (artifact handoff)
+        # The publish jobs ship THESE bytes; they never rebuild.
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: npm-tarball
+          path: .release/*.tgz
+          retention-days: 5
+          if-no-files-found: error
+
+      - name: Upload sdist (artifact handoff)
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: python-sdist
+          path: dist/*.tar.gz
+          retention-days: 5
+          if-no-files-found: error
+
+  # ===========================================================================
+  # Publish: npm (trusted publishing + provenance)
+  # ===========================================================================
+  publish-npm:
+    name: Publish to npm
+    runs-on: ubuntu-latest
+    needs: build
+    if: github.repository == 'theQRL/qrllib'
+    environment: npm-publish
+    permissions:
+      id-token: write # npm trusted publishing OIDC token
+    steps:
+      - name: Download npm tarball
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          name: npm-tarball
+          path: tarball
+
+      - name: Setup Node.js
+        uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6.4.0
+        with:
+          node-version: 22.14.0
+          registry-url: 'https://registry.npmjs.org/'
+
+      - name: Use npm 11 for trusted publishing
+        # npm trusted publishing requires npm >= 11.5.1. The OIDC token from
+        # `id-token: write` is detected automatically; no NPM_TOKEN exists.
+        # The qrllib package's npm settings must list this workflow as a
+        # trusted publisher.
+        run: |
+          npm install -g npm@11.16.0
+          npm --version
+
+      - name: Publish
+        env:
+          NPM_CONFIG_PROVENANCE: 'true'
+          NPM_CONFIG_ACCESS: public
+        run: npm publish tarball/*.tgz
+
+      - name: Verify release is live on npm
+        env:
+          TAG: ${{ github.ref_name }}
+        run: |
+          set -euo pipefail
+          VERSION="${TAG#v}"
+          ok=""
+          for attempt in 1 2 3 4 5 6 7 8 9 10; do
+            served="$(npm view "qrllib@${VERSION}" version 2>/dev/null || true)"
+            if [ "${served}" = "${VERSION}" ]; then
+              echo "confirmed qrllib@${VERSION} on attempt ${attempt}"
+              ok=1
+              break
+            fi
+            echo "not yet visible (attempt ${attempt}/10); retrying in 15s"
+            sleep 15
+          done
+          if [ -z "${ok}" ]; then
+            echo "::error::qrllib@${VERSION} is not served by the registry after 10 attempts"
+            exit 1
+          fi
+
+  # ===========================================================================
+  # Publish: PyPI (trusted publishing)
+  # ===========================================================================
+  publish-pypi:
+    name: Publish to PyPI
+    runs-on: ubuntu-latest
+    needs: build
+    if: github.repository == 'theQRL/qrllib'
+    environment: pypi
+    permissions:
+      id-token: write # PyPI trusted publishing OIDC token
+    steps:
+      - name: Download sdist
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          name: python-sdist
+          path: dist
+
+      - name: Publish
+        uses: pypa/gh-action-pypi-publish@dc37677b2e1c63e2034f94d8a5b11f265b73ba33 # v1.14.2
+
+  # ===========================================================================
+  # Supply Chain: SBOM, Checksums, GitHub Attestations
+  # ===========================================================================
+  supply-chain-artifacts:
+    name: Supply Chain Artifacts
+    runs-on: ubuntu-latest
+    needs: [publish-npm, publish-pypi]
+    if: github.repository == 'theQRL/qrllib'
+    permissions:
+      contents: write # create the GitHub Release and upload SBOMs/checksums
+      id-token: write # mint OIDC token for build provenance signing
+      attestations: write # create build-provenance attestations
+    steps:
+      # No checkout: every artifact below is derived from the published
+      # tarballs handed off by the build job. The supply-chain documents
+      # must describe the published bytes, never a rebuild.
+      - name: Download npm tarball
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          name: npm-tarball
+          path: tarball
+
+      - name: Download sdist
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          name: python-sdist
+          path: sdist
+
+      - name: Extract npm tarball contents
+        run: |
+          set -euo pipefail
+          mkdir -p extracted
+          tar -xzf tarball/*.tgz -C extracted
+          ls -la extracted/package
+
+      - name: Generate checksums (published artifacts)
+        run: |
+          set -euo pipefail
+          { (cd tarball && sha256sum ./*.tgz); (cd sdist && sha256sum ./*.tar.gz); } > checksums-sha256.txt
+          { (cd tarball && sha512sum ./*.tgz); (cd sdist && sha512sum ./*.tar.gz); } > checksums-sha512.txt
+          (cd extracted/package && find . -type f | LC_ALL=C sort | xargs sha256sum) > package-contents-sha256.txt
+
+      - name: Generate SBOM (SPDX)
+        uses: anchore/sbom-action@e22c389904149dbc22b58101806040fa8d37a610 # v0.24.0
+        with:
+          path: extracted/package
+          format: spdx-json
+          output-file: sbom-spdx.json
+          artifact-name: sbom-spdx.json
+
+      - name: Generate SBOM (CycloneDX)
+        uses: anchore/sbom-action@e22c389904149dbc22b58101806040fa8d37a610 # v0.24.0
+        with:
+          path: extracted/package
+          format: cyclonedx-json
+          output-file: sbom-cyclonedx.json
+          artifact-name: sbom-cyclonedx.json
+
+      - name: Attest published tarballs and checksums
+        uses: actions/attest-build-provenance@a2bbfa25375fe432b6a289bc6b6cd05ecd0c4c32 # v4.1.0
+        with:
+          subject-path: |
+            tarball/*.tgz
+            sdist/*.tar.gz
+            checksums-sha256.txt
+            checksums-sha512.txt
+            package-contents-sha256.txt
+
+      # attest-sbom subjects are the artifact each SBOM describes — the
+      # published npm tarball — not the SBOM document itself.
+      - name: Attest SBOM (SPDX)
+        uses: actions/attest-sbom@c604332985a26aa8cf1bdc465b92731239ec6b9e # v4.1.0
+        with:
+          subject-path: tarball/*.tgz
+          sbom-path: sbom-spdx.json
+
+      - name: Attest SBOM (CycloneDX)
+        uses: actions/attest-sbom@c604332985a26aa8cf1bdc465b92731239ec6b9e # v4.1.0
+        with:
+          subject-path: tarball/*.tgz
+          sbom-path: sbom-cyclonedx.json
+
+      - name: Create GitHub Release and upload artifacts
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG: ${{ github.ref_name }}
+        run: |
+          set -euo pipefail
+          if ! gh release view "${TAG}" --repo "${GITHUB_REPOSITORY}" >/dev/null 2>&1; then
+            gh release create "${TAG}" \
+              --repo "${GITHUB_REPOSITORY}" \
+              --title "${TAG}" \
+              --verify-tag \
+              --generate-notes
+          fi
+          gh release upload "${TAG}" \
+            checksums-sha256.txt \
+            checksums-sha512.txt \
+            package-contents-sha256.txt \
+            sbom-spdx.json \
+            sbom-cyclonedx.json \
+            --repo "${GITHUB_REPOSITORY}" \
+            --clobber
+
+  # ===========================================================================
+  # SLSA Level 3 Provenance
+  # ===========================================================================
+  slsa-subjects:
+    name: Compute SLSA Subjects
+    runs-on: ubuntu-latest
+    needs: [publish-npm, publish-pypi]
+    if: github.repository == 'theQRL/qrllib'
+    permissions:
+      contents: read # artifact download only; nothing is checked out
+    outputs:
+      hashes: ${{ steps.hash.outputs.hashes }}
+    steps:
+      # The provenance subjects are the published tarballs from the build
+      # job's handoff. A rebuild here could hash different bytes than the
+      # registries serve — the provenance must describe the released
+      # artifacts, not a reproduction.
+      - name: Download npm tarball
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          name: npm-tarball
+          path: subjects
+
+      - name: Download sdist
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          name: python-sdist
+          path: subjects
+
+      - name: Generate subject hashes
+        id: hash
+        run: |
+          set -euo pipefail
+          cd subjects
+          echo "hashes=$(sha256sum ./* | base64 -w0)" >> "$GITHUB_OUTPUT"
+
+  slsa-provenance:
+    name: SLSA Provenance
+    needs: [publish-npm, publish-pypi, slsa-subjects]
+    if: github.repository == 'theQRL/qrllib'
+    permissions:
+      actions: read # SLSA generator inspects the run's workflow definition
+      id-token: write # SLSA provenance is signed via OIDC
+      contents: write # required by the reusable workflow's upload path
+    # SLSA reusable workflow MUST be tag-pinned (not SHA-pinned) so the
+    # slsa-verifier can validate the generator's identity against the
+    # signed release tag. SHA-pinning here would break SLSA Level 3
+    # provenance verification.
+    uses: slsa-framework/slsa-github-generator/.github/workflows/generator_generic_slsa3.yml@v2.1.0
+    with:
+      base64-subjects: ${{ needs.slsa-subjects.outputs.hashes }}
+      upload-assets: false
+      provenance-name: provenance.intoto.jsonl
+
+  slsa-upload:
+    name: Upload SLSA Provenance
+    runs-on: ubuntu-latest
+    needs: [supply-chain-artifacts, slsa-provenance]
+    if: github.repository == 'theQRL/qrllib'
+    permissions:
+      contents: write # attach SLSA provenance asset to the GitHub Release
+    steps:
+      - name: Download provenance
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          name: provenance.intoto.jsonl
+
+      - name: Download npm tarball
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          name: npm-tarball
+          path: artifacts
+
+      - name: Download sdist
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          name: python-sdist
+          path: artifacts
+
+      - name: Upload to release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG: ${{ github.ref_name }}
+        run: |
+          set -euo pipefail
+          gh release upload "${TAG}" \
+            provenance.intoto.jsonl \
+            artifacts/* \
+            --repo "${GITHUB_REPOSITORY}" \
+            --clobber
