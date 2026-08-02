@@ -48,6 +48,13 @@ jobs:
           fetch-depth: 0
           persist-credentials: false
 
+      - name: Build sdist
+        # Before the wasm build, and `sdist` only (no `build`): the sdist is a
+        # source tarball, and building it first keeps the emscripten-configured
+        # CMake cache and emitted artifacts out of it. Compilation of this
+        # commit is already gated by the required CircleCI build job.
+        run: python3 setup.py sdist
+
       - name: Build webassembly (includes RNG shim regression gate)
         run: ./.circleci/build_emscripten.sh
 
@@ -62,9 +69,6 @@ jobs:
           mkdir -p .release
           npm pack --pack-destination .release
           ls -la .release
-
-      - name: Build sdist
-        run: python3 setup.py build sdist
 
       - name: Upload npm tarball (artifact handoff)
         # The publish jobs ship THESE bytes; they never rebuild.
