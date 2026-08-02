@@ -72,22 +72,20 @@ bool XmssPool::isAvailable() {
 }
 
 std::shared_ptr<XmssFast> XmssPool::prepareTree(size_t index) {
+    // Domain-separate each tree by appending the 1-based index (little-endian,
+    // minimal length) to the base seed and deriving the full 48-byte stake
+    // seed with SHAKE256. The previous derivation hashed to a 32-byte SHA-256
+    // and duplicated its first 16 bytes, so every stake seed satisfied
+    // seed[32..47] == seed[0..15] and carried only 256 bits of entropy.
+    // NOTE: this changes the trees derived from a given base seed; anything
+    // relying on the old derivation must regenerate its expected values.
     auto tmp_seed(_base_seed);
 
-    // FIXME: Check with Leon. The commented code is a proposal
-//    index++;
-//    while(index>0)
-//    {
-//        tmp_seed.push_back(static_cast<unsigned char &&>(index & 0xFF));
-//        index >>= 8;
-//    }
-//    auto stake_seed = shake256(48, tmp_seed);
+    auto idx = index + 1;
+    while (idx > 0) {
+        tmp_seed.push_back(static_cast<unsigned char>(idx & 0xFF));
+        idx >>= 8;
+    }
 
-    // This was the original approach in python
-    auto seed_str = bin2hstr(_base_seed) + std::to_string(index + 1);
-    auto stake_seed = sha2_256(str2bin(seed_str));
-    stake_seed.reserve(48);
-    std::copy_n(stake_seed.begin(), 16, std::back_inserter(stake_seed));
-
-    return std::make_shared<XmssFast>(stake_seed, _height);
+    return std::make_shared<XmssFast>(shake256(48, tmp_seed), _height);
 }

@@ -56,3 +56,23 @@ class TestMisc(TestCase):
 
         with self.assertRaises(ValueError):
             pyqrllib.hstr2bin('Z0')
+
+    def test_get_random_seed_is_nondeterministic(self):
+        # getRandomSeed is the library's only entropy-producing function.
+        # These assertions are designed to fail on a substitution to a
+        # deterministic source, not to measure entropy quality.
+        a = pyqrllib.getRandomSeed(48, '')
+        b = pyqrllib.getRandomSeed(48, '')
+
+        self.assertEqual(len(a), 48)
+        self.assertEqual(len(b), 48)
+
+        # Two draws must differ; equality means the entropy source is broken.
+        self.assertNotEqual(bytes(a), bytes(b))
+
+        self.assertNotEqual(bytes(a), bytes(48))
+
+        # Crude dead-RNG floor: a live source yields ~38 distinct byte values
+        # in 48 draws. This would not catch a seeded PRNG; the nondeterminism
+        # assertion above is the one that matters.
+        self.assertGreaterEqual(len(set(bytes(a))), 16)

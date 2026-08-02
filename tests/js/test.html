@@ -331,7 +331,12 @@
             // XMSS tests
             const xmssSuite = createTestSuite('XMSS Tree Operations');
             
-            tests.push(createTestCase(xmssSuite, 'Create tree from parameters', function() {
+            tests.push(createTestCase(xmssSuite, 'Create tree from parameters (fixed all-zero KAT vector)', function() {
+                // KAT: the all-zero seed below is a fixed known-answer test
+                // vector locking in the expected address. NEVER copy this
+                // pattern to create a real wallet — pass entropy from
+                // libqrl.getRandomSeed() (or crypto.getRandomValues) instead;
+                // see 'Create tree from secure random seed' below.
                 const seedVector = ToUint8Vector(new Uint8Array(48));
                 const height = 4;
                 const hashFunc = libqrl.eHashFunction.SHA2_256;
@@ -348,6 +353,23 @@
                     libqrl.bin2hstr(xmss.getAddressRaw()),
                     '00020096e5c065cf961565169e795803c1e60f521af7a3ea0326b42aa40c0e75390e5d8f4336de'
                 );
+            }));
+
+            tests.push(createTestCase(xmssSuite, 'Create tree from secure random seed', function() {
+                // This is the pattern consumers should copy: seed the tree
+                // from the library's fail-closed CSPRNG helper.
+                const height = 4;
+                const hashFunc = libqrl.eHashFunction.SHA2_256;
+
+                const xmssA = libqrl.Xmss.fromParameters(libqrl.getRandomSeed(), height, hashFunc);
+                const xmssB = libqrl.Xmss.fromParameters(libqrl.getRandomSeed(), height, hashFunc);
+
+                assertNotEqual(xmssA.getAddress(), xmssB.getAddress(),
+                    'two random wallets were identical — entropy source is broken');
+                assertNotEqual(
+                    xmssA.getHexSeed(),
+                    '000200000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000',
+                    'random wallet produced the all-zero seed');
             }));
 
             tests.push(createTestCase(xmssSuite, 'Create tree from hex seed', function() {
