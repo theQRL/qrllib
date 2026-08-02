@@ -2,7 +2,10 @@ version: 2.1
 jobs:
   build:
     docker:
-      - image: qrledger/qrl-docker-ci:noble
+      # qrledger/qrl-docker-ci:noble, hash-pinned 2026-08-02. Bump the digest
+      # deliberately when the image updates; build_emscripten.sh additionally
+      # pins the emcc version this image must provide.
+      - image: qrledger/qrl-docker-ci@sha256:9090f3bb83e85b59bc09d22f6c8be42a7f07b0b1ed8194f63c89ff84c1bed9b0
     steps:
       - checkout
       - run: git submodule update --init --recursive
@@ -12,7 +15,10 @@ jobs:
 
   test_rust:
       docker:
-        - image: qrledger/qrl-docker-ci:noble
+        # qrledger/qrl-docker-ci:noble, hash-pinned 2026-08-02. Bump the digest
+      # deliberately when the image updates; build_emscripten.sh additionally
+      # pins the emcc version this image must provide.
+      - image: qrledger/qrl-docker-ci@sha256:9090f3bb83e85b59bc09d22f6c8be42a7f07b0b1ed8194f63c89ff84c1bed9b0
       steps:
         - checkout
         - run:
@@ -26,7 +32,10 @@ jobs:
 
   test_python:
     docker:
-      - image: qrledger/qrl-docker-ci:noble
+      # qrledger/qrl-docker-ci:noble, hash-pinned 2026-08-02. Bump the digest
+      # deliberately when the image updates; build_emscripten.sh additionally
+      # pins the emcc version this image must provide.
+      - image: qrledger/qrl-docker-ci@sha256:9090f3bb83e85b59bc09d22f6c8be42a7f07b0b1ed8194f63c89ff84c1bed9b0
     steps:
       - checkout
       - run: git submodule update --init --recursive
@@ -35,7 +44,10 @@ jobs:
 
   test_golang:
     docker:
-      - image: qrledger/qrl-docker-ci:noble
+      # qrledger/qrl-docker-ci:noble, hash-pinned 2026-08-02. Bump the digest
+      # deliberately when the image updates; build_emscripten.sh additionally
+      # pins the emcc version this image must provide.
+      - image: qrledger/qrl-docker-ci@sha256:9090f3bb83e85b59bc09d22f6c8be42a7f07b0b1ed8194f63c89ff84c1bed9b0
     steps:
       - checkout
       - run: git submodule update --init --recursive
@@ -50,7 +62,10 @@ jobs:
 
   build_emscripten:
     docker:
-      - image: qrledger/qrl-docker-ci:noble
+      # qrledger/qrl-docker-ci:noble, hash-pinned 2026-08-02. Bump the digest
+      # deliberately when the image updates; build_emscripten.sh additionally
+      # pins the emcc version this image must provide.
+      - image: qrledger/qrl-docker-ci@sha256:9090f3bb83e85b59bc09d22f6c8be42a7f07b0b1ed8194f63c89ff84c1bed9b0
     environment:
       BASH_ENV: ".circleci/bash_env.sh"
     steps:
@@ -85,7 +100,10 @@ jobs:
 
   deploy_pypi:
     docker:
-      - image: qrledger/qrl-docker-ci:noble
+      # qrledger/qrl-docker-ci:noble, hash-pinned 2026-08-02. Bump the digest
+      # deliberately when the image updates; build_emscripten.sh additionally
+      # pins the emcc version this image must provide.
+      - image: qrledger/qrl-docker-ci@sha256:9090f3bb83e85b59bc09d22f6c8be42a7f07b0b1ed8194f63c89ff84c1bed9b0
     steps:
       - checkout
       - run: git submodule update --init --recursive
@@ -95,7 +113,10 @@ jobs:
 
   deploy_npm:
     docker:
-      - image: zondax/qrl-build-images:emscripten
+      # Same hash-pinned image as build_emscripten: the npm artifacts must be
+      # produced by the exact toolchain the RNG shim gates were verified
+      # against, not a separate build image.
+      - image: qrledger/qrl-docker-ci@sha256:9090f3bb83e85b59bc09d22f6c8be42a7f07b0b1ed8194f63c89ff84c1bed9b0
     environment:
       BASH_ENV: ".circleci/bash_env.sh"
     steps:

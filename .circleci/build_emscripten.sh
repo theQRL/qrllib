@@ -8,7 +8,10 @@ set -e
 # source file, so the version is asserted here and the emitted artifacts are
 # checked below regardless. Bump EXPECTED_EMSCRIPTEN_VERSION deliberately,
 # re-running the checks below, when upgrading the toolchain.
-EXPECTED_EMSCRIPTEN_VERSION="${EXPECTED_EMSCRIPTEN_VERSION:-4.0.22}"
+# Default matches the CI image (qrledger/qrl-docker-ci:noble). For local
+# builds with a different toolchain, override deliberately, e.g.:
+#   EXPECTED_EMSCRIPTEN_VERSION=4.0.22 ./.circleci/build_emscripten.sh
+EXPECTED_EMSCRIPTEN_VERSION="${EXPECTED_EMSCRIPTEN_VERSION:-6.0.5}"
 ACTUAL_EMSCRIPTEN_VERSION="$(emcc -dumpversion)"
 case "$ACTUAL_EMSCRIPTEN_VERSION" in
   "$EXPECTED_EMSCRIPTEN_VERSION"*) ;;
