@@ -58,4 +58,19 @@ TEST(QRL_Descriptor, checkAttributesFromBytes)
     EXPECT_EQ(expected_descriptor_bytes, desc.getBytes());
 }
 
+// eSignatureType only names XMSS (0) today, but the wire format reserves a
+// full nibble for it (bits 4-7 of byte 0), and getBytes() always encodes
+// whatever value is stored: (_signatureType << 4) | hashFunction. fromBytes()
+// must decode that same nibble back rather than only ever producing 0 -
+// see https://github.com/theQRL/qrllib/issues/182.
+TEST(QRL_Descriptor, signatureTypeNibbleRoundTrips)
+{
+    QRLDescriptor desc = QRLDescriptor::fromBytes({0x10, 0x00, 0x00});
+
+    EXPECT_EQ(1, static_cast<int>(desc.getSignatureType()));
+
+    std::vector<uint8_t> expected_descriptor_bytes{0x10, 0x00, 0x00};
+    EXPECT_EQ(expected_descriptor_bytes, desc.getBytes());
+}
+
 }

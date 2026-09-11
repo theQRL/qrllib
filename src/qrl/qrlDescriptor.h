@@ -65,7 +65,7 @@ public:
         }
 
         auto hashFunction = static_cast<eHashFunction>(bytes[0] & 0x0F);
-        auto signatureType = static_cast<eSignatureType>((bytes[0] >> 4) & 0xF0);
+        auto signatureType = static_cast<eSignatureType>((bytes[0] >> 4) & 0x0F);
         auto height = static_cast<uint8_t>((bytes[1] & 0x0F) << 1 );
         auto addrFormatType = static_cast<eAddrFormatType>((bytes[1] & 0xF0) >> 4 );
 
