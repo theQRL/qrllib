@@ -19,11 +19,13 @@ public:
 
     XmssFast(const TSEED& extended_seed);
 
+#ifndef SWIG
     XmssFast(const XmssFast& other);
     XmssFast(XmssFast&& other) noexcept;
     XmssFast& operator=(const XmssFast& other);
     XmssFast& operator=(XmssFast&& other) noexcept;
     ~XmssFast() override = default;
+#endif
 
     TSIGNATURE sign(const TMESSAGE& message) override;
 
