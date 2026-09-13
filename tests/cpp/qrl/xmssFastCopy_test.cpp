@@ -9,6 +9,9 @@
 
 namespace
 {
+// These tests deliberately duplicate signer state to compare deterministic
+// signatures of the same fixed message. Applications must never use copies to
+// sign different messages at the same OTS index.
 std::vector<unsigned char> testSeed()
 {
     std::vector<unsigned char> seed(48);
