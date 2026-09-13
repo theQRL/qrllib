@@ -33,11 +33,13 @@ emmake make
 # getRandomSeed.js appends a fail-closed WebCrypto seed helper to the qrl
 # bundles so consumers have a correct entropy call to reach for.
 POST_JS="--post-js src/jswrapper/getRandomSeed.js"
-emcc --bind CMakeFiles/jsqrl.dir/src/jswrapper/jsqrlwrapper.cpp.o libjsqrl.a libqrllib.a libshasha.a -s DISABLE_EXCEPTION_CATCHING=0 -O3 -s WASM=1 -s SINGLE_FILE=1 $POST_JS -o libjsqrl.js
-emcc --bind CMakeFiles/jsqrl.dir/src/jswrapper/jsqrlwrapper.cpp.o libjsqrl.a libqrllib.a libshasha.a -s DISABLE_EXCEPTION_CATCHING=0 -O3 -s WASM=1 $POST_JS -o web-libjsqrl.js
-emcc --bind CMakeFiles/jsqrl.dir/src/jswrapper/jsqrlwrapper.cpp.o libjsqrl.a libqrllib.a libshasha.a -s DISABLE_EXCEPTION_CATCHING=0 -O3 -s WASM=1 -s SINGLE_FILE=1 $POST_JS -o offline-libjsqrl.js
-emcc --bind CMakeFiles/jsdilithium.dir/src/jswrapper/jsdilwrapper.cpp.o libjsdilithium.a libdilithium.a libshasha.a -s DISABLE_EXCEPTION_CATCHING=0 -O3 -s WASM=1 -s SINGLE_FILE=1 -o offline-libjsdilithium.js
-emcc --bind CMakeFiles/jskyber.dir/src/jswrapper/jskybwrapper.cpp.o libjskyber.a libkyber.a libshasha.a -s DISABLE_EXCEPTION_CATCHING=0 -O3 -s WASM=1 -s SINGLE_FILE=1 -o offline-libjskyber.js
+# Explicit stack size: do not rely on the toolchain default.
+COMMON_FLAGS=(-s DISABLE_EXCEPTION_CATCHING=0 -O3 -s WASM=1 -s STACK_SIZE=5MB)
+emcc --bind CMakeFiles/jsqrl.dir/src/jswrapper/jsqrlwrapper.cpp.o libjsqrl.a libqrllib.a libshasha.a "${COMMON_FLAGS[@]}" -s SINGLE_FILE=1 $POST_JS -o libjsqrl.js
+emcc --bind CMakeFiles/jsqrl.dir/src/jswrapper/jsqrlwrapper.cpp.o libjsqrl.a libqrllib.a libshasha.a "${COMMON_FLAGS[@]}" $POST_JS -o web-libjsqrl.js
+emcc --bind CMakeFiles/jsqrl.dir/src/jswrapper/jsqrlwrapper.cpp.o libjsqrl.a libqrllib.a libshasha.a "${COMMON_FLAGS[@]}" -s SINGLE_FILE=1 $POST_JS -o offline-libjsqrl.js
+emcc --bind CMakeFiles/jsdilithium.dir/src/jswrapper/jsdilwrapper.cpp.o libjsdilithium.a libdilithium.a libshasha.a "${COMMON_FLAGS[@]}" -s SINGLE_FILE=1 -o offline-libjsdilithium.js
+emcc --bind CMakeFiles/jskyber.dir/src/jswrapper/jskybwrapper.cpp.o libjskyber.a libkyber.a libshasha.a "${COMMON_FLAGS[@]}" -s SINGLE_FILE=1 -o offline-libjskyber.js
 echo "QRLLIB=Module;" >> web-libjsqrl.js
 echo "QRLLIB=Module;" >> offline-libjsqrl.js
 echo "DILLIB=Module;" >> offline-libjsdilithium.js
