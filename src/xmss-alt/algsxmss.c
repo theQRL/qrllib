@@ -6,6 +6,7 @@
 #include "algsxmss.h"
 #include <cstdlib>
 #include <cstring>
+#include <memory>
 
 #include "hash.h"
 #include "hash_address.h"
@@ -126,7 +127,10 @@ static int compute_authpath_wots(eHashFunction hash_func,
     uint32_t h = params->h;
 
     const size_t tree_size = (size_t) 2 * ((size_t) 1 << h) * n;
-    unsigned char *tree = (unsigned char *) malloc(tree_size);
+    // SHA2 hashing can throw while building the tree; retain ownership on unwind.
+    std::unique_ptr<unsigned char, decltype(&free)> tree_owner(
+            static_cast<unsigned char *>(malloc(tree_size)), &free);
+    unsigned char *tree = tree_owner.get();
     if (tree == NULL) {
         return -1;
     }
@@ -170,7 +174,6 @@ static int compute_authpath_wots(eHashFunction hash_func,
     // copy root
     memcpy(root, tree + n, n);
 
-    free(tree);
     return 0;
 }
 

@@ -20,8 +20,13 @@ public:
     XmssFast(const TSEED& extended_seed);
 
 #ifndef SWIG
+    // Copying duplicates the private key and current OTS index. The copies do
+    // not coordinate index usage: never sign different messages at the same
+    // index through separate copies. Prefer moving to transfer a signer.
     XmssFast(const XmssFast& other);
     XmssFast(XmssFast&& other) noexcept;
+    // The same OTS restriction applies to assignment; allocation failure leaves
+    // the destination unchanged.
     XmssFast& operator=(const XmssFast& other);
     XmssFast& operator=(XmssFast&& other) noexcept;
     ~XmssFast() override = default;

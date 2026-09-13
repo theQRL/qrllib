@@ -113,17 +113,9 @@ XmssFast::XmssFast(XmssFast&& other) noexcept
 XmssFast& XmssFast::operator=(const XmssFast& other)
 {
     if (this != &other) {
-        XmssBase::operator=(other);
-        _state = other._state;
-        _stackoffset = other._stackoffset;
-        _stack = other._stack;
-        _stacklevels = other._stacklevels;
-        _auth = other._auth;
-        _keep = other._keep;
-        _treehash = other._treehash;
-        _th_nodes = other._th_nodes;
-        _retain = other._retain;
-        rebindState();
+        // Leave this signer intact if copying any buffer throws.
+        XmssFast copy(other);
+        *this = std::move(copy);
     }
     return *this;
 }

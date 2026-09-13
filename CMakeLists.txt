@@ -301,6 +301,15 @@ if (BUILD_TESTS)
     target_link_libraries(qrllib_test qrllib gtest_main)
     add_test(qrllib_test ${PROJECT_BINARY_DIR}/qrllib_test)
 
+    # Isolate allocation failure injection from the ordinary test executable.
+    add_executable(xmss_allocation_test
+            tests/cpp/memory/xmssAllocation_test.cpp)
+    target_include_directories(xmss_allocation_test PRIVATE
+            ${LIB_QRL_INCLUDES}
+            ${LIB_SHASHA_INCLUDES})
+    target_link_libraries(xmss_allocation_test qrllib gtest_main)
+    add_test(xmss_allocation_test ${PROJECT_BINARY_DIR}/xmss_allocation_test)
+
     ###########################
 
     add_executable(shasha_test

@@ -25,6 +25,30 @@ This library currently exposes the following functionality:
 |Golang     | :seedling: |     -       |    -     |
 |Java       |      -       |     -       |    -     |
 
+## XMSS signing state
+
+An XMSS one-time signature index must never be used to sign different messages
+with the same private key. Persist the signing index and coordinate its use
+across every process or object holding that key.
+
+Copying an `XmssFast` object, including copy assignment, duplicates its private
+key and current index. The objects advance independently. Never sign different
+messages at the same index through an original and its copy. Prefer moving the
+object when transferring signing ownership. Restoring the same seed into another
+signer also requires coordinating the index; it does not create a new key.
+
+Best practice is to keep signature consumption under user control, with the
+calling application maintaining an independent, persistent record of consumed
+OTS indices for each private key. Use that record to coordinate signing across
+all instances and processes, including after restoring a seed. Do not rely
+solely on a signer object's internal index to determine which signatures have
+already been consumed.
+
+The user or calling application controls when an index is marked as consumed.
+For example, an application may reserve and mark an index as consumed as soon
+as the user presses "sign", before attempting to sign, regardless of whether
+signing succeeds or fails.
+
 ## Installing
 
 #### Ubuntu
