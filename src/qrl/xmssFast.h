@@ -19,11 +19,20 @@ public:
 
     XmssFast(const TSEED& extended_seed);
 
+    XmssFast(const XmssFast& other);
+    XmssFast(XmssFast&& other) noexcept;
+    XmssFast& operator=(const XmssFast& other);
+    XmssFast& operator=(XmssFast&& other) noexcept;
+    ~XmssFast() override = default;
+
     TSIGNATURE sign(const TMESSAGE& message) override;
 
     unsigned int setIndex(unsigned int new_index) override;
 
 protected:
+    // Point the traversal state at this object's buffers.
+    void rebindState();
+
     bds_state _state;
     unsigned int _stackoffset = 0;
     std::vector<unsigned char> _stack;

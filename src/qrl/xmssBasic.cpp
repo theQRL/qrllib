@@ -50,14 +50,20 @@ XmssBasic::XmssBasic(const TSEED &seed,
 
 
 TSIGNATURE XmssBasic::sign(const TMESSAGE &message) {
+    if (getIndex() >= getNumberSignatures()) {
+        throw std::invalid_argument("index too high");
+    }
+
     auto signature = TSIGNATURE(getSignatureSize(params.wots_par.w), 0);
 
-    xmss_Signmsg(_hashFunction,
-                 &params,
-                 _sk.data(),
-                 signature.data(),
-                 static_cast<TMESSAGE>(message).data(),
-                 message.size());
+    if (xmss_Signmsg(_hashFunction,
+                     &params,
+                     _sk.data(),
+                     signature.data(),
+                     static_cast<TMESSAGE>(message).data(),
+                     message.size()) != 0) {
+        throw std::runtime_error("XMSS signing failed");
+    }
 
     return signature;
 }

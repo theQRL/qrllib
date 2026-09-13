@@ -34,6 +34,11 @@ public:
 
     XmssBase(const TSEED &extended_seed);
 
+    XmssBase(const XmssBase&) = default;
+    XmssBase(XmssBase&&) noexcept = default;
+    XmssBase& operator=(const XmssBase&) = default;
+    XmssBase& operator=(XmssBase&&) noexcept = default;
+
     virtual ~XmssBase() = default;
 
     virtual TSIGNATURE sign(const TMESSAGE &message) = 0;

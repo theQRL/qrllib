@@ -4,6 +4,7 @@
 // by Andreas Hülsing and Joost Rijneveld
 
 #include "algsxmss.h"
+#include <cstdlib>
 #include <cstring>
 
 #include "hash.h"
@@ -112,19 +113,23 @@ treehash(eHashFunction hash_func,
  * For more efficient algorithms see e.g. the chapter on hash-based signatures in Bernstein, Buchmann, Dahmen. "Post-quantum Cryptography", Springer 2009.
  * It returns the authpath in "authpath" with the node on level 0 at index 0.
  */
-static void compute_authpath_wots(eHashFunction hash_func,
-                                  unsigned char *root,
-                                  unsigned char *authpath,
-                                  unsigned long leaf_idx,
-                                  const unsigned char *sk_seed,
-                                  const xmss_params *params,
-                                  unsigned char *pub_seed,
-                                  uint32_t addr[8]) {
+static int compute_authpath_wots(eHashFunction hash_func,
+                                 unsigned char *root,
+                                 unsigned char *authpath,
+                                 unsigned long leaf_idx,
+                                 const unsigned char *sk_seed,
+                                 const xmss_params *params,
+                                 unsigned char *pub_seed,
+                                 uint32_t addr[8]) {
     uint32_t i, j, level;
     uint32_t n = params->n;
     uint32_t h = params->h;
 
-    unsigned char tree[2 * (1 << h) * n];
+    const size_t tree_size = (size_t) 2 * ((size_t) 1 << h) * n;
+    unsigned char *tree = (unsigned char *) malloc(tree_size);
+    if (tree == NULL) {
+        return -1;
+    }
 
     uint32_t ots_addr[8];
     uint32_t ltree_addr[8];
@@ -164,6 +169,9 @@ static void compute_authpath_wots(eHashFunction hash_func,
 
     // copy root
     memcpy(root, tree + n, n);
+
+    free(tree);
+    return 0;
 }
 
 
@@ -305,7 +313,9 @@ int xmss_Signmsg(eHashFunction hash_func,
     sig_msg += params->wots_par.keysize;
     sig_msg_len += params->wots_par.keysize;
 
-    compute_authpath_wots(hash_func, root, sig_msg, idx, sk_seed, params, pub_seed, ots_addr);
+    if (compute_authpath_wots(hash_func, root, sig_msg, idx, sk_seed, params, pub_seed, ots_addr) != 0) {
+        return -1;
+    }
     sig_msg += params->h * n;
     sig_msg_len += params->h * n;
 
