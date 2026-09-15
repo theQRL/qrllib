@@ -1,5 +1,5 @@
-[![PyPI version](https://img.shields.io/badge/PyPI-1.3.0-blue.svg)](https://pypi.org/project/pyqrllib/1.3.0/)
-[![npm version](https://img.shields.io/badge/npm-1.3.0-red.svg)](https://www.npmjs.com/package/qrllib/v/1.3.0)
+[![PyPI version](https://img.shields.io/pypi/v/pyqrllib.svg)](https://pypi.org/project/pyqrllib/)
+[![npm version](https://img.shields.io/npm/v/qrllib.svg)](https://www.npmjs.com/package/qrllib)
 [![CircleCI](https://circleci.com/gh/theQRL/qrllib.svg?style=svg)](https://circleci.com/gh/theQRL/qrllib)
 [![Codacy Badge](https://app.codacy.com/project/badge/Grade/23da5bbcb4fc4b6ba0c118f181aba24e)](https://www.codacy.com/gh/theQRL/qrllib/dashboard?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=theQRL/qrllib&amp;utm_campaign=Badge_Grade)
 [![MIT licensed](https://img.shields.io/badge/license-MIT-blue.svg)](https://raw.githubusercontent.com/theQRL/qrllib/master/LICENSE)

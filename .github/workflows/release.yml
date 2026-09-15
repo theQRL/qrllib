@@ -159,16 +159,17 @@ jobs:
           ok=""
           for attempt in 1 2 3 4 5 6 7 8 9 10; do
             served="$(npm view "qrllib@${VERSION}" version 2>/dev/null || true)"
-            if [ "${served}" = "${VERSION}" ]; then
-              echo "confirmed qrllib@${VERSION} on attempt ${attempt}"
+            latest="$(npm view qrllib version 2>/dev/null || true)"
+            if [ "${served}" = "${VERSION}" ] && [ "${latest}" = "${VERSION}" ]; then
+              echo "confirmed qrllib@${VERSION} and latest dist-tag on attempt ${attempt}"
               ok=1
               break
             fi
-            echo "not yet visible (attempt ${attempt}/10); retrying in 15s"
+            echo "not yet visible as latest (attempt ${attempt}/10); qrllib@${VERSION}=${served:-missing}, latest=${latest:-missing}; retrying in 15s"
             sleep 15
           done
           if [ -z "${ok}" ]; then
-            echo "::error::qrllib@${VERSION} is not served by the registry after 10 attempts"
+            echo "::error::qrllib@${VERSION} is not the latest npm release after 10 attempts"
             exit 1
           fi
 
@@ -192,6 +193,35 @@ jobs:
 
       - name: Publish
         uses: pypa/gh-action-pypi-publish@dc37677b2e1c63e2034f94d8a5b11f265b73ba33 # v1.14.2
+
+      - name: Verify release is live on PyPI
+        env:
+          TAG: ${{ github.ref_name }}
+        run: |
+          set -euo pipefail
+          VERSION="${TAG#v}"
+          ok=""
+          for attempt in 1 2 3 4 5 6 7 8 9 10; do
+            served="$(python3 - <<'PY'
+import json
+import urllib.request
+
+with urllib.request.urlopen("https://pypi.org/pypi/pyqrllib/json", timeout=20) as response:
+    print(json.load(response)["info"]["version"])
+PY
+)"
+            if [ "${served}" = "${VERSION}" ]; then
+              echo "confirmed pyqrllib==${VERSION} on attempt ${attempt}"
+              ok=1
+              break
+            fi
+            echo "not yet visible as latest (attempt ${attempt}/10); latest=${served:-missing}; retrying in 15s"
+            sleep 15
+          done
+          if [ -z "${ok}" ]; then
+            echo "::error::pyqrllib==${VERSION} is not the latest PyPI release after 10 attempts"
+            exit 1
+          fi
 
   # ===========================================================================
   # Supply Chain: SBOM, Checksums, GitHub Attestations
