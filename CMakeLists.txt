@@ -637,6 +637,20 @@ endif ()
 if (BUILD_GO)
     message(STATUS "Go wrapper enabled")
 
+    # All Go modules share one ELF symbol namespace. The candidate-era
+    # implementations reuse global names for incompatible types (for example,
+    # Dilithium and Kyber both define poly_ntt), so expose only the SWIG ABI.
+    set(QRLLIB_GO_EXPORT_MAP
+            ${CMAKE_CURRENT_SOURCE_DIR}/src/api/go-wrapper.exports)
+    function(qrllib_isolate_go_module target_name)
+        if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
+            set_property(TARGET ${target_name} APPEND_STRING PROPERTY LINK_FLAGS
+                    " -Wl,--version-script=${QRLLIB_GO_EXPORT_MAP}")
+            set_property(TARGET ${target_name} APPEND PROPERTY LINK_DEPENDS
+                    ${QRLLIB_GO_EXPORT_MAP})
+        endif()
+    endfunction()
+
     unset(CMAKE_LIBRARY_OUTPUT_DIRECTORY)
 
     if (NOT CMAKE_LIBRARY_OUTPUT_DIRECTORY)
@@ -667,6 +681,7 @@ if (BUILD_GO)
     SWIG_LINK_LIBRARIES(goqrllib
             shasha
             ${SWIG_LANG_LIBRARIES})
+    qrllib_isolate_go_module(${SWIG_MODULE_goqrllib_REAL_NAME})
 
     include_directories(
             ${LIB_QRL_INCLUDES}
@@ -724,6 +739,7 @@ if (BUILD_GO)
 
     SWIG_LINK_LIBRARIES(godilithium
             ${SWIG_LANG_LIBRARIES})
+    qrllib_isolate_go_module(${SWIG_MODULE_godilithium_REAL_NAME})
 
     add_custom_command(TARGET ${SWIG_MODULE_godilithium_REAL_NAME}
             POST_BUILD
@@ -768,6 +784,7 @@ if (BUILD_GO)
 
     SWIG_LINK_LIBRARIES(gokyber
             ${SWIG_LANG_LIBRARIES})
+    qrllib_isolate_go_module(${SWIG_MODULE_gokyber_REAL_NAME})
 
     add_custom_command(TARGET ${SWIG_MODULE_gokyber_REAL_NAME}
             POST_BUILD
