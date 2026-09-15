@@ -28,6 +28,9 @@ jobs:
     steps:
       - checkout
       - run:
+          name: Install CMake
+          command: command -v cmake >/dev/null 2>&1 || brew install cmake
+      - run:
           name: Verify native macOS arm64 executor
           command: |
             test "$(uname -s)" = "Darwin"

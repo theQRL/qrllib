@@ -78,7 +78,7 @@ SWIGEXPORT void HandleAllExceptions()
 namespace std {
 #if defined(SWIGGO)
   %extend vector<unsigned char> {
-    ~vector() {
+    ~vector<unsigned char>() {
       if ($self != nullptr) {
         qrllib::secure_memory::wipe(*$self);
       }
@@ -93,17 +93,23 @@ namespace std {
   %template(doubleVector) vector<double>;
   %template(_string_list) vector<string>;
 #if defined(SWIGGO)
-  %extend vector<vector<unsigned char>> {
-    ~vector() {
-      if ($self != nullptr) {
-        qrllib::secure_memory::wipe(*$self);
-      }
-      delete $self;
-    }
-  }
+  %ignore vector<vector<unsigned char> >::~vector;
 #endif
   %template(_string_list_list) vector<vector<unsigned char>>;
 }
+
+#if defined(SWIGGO)
+%rename(DeleteX_string_list_list) qrllib_go_delete_uchar_vector_list;
+%inline %{
+static void qrllib_go_delete_uchar_vector_list(
+        std::vector<std::vector<unsigned char>>* value) {
+    if (value != nullptr) {
+        qrllib::secure_memory::wipe(*value);
+    }
+    delete value;
+}
+%}
+#endif
 
 // Python converts each SWIG result in place and wipes it immediately after
 // creating the Python value. These typemaps follow the vector templates so

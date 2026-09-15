@@ -7,18 +7,18 @@
 
 namespace {
     TEST(DepsAltXmss, LeonsTest) {
-        unsigned char h = 4;
+        constexpr unsigned int h = 4;
         unsigned long long siglen = static_cast<unsigned long long int>(4 + 32 + 67 * 32 + h * 32);
 
         unsigned char pk[64];
         unsigned char sk[4+4*32];
-        unsigned int n = 48;
+        constexpr unsigned int n = 48;
         unsigned char seed[48];
 
         printf("before keygen");
 
         bds_state s;
-        unsigned int k = 2;
+        constexpr unsigned int k = 2;
         unsigned char stack[(h+1)*n];
         unsigned int stackoffset = 0;
         unsigned char stacklevels[h+1];

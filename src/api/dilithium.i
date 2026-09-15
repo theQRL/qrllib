@@ -71,7 +71,7 @@ SWIGEXPORT void HandleAllExceptions()
 namespace std {
 #if defined(SWIGGO)
   %extend vector<unsigned char> {
-    ~vector() {
+    ~vector<unsigned char>() {
       if ($self != nullptr) {
         qrllib::secure_memory::wipe(*$self);
       }
