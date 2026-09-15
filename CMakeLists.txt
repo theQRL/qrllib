@@ -639,15 +639,13 @@ if (BUILD_GO)
 
     # All Go modules share one ELF symbol namespace. The candidate-era
     # implementations reuse global names for incompatible types (for example,
-    # Dilithium and Kyber both define poly_ntt), so expose only the SWIG ABI.
-    set(QRLLIB_GO_EXPORT_MAP
-            ${CMAKE_CURRENT_SOURCE_DIR}/src/api/go-wrapper.exports)
+    # Dilithium and Kyber both define poly_ntt), so bind each module's internal
+    # calls to its own definitions. The symbols remain visible because cgo
+    # compiles the generated wrapper again when it links the final executable.
     function(qrllib_isolate_go_module target_name)
         if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
             set_property(TARGET ${target_name} APPEND_STRING PROPERTY LINK_FLAGS
-                    " -Wl,--version-script=${QRLLIB_GO_EXPORT_MAP}")
-            set_property(TARGET ${target_name} APPEND PROPERTY LINK_DEPENDS
-                    ${QRLLIB_GO_EXPORT_MAP})
+                    " -Wl,-Bsymbolic-functions")
         endif()
     endfunction()
 

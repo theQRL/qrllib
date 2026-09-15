@@ -1,6 +1,0 @@
-{
-  global:
-    _wrap_*;
-  local:
-    *;
-};
