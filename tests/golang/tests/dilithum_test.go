@@ -183,13 +183,19 @@ func TestDilithiumReference(t *testing.T) {
 	messageSigned := d.Sign(misc.BytesToUCharVector(message))
 	dataOut := misc.Int64ToUCharVector(messageSigned.Size())
 
-	dilithium.DilithiumSign_open(dataOut, messageSigned, d.GetPK())
+	if !dilithium.DilithiumSign_open(dataOut, messageSigned, d.GetPK()) {
+		t.Fatal("Failed to recover signed message")
+	}
 
 	messageOut := dilithium.DilithiumExtract_message(messageSigned)
 	signatureOut := dilithium.DilithiumExtract_signature(messageSigned)
 
-	if dataOut.Size() != 2715 {
-		t.Errorf("Incorrect dataOut Size\nExpected: %d\nFound: %d", 2715, dataOut.Size())
+	if dataOut.Size() != int64(len(message)) {
+		t.Errorf("Incorrect dataOut Size\nExpected: %d\nFound: %d", len(message), dataOut.Size())
+	}
+
+	if !reflect.DeepEqual(message, misc.UCharVectorToBytes(dataOut)) {
+		t.Errorf("Recovered message doesn't match\nExpected: %s\nFound: %s", message, misc.UCharVectorToBytes(dataOut))
 	}
 
 	if messageOut.Size() != int64(len(message)) {
@@ -223,13 +229,19 @@ func TestDilithiumReference2(t *testing.T) {
 	messageSigned := d.Sign(misc.BytesToUCharVector(message))
 	dataOut := misc.Int64ToUCharVector(messageSigned.Size())
 
-	dilithium.DilithiumSign_open(dataOut, messageSigned, d.GetPK())
+	if !dilithium.DilithiumSign_open(dataOut, messageSigned, d.GetPK()) {
+		t.Fatal("Failed to recover signed message")
+	}
 
 	messageOut := dilithium.DilithiumExtract_message(messageSigned)
 	signatureOut := dilithium.DilithiumExtract_signature(messageSigned)
 
-	if dataOut.Size() != 2715 {
-		t.Errorf("Incorrect dataOut Size\nExpected: %d\nFound: %d", 2715, dataOut.Size())
+	if dataOut.Size() != int64(len(message)) {
+		t.Errorf("Incorrect dataOut Size\nExpected: %d\nFound: %d", len(message), dataOut.Size())
+	}
+
+	if !reflect.DeepEqual(message, misc.UCharVectorToBytes(dataOut)) {
+		t.Errorf("Recovered message doesn't match\nExpected: %s\nFound: %s", message, misc.UCharVectorToBytes(dataOut))
 	}
 
 	if messageOut.Size() != int64(len(message)) {
