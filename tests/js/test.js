@@ -402,14 +402,55 @@ describe('libjsqrl', function () {
             assert.ok(signed.endsWith(messageHex));
 
             const opened = DILLIB.Dilithium.sign_open('', signed, pk);
-            assert.ok(opened.startsWith(messageHex), 'sign_open returns the message on a valid signature');
+            assert.equal(opened, messageHex, 'sign_open returns exactly the message on a valid signature');
 
             const tampered = signed.slice(0, 10) + (signed[10] === '0' ? '1' : '0') + signed.slice(11);
             const openedBad = DILLIB.Dilithium.sign_open('', tampered, pk);
-            assert.ok(!openedBad.startsWith(messageHex), 'a tampered signature must not open');
+            assert.equal(openedBad.length, 0, 'a tampered signature publishes no output');
 
             const reloaded = DILLIB.Dilithium.fromKeys(pk, sk);
             assert.equal(reloaded.sign(messageHex).length, signed.length);
+            assert.equal(typeof DILLIB.crypto_sign_keypair, 'function');
+            assert.equal(DILLIB.crypto_sign_keypair(0, 0), -1);
+        });
+
+        it('Dilithium rejects fixed-size boundary violations without exposing a live key', function () {
+            this.timeout(60000);
+            const signer = DILLIB.Dilithium.empty();
+            const pk = signer.getPK();
+            const sk = signer.getSK();
+            assert.equal(pk.length / 2, 1472);
+            assert.equal(sk.length / 2, 3504);
+
+            for (const bytes of [0, 1471, 1473]) {
+                assert.throws(() => DILLIB.Dilithium.fromKeys('00'.repeat(bytes), sk));
+            }
+            for (const bytes of [0, 3503, 3505]) {
+                assert.throws(() => DILLIB.Dilithium.fromKeys(pk, '00'.repeat(bytes)));
+            }
+
+            const messageHex = Buffer.from('boundary').toString('hex');
+            const signed = signer.sign(messageHex);
+            const emptySigned = signer.sign('');
+            assert.equal(emptySigned.length / 2, 2701);
+            assert.equal(DILLIB.Dilithium.sign_open('', emptySigned, pk).length, 0);
+            for (const bytes of [0, 1471, 1473]) {
+                const opened = DILLIB.Dilithium.sign_open('', signed, '00'.repeat(bytes));
+                assert.equal(opened.length, 0, 'invalid public key length published output');
+            }
+
+            for (const bytes of [0, 2700, 2701, 2702]) {
+                const extracted = DILLIB.Dilithium.extract_message('a5'.repeat(bytes));
+                const expectedBytes = bytes < 2701 ? 0 : bytes - 2701;
+                assert.equal(extracted.length / 2, expectedBytes,
+                    'extract_message returned the wrong boundary length');
+            }
+
+            // Keep this assertion redacted: if the old two-temporary iterator bug
+            // regresses, the failure reports only a byte count, never leaked bytes.
+            const exposed = DILLIB.Dilithium.extract_message('00');
+            assert.ok(exposed.length === 0,
+                'short extraction from a live signer published ' + (exposed.length / 2) + ' bytes');
         });
 
         it('Kyber KEM encapsulation and decapsulation agree', function () {
@@ -422,6 +463,49 @@ describe('libjsqrl', function () {
             assert.equal(bob.kem_decode(ct), true);
             assert.equal(alice.getMyKey().length / 2, 32);
             assert.equal(alice.getMyKey(), bob.getMyKey());
+            assert.equal(typeof KYBLIB.crypto_kem_keypair, 'function');
+            assert.equal(KYBLIB.crypto_kem_keypair(0, 0), -1);
+        });
+
+        it('Kyber enforces fixed input sizes and preserves implicit rejection', function () {
+            this.timeout(30000);
+            const recipient = KYBLIB.Kyber.empty();
+            const sender = KYBLIB.Kyber.empty();
+            const peerPk = recipient.getPK();
+
+            for (const bytes of [0, 1087, 1089]) {
+                assert.equal(sender.kem_encode(peerPk), true);
+                assert.equal(sender.kem_encode('00'.repeat(bytes)), false);
+                assert.equal(sender.getMyKey().length, 0, 'invalid peer key retained a shared key');
+                assert.equal(sender.getCypherText().length, 0, 'invalid peer key retained ciphertext');
+            }
+            assert.equal(sender.kem_encode(peerPk), true);
+            assert.throws(() => sender.kem_encode('0'));
+            assert.equal(sender.getMyKey().length, 0, 'peer-key parse failure retained a shared key');
+            assert.equal(sender.getCypherText().length, 0, 'peer-key parse failure retained ciphertext');
+
+            assert.equal(sender.kem_encode(peerPk), true);
+            const ciphertext = sender.getCypherText();
+            assert.equal(ciphertext.length / 2, 1152);
+            for (const bytes of [0, 1151, 1153]) {
+                assert.equal(recipient.kem_decode(ciphertext), true);
+                assert.equal(recipient.kem_decode('00'.repeat(bytes)), false);
+                assert.equal(recipient.getMyKey().length, 0,
+                    'invalid ciphertext retained a prior shared key');
+            }
+            assert.equal(recipient.kem_decode(ciphertext), true);
+            assert.throws(() => recipient.kem_decode('zz'));
+            assert.equal(recipient.getMyKey().length, 0,
+                'ciphertext parse failure retained a prior shared key');
+
+            assert.equal(recipient.kem_decode(ciphertext), true);
+            const acceptedKey = recipient.getMyKey();
+            const firstByte = ciphertext.slice(0, 2) === '00' ? '01' : '00';
+            const rejectedCiphertext = firstByte + ciphertext.slice(2);
+            assert.equal(recipient.kem_decode(rejectedCiphertext), false);
+            const rejectionKey = recipient.getMyKey();
+            assert.equal(rejectionKey.length / 2, 32);
+            assert.ok(rejectionKey !== acceptedKey, 'implicit rejection reused the accepted key');
         });
     });
 
@@ -526,14 +610,18 @@ describe('libjsqrl', function () {
     describe('Create a tree using XMSSBasic (variable WOTS for enqlave)', function() {
         let xmss_basic_object;
 
-        before(function() {
+        function createXmssBasicObject() {
             // KAT: fixed all-zero test vector locking in the expected PK and
             // signature below. NEVER copy this pattern for real key
             // generation — use libqrl.getRandomSeed() instead.
             const a = new Uint8Array(48); // null-seed
             const height = 6;
             const WOTSParamW = 4;
-            xmss_basic_object = libqrl.XmssBasic.fromParameters(ToUint8Vector(a), height, libqrl.eHashFunction.SHAKE_128, libqrl.eAddrFormatType.SHA256_2X, WOTSParamW );
+            return libqrl.XmssBasic.fromParameters(ToUint8Vector(a), height, libqrl.eHashFunction.SHAKE_128, libqrl.eAddrFormatType.SHA256_2X, WOTSParamW );
+        }
+
+        before(function() {
+            xmss_basic_object = createXmssBasicObject();
         });
 
         it('create xmss tree from parameters using WOTS param W = 4', function() {
@@ -548,14 +636,15 @@ describe('libjsqrl', function () {
             assert.equal(xmss_basic_object.getIndex(), 0);
             xmss_basic_object.setIndex(1);
             assert.equal(xmss_basic_object.getIndex(), 1);
-            xmss_basic_object.setIndex(0);
+            assert.throws(() => xmss_basic_object.setIndex(0));
+            assert.equal(xmss_basic_object.getIndex(), 1);
         });
         it('can correctly sign a message', function() {
             this.timeout(20000);
             const sig = '0000000010ddfc3f7bfb9c95cc48f4cfac1eff2cbb03c0d0647e41a84de8d3ecebfe0bc2376114b2a7043809d74e9f328971947302c85d73a8c757bd98356cb26d1822b1e2b46ac1b2d810e772dd6af8a4db3e3ba915956f0cbbf06799ef23bc181f6973a0dec9ab2327c9d7e5dcfa3c25db2013525efc5f7a90e4519f2d91506d83cab849ad8c3741754afbc92f8b83bcf97794658053da9dc94565adee8140272801a7f75b1ffd3930132f207c389b5b06695e9a2177581fa9a1f7b76e811dba4fb05664dce5819e0a0dbbf27225e74c746f19bd6fadc0caf7815333e6321f11e377daf558f2cf79dfcf4f16e67b53fd335e1e925cb7fe3763ec1619e523e9d194b25fe19a050534f8cbfb5f52b2f399c82554a1f5a6adeb8954060465244973839add319a116216e2fa1371239cf07556f06a941c1b0b66d83374d15f80e4e8ff14b5f60cafd8a0e4be4d145a837b5eec05a990ef8bfbaf497d72caea4b6489a359b9b3ceab6188970e739163ce5b55d8e5f1409ff3ae5f247f41c6ac637404e1b742b62e41c35d9e0461e1b61d7b3713ac159dd08cff8037980bff7bb7fce82802f2a2d9352d501224d1fa0db285ab3cd5956ba52d7c8dfbf9577f8568e67e8dbfc16af416ab9ae4274f55c77af1e5f0dc523f7fdab74ebf76cecfed2452f9de7fda4cf5c6545ad6de11d0639ce479b13cdbcedcf98b0e0cc8e2978139c7d9f0ca3734bfb7fb7e35cb54bcb0c44802389c8e31ffd6078be895e0e917bed98e48d032f8f4a8950a187156cdd97677bc725e639b73d45dc1e2c39af5ebb8b3072fef26af5814a1d02c45861ec2f9987350e339ea436572fd4fb74e27547a3ffb7959b92b5be3cf032183fba0f85befd35cf1147ac819cdec7397190a8060b17b8f45666d3546a3403414d1a79003b9b5de6b4edf7ceb761373424929616cf10c6b39932a478a4840ffbe1b53f2f2a0e3edacb1ab516c19df0cb17e54a5477aefd560b090bc7eda8239fd7dba50fd5b604e1474d4145edb07feb94d28060e570db210d80bd3f2905539f9c7da327f9297ffc989004656ec03e12b839e91d2455bd9ef04acaa4a37cd4d018b3a0dc11653ac679434631d7b27247feca64a8a05d971d4b3ddcc1d6afa7da28d6dd99e6ea185a7704b8cd0b856acc97629a3b4e6fc1e995d22475bd51401c29d2b5f63e949ab382305c57a63e8c1bd3141294fd760b0fcbdd275752b8ed914d90bc685ce572a83032f04f266d8bb14f450917c91cc83c7e460c61fe5b4f6cb65109f6dd55365ed157d1d1cf917852285dc5804c06d82cb753ed6ecc7d90b03c6395f4bcbfd448471388f313fae4c2bbf646f4ec28f70c15be663a552f96bb77866977cd04803d59622fc374827b62cf68d11b0ce114b7d916ea12304f54ef6d7f6222010f6666df77734e9a358fe5270fa1f405984f4e8432da01ffa7eb79f99ad532fa65ee69ba0c2f3e51a43e2565c2354522322c662a68168d549d65ba242da9dea38c8d35a41e3a008647f25616c68f915a4518ca4eae161ce66659f52aed1b8d25dc3c50ce3ca4eb253f791956ad601a2f6e3f9490ccd98ec8a5efce427889b50834ea5169189e4144c9563cdb3b76ecd043a6a15d4f85026b41f2de62da06319a9046fe68bd4c281ff4e81ba7527a91e04566603dbb065fa586392ec6b3bc2f7fdc71b2c7ec0bca9286a9cfd51b2e40d647ce3d8ae45d291f2a0730d308c567eeb7239057e0cbe8736415e9cebd7dae08ed642e7541e86b36da1c39a62e79d35c88a792c20f297a2dfacbc18fd799f9bec72c0e714eb6a33cfc6439e603d8e0aff5332e69d9301eecd85360c3a94ad1715bbd32b24b0eb36807393771745f389f0b5339d3494c42a0bfd7876cb36a82c6fe096e79cd3b4f5169f96d0ec4225039f13ff89753be03ee3cc57ac4c7592edad9ef815b76c3c638ee54c22ca2816fbef9742dff761eae2772dfef9f62de57529cd121e4d35c87dc6fbd1bb057ccb299b9a5090df02cd2fa7d380106e8d20d7b38ff740031de090c2898b645613b9b5d5d5e73e5f5773437a5943477116e2ce9f51f0a47b576cdf698dd5ebd23b006309128f9816cb3f8933573f38b88557efdb5ce09e5063f4d55e589a9c68fe1d0cdd3316e7b0e6edd2c9dcb40627476fbc46c32b7aab1b3d405decd7032c4c6e80df97d7aba9ed18cda4bfb131dd4c4f4442bd43bf99ee28476c90c728d917267cf6b9009777c91b81cab6cca4cc2200bdb031b68a0d84e40ca5f1162b08c241956792855ea29712c79ffbeb04df32d027fb68da3b664f3b3a872d881223c2a19b27666bfc589372db27ad7e3c8269bc21c4c2b842fd07c25f85efe8c7a933959c9712d298dc03d13c5d2f568ad499a6e6b44b03aa1c8b664339f0595b3c83d589cac947c92fafaed443a52ed55b8be54a841eccb526f6a344caca411e3df34c251811d49a0d19bdd851475555bb07028dbdd955fd60d1ca90c4991058345470ae46d5dd652debae7b832994b09764d55f0637870b309a1f7de9bb372d42d93d41a13db77f3cabd5f7be8166c10bf208ff5c08674e5124890410b7eea3789ed1c796368056ccc1870804e0e525cb35e68678fe09657462b0e8da22c1f8955ac38a1af976db5cd8e3c29a2f33c2921cec298d2b736d54367143abe3caffa4bc181bc8fa4da3052a3c04a2cf02d7100fd946bd8ab9ba38041bb999a00a5f50313d034db1a92ca4a128aa2bb855a827eca2fecd9c0002452fa0a03735f03f38751c0bc64ce04905071b76d9cce03eeec0eefe821a028f4d18dfb2e8d11563c6eec1b08ae78118ac3d62d79540ecec0e11f9fc5f51d2fb3869991a4c149c1499c61a29d219f5e8295ae87b188d1596a414907a70176741672f1bb7e9a18a2cf7d1cad5f81d15f7be3bef547d49fa086b3fcecc4f2071fcb2a957229e5da35302854b6aabb7b6b0206689a3dba0e5f761dac2b2ed9d0f69b779d5596ccc61f9e1dc2ba8beef215f9c8ea015fab33bef1b9c62d091280192d312c4acf34081f91e6a49665f7afac5aa0714a68dc3efa37861b8accb1d16700ed1dc3c43c9c67ceea797280a757aec9fb93d9150c8ac64f83751ce839d2a0097efa3444c89adf9647a0d3dc09d0b33bb9ea656496cc1a3bc2f89470a22e53fb51f9d1dde2364c5b36f87ff4e3e9dbccac7c6b0bec362e1269c5ff1eff368924f91f16bc78e6ee09cc637e9e381aefade77fdb5e902f4688a0c0e070cc34ec5fc5ad84bab4ad8736f11836d4431632c5326c59ea680e850efe9f2755beeb52f9ae87576df6b9b8d22c747bad88aee5a21c53b5253d2b013446118fe7cb6d83283965ed39f7bbd8776758c95550275afe2b8ff7549ebda338855835ffe37cb1c85f5a66aedf73246fcbe3bb9dfb48a3ff1b20531ff1bfaa1ce337c52e6912a5f12a3aa3a36b3f5d0c163e9d1d62ab3d9acf0be4ea9ee6899c2778661413e932230573a9bceecac205a85d5c927a4ac0fe6c5bca65e532b444f0b121df20c81c72536cb07f0ac8cd03d54d644e0fa4a9c293bd74259955531319e5bb0d5762435a4604b39d85b8ab87451a457fe6e01ea5d5318958a14d34d87b5026dba1685b64937940c0dede517fa224f3533efc69d1e45be3ba33f4effa645e44452bc8b9ff9248b37390dd14f5ed668c2b6339d285466d97774c9e98c216853270410a0e69eaa89bc108d9086cdae440355679c797712af127519a6195169b6914038ed21aad0f5dfa980bb3b2755cbe88369d0431bcf5c7d96824e1df9c35a4a164e676d6b0dcf65e28cb2d439033fc72115695ad3c7a47f0304efc61934cf27247e6f7b99cd8072fe83e406117c5acad001f7a846afaecc0849aa9361c688f2e524fef98e5498a7c9d085f4ac3a745a005105923e45eda66159ed58b7651b075ca925bed45714d4382212925fbea79d8ceed4f4c89e16f69372fbfeea7f5adc4389e47d391802620bd9543bacc9afe8132e78b408fd116206d8a6cf385bb687616369be08698d66ca713ca929fb4d1f9f4411e203040d4fd119f3220e808b00ac213138c5afba22ebcfe21713e071d83f1b43e4b5a8518e5fb62bb9344cbffa2d91c75a99bdd6654d7b921b0af41ba19382c13889fde15c4ab3a184b28aae2ba93c312119b15dd436ffee429e1b54b4e616bf5484e166cfa23efd952a8e0eada19caa7053b770730d4c951376fb1e6eb8551a360be0195efbf9a5f13fb5dd1771c8b868a2f4c50ba8383d07ce2834b10a36356fdb03d85e10af49e3a7e3c6e11ee13128d1fbd2f3b5f3818ebf8ab1635a63673346b3ee0257f170ad9c3ddee6633d12e189e816aa5f98343fbc3caa789fbbf68e3571139cffeb999430e238f2fe2e95927649804b7f64ff1666b589f6f4c87b8967bf8f5bd8aa7f29987009cb989f66f81693e5148ad40f9d2438295d3b31f5dcd388dcb036a3fccd975c0401425563b525804e14c866b62ed9ca9e848f156f5da438322a0fceb1d6a0aa59ff8c25380f03fcafc81de7341a4b93423ff2553969f687fe02fe39963e03817dc246ba7fadb653724c0d8a6b1805537bc36e285a7f23d6be7c247dc0eac355c571aa7f700cc1ac737994641edbec6a9b984e3447ef14ffd8a49a6c134b3b7ce913bdca18a5e35c2c8d7b94adc4df3401c3043f1bde4727560e2978de176e5311acf59dc2b97493f37b93587932a4d9a4315787311ed2e0b0cf634c6cb10649b74f36c210cb1804a5d21755bda186411e297dca1e6f9daa1fca1730096ece27ac13f7b2dadf92f5d377a7a0339c7d7e0d12727ed60582aac9037fe9b7b69dcbd9c7a366d29e30b349bc9870df7caf012a71a3a7a5554a61ad70807f85b7471529e50e52895ef5ea26dad5a95b563cc4bbc2f1ee08f50c422ecea2caacfb3fa7d1b53781f11f5e308765fd717aa1ae90d0e50b0368874bf53f65b4fcb02b8be1a5ec31d70c92099d72da2528aabd2319869dea80425b5039791a69ccfed6b5b9a67b8135697d6389652af6b55a5c42631ce7253aa1d97ad761b15bdffaf20a4e2b601ea60d0491b0eb6466b66e6fe878d718318d249a599fe052c796fd1e3badc730914ea59fa61942d222fcdf9ecc0f999c5066a388ed5b55f7ae8a4a4f0bec0f856adaa72a571977c28daf0fdb362a0e61d11abb655a30cac6abfa9d99f5b73aa3b293b4c3e6ea409c3532d3e9aeb483d2c39130434d6765967b41fe9334f4ff82a1eb336951c559d1312b946abcec3f45f14851e0f43fe51fbcd649168f619aa742952033589d71a3280b94e8761c487faebc247169aa7e8655871f1f9cd84345ebbfa47faac5022d1926b345c33d7353145259528e303ba01a5204a7347bcecd9974efd1cbfe4e94e2ba7aeafdc37391c2600983cd0336e84fd69751c9044439a5a5e05c58b74ed624d966d7e6f4f37d82e91bbe08391173df04389aacfb8c6d517ccf81a01bfdf5bde998214b7c59894b8740423631c7ef3e31a933535eb7732682dc9d8298c8b6a5cd698077f05edda37536656ccfdeeeee6039495d9f29459fece731804db76659a8f4366eca3e5916cbf4f273ad879e5c444deaf0ab876e2dee6127a2df11c5b086db9119b007de1cc330944f22cc0b0a8dea53db0155a56ec6b4ebd99a66341d4d1e04c03a38fd657ba3e36c9000853c71fb2e3646fe2312944b5aa9814b1b100a370458dc24c2ac82d1f69470876664fa3486315e356b2e0e264e4efdd0190e042eebe6fe8fa8368da905b631d080d93c5d97837e446a22110a8d9eee1b9cf0bd5f713198865282bcf6da762760a1014ab6f4ede10faaf8d7a548c0a89f1c8c19ff2de72d65ee9506da455678eaa165f5b0bf27ed4b1d7c091cbca8142001a21b72fb6ae2aa63343c6a02a7eb42ce5a99b8b7142e61706d4267d24ee5ac353f9ff1c2fdf309936808cb339e71bd7e8cb106ccd0663484af5573d0ccdb085fc7f915ea6c0e940ecea08eb32a034c537a124b3e3a168aff3d7680f344639af64d63b681be8650f9e982b4345fa0ef5c9af3f2e0d9ffdc6ff7078196301d81f532d769ae0c4e1597a5063d8994bcb139389f9b4193f5df702f93dada6e10a649f33340100a3723b9004125560193307e24e861502ae06a5cd33d1cf9e831ff9d20c8f5ed55134a6238122d053747f455c39a8c2de80f4835f5ff76de61f1ae0388ef4bc4469fcaf78ba97462bebe00d2c126fc3e6aab591eb3b566ab82273a410607b049b3b5acc924d34355220d1c06c1d46b0577319cf6623462c920f940efb5b6c5b15b5b1f119245cf90f74159a176a6fd67e1d65008379ff5c2f1';
             const message = '56454c9621c549cd05c112de496ba32f';
             const messageBin = ToUint8Vector(Buffer.from(message, 'hex'));
-            const signed = xmss_basic_object.sign(messageBin);
+            const signed = createXmssBasicObject().sign(messageBin);
             assert.equal(bytesToHex(binaryToBytes(signed)).toString(), sig);
         });
         it('can correctly verify a message', function() {
@@ -565,7 +654,6 @@ describe('libjsqrl', function () {
             const sigBin = ToUint8Vector(Buffer.from(sig, 'hex'));
             const message = '56454c9621c549cd05c112de496ba32f';
             const messageBin = ToUint8Vector(Buffer.from(message, 'hex'));
-            const signed = xmss_basic_object.sign(messageBin);
             const pk = ToUint8Vector(Buffer.from(xmss_basic_object.getPK(), 'hex'));
             const verification = libqrl.XmssBasic.verify(messageBin, sigBin, pk, 4);
             assert.equal(verification, true);
@@ -577,7 +665,6 @@ describe('libjsqrl', function () {
             const sigBin = ToUint8Vector(Buffer.from(sig, 'hex'));
             const message = '56454c9621c549cd05c112de496ba32f';
             const messageBin = ToUint8Vector(Buffer.from(message, 'hex'));
-            const signed = xmss_basic_object.sign(messageBin);
             const pk = ToUint8Vector(Buffer.from(xmss_basic_object.getPK(), 'hex'));
             const verification = libqrl.XmssBasic.verify(messageBin, sigBin, pk, 4);
             assert.notEqual(verification, true);

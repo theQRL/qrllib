@@ -7,6 +7,7 @@
 #include <xmss-alt/eHashFunctions.h>
 #include <xmss-alt/xmss_params.h>
 #include "qrlDescriptor.h"
+#include "xmssValidation.h"
 
 #define TSIGNATURE std::vector<uint8_t>
 #define TMESSAGE std::vector<uint8_t>
@@ -35,13 +36,13 @@ public:
     XmssBase(const TSEED &extended_seed);
 
 #ifndef SWIG
-    XmssBase(const XmssBase&) = default;
-    XmssBase(XmssBase&&) noexcept = default;
-    XmssBase& operator=(const XmssBase&) = default;
-    XmssBase& operator=(XmssBase&&) noexcept = default;
+    XmssBase(const XmssBase& other);
+    XmssBase(XmssBase&& other) noexcept;
+    XmssBase& operator=(const XmssBase& other);
+    XmssBase& operator=(XmssBase&& other) noexcept;
 #endif
 
-    virtual ~XmssBase() = default;
+    virtual ~XmssBase();
 
     virtual TSIGNATURE sign(const TMESSAGE &message) = 0;
 
@@ -75,7 +76,7 @@ public:
 
     std::vector<uint8_t> getAddress();
 
-    uint32_t getNumberSignatures() { return ((uint32_t) 1) << _height; }
+    uint32_t getNumberSignatures() { return XmssValidation::signatureCount(_height); }
 
     uint32_t getRemainingSignatures() { return getNumberSignatures() - getIndex(); }
 
@@ -94,6 +95,8 @@ public:
     unsigned int getPublicKeySize();
 
 protected:
+    void validateBaseState() const;
+
     xmss_params params;
 
     eHashFunction _hashFunction;

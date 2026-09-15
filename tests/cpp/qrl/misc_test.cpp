@@ -96,6 +96,13 @@ namespace {
         EXPECT_EQ(bin2hstr(data), "123456780102");
     }
 
+    TEST(Misc, mnemonic2bin_mixed_whitespace) {
+        const std::string input = "base\telbow\nknew\r\n  bag";
+        auto data = mnemonic2bin(input);
+
+        EXPECT_EQ(bin2hstr(data), "123456780102");
+    }
+
     TEST(Misc, mnemonic2bin_unknown) {
         std::string input = "base elbow knew unknown";
         EXPECT_THROW(mnemonic2bin(input), std::invalid_argument);

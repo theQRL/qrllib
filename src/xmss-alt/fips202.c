@@ -7,11 +7,26 @@
  * from https://twitter.com/tweetfips202
  * by Gilles Van Assche, Daniel J. Bernstein, and Peter Schwabe */
 
+#include <atomic>
 #include <cstdint>
+#include <cstring>
+#if defined(_MSC_VER)
+#include <intrin.h>
+#endif
 #include "fips202.h"
+#include <crypto/secure_memory.h>
 
 #define NROUNDS 24
 #define ROL(a, offset) (((a) << (offset)) ^ ((a) >> (64-(offset))))
+
+#if defined(_MSC_VER)
+#define QRLLIB_COMPILER_BARRIER() _ReadWriteBarrier()
+#elif defined(__GNUC__) || defined(__clang__)
+#define QRLLIB_COMPILER_BARRIER() __asm__ __volatile__("" ::: "memory")
+#else
+#define QRLLIB_COMPILER_BARRIER() \
+    std::atomic_signal_fence(std::memory_order_seq_cst)
+#endif
 
 static uint64_t load64(const unsigned char *x) {
     unsigned long long r = 0, i;
@@ -59,296 +74,83 @@ static const uint64_t KeccakF_RoundConstants[NROUNDS] =
                 (uint64_t) 0x8000000080008008ULL
         };
 
-void KeccakF1600_StatePermute(uint64_t *state) {
-    int round;
+static const unsigned int KeccakF_RotationOffsets[NROUNDS] =
+        {
+                1, 3, 6, 10, 15, 21, 28, 36,
+                45, 55, 2, 14, 27, 41, 56, 8,
+                25, 43, 62, 18, 39, 61, 20, 44
+        };
 
-    uint64_t Aba, Abe, Abi, Abo, Abu;
-    uint64_t Aga, Age, Agi, Ago, Agu;
-    uint64_t Aka, Ake, Aki, Ako, Aku;
-    uint64_t Ama, Ame, Ami, Amo, Amu;
-    uint64_t Asa, Ase, Asi, Aso, Asu;
-    uint64_t BCa, BCe, BCi, BCo, BCu;
-    uint64_t Da, De, Di, Do, Du;
-    uint64_t Eba, Ebe, Ebi, Ebo, Ebu;
-    uint64_t Ega, Ege, Egi, Ego, Egu;
-    uint64_t Eka, Eke, Eki, Eko, Eku;
-    uint64_t Ema, Eme, Emi, Emo, Emu;
-    uint64_t Esa, Ese, Esi, Eso, Esu;
+static const unsigned int KeccakF_PiLane[NROUNDS] =
+        {
+                10, 7, 11, 17, 18, 3, 5, 16,
+                8, 21, 24, 4, 15, 23, 19, 13,
+                12, 2, 20, 14, 22, 9, 6, 1
+        };
 
-    //copyFromState(A, state)
-    Aba = state[0];
-    Abe = state[1];
-    Abi = state[2];
-    Abo = state[3];
-    Abu = state[4];
-    Aga = state[5];
-    Age = state[6];
-    Agi = state[7];
-    Ago = state[8];
-    Agu = state[9];
-    Aka = state[10];
-    Ake = state[11];
-    Aki = state[12];
-    Ako = state[13];
-    Aku = state[14];
-    Ama = state[15];
-    Ame = state[16];
-    Ami = state[17];
-    Amo = state[18];
-    Amu = state[19];
-    Asa = state[20];
-    Ase = state[21];
-    Asi = state[22];
-    Aso = state[23];
-    Asu = state[24];
+#if defined(_MSC_VER)
+#define QRLLIB_XMSS_PERMUTE_ATTR __declspec(noinline)
+#elif defined(__GNUC__) || defined(__clang__)
+#define QRLLIB_XMSS_PERMUTE_ATTR __attribute__((noinline))
+#else
+#define QRLLIB_XMSS_PERMUTE_ATTR
+#endif
 
-    for (round = 0; round < NROUNDS; round += 2) {
-        //    prepareTheta
-        BCa = Aba ^ Aga ^ Aka ^ Ama ^ Asa;
-        BCe = Abe ^ Age ^ Ake ^ Ame ^ Ase;
-        BCi = Abi ^ Agi ^ Aki ^ Ami ^ Asi;
-        BCo = Abo ^ Ago ^ Ako ^ Amo ^ Aso;
-        BCu = Abu ^ Agu ^ Aku ^ Amu ^ Asu;
+QRLLIB_XMSS_PERMUTE_ATTR void KeccakF1600_StatePermute(uint64_t *state) {
+    // Keep a wiped home for the column parities.  The barriers bound each
+    // phase's live values; recheck optimized output when changing compilers to
+    // ensure that no anonymous, uncleansed spill slots have appeared.
+    uint64_t workspace[5]{};
+    qrllib::secure_memory::RangeWipeGuard workspace_guard(workspace,
+                                                          sizeof(workspace));
 
-        //thetaRhoPiChiIotaPrepareTheta(round  , A, E)
-        Da = BCu ^ ROL(BCe, 1);
-        De = BCa ^ ROL(BCi, 1);
-        Di = BCe ^ ROL(BCo, 1);
-        Do = BCi ^ ROL(BCu, 1);
-        Du = BCo ^ ROL(BCa, 1);
-
-        Aba ^= Da;
-        BCa = Aba;
-        Age ^= De;
-        BCe = ROL(Age, 44);
-        Aki ^= Di;
-        BCi = ROL(Aki, 43);
-        Amo ^= Do;
-        BCo = ROL(Amo, 21);
-        Asu ^= Du;
-        BCu = ROL(Asu, 14);
-        Eba = BCa ^ ((~BCe) & BCi);
-        Eba ^= (uint64_t) KeccakF_RoundConstants[round];
-        Ebe = BCe ^ ((~BCi) & BCo);
-        Ebi = BCi ^ ((~BCo) & BCu);
-        Ebo = BCo ^ ((~BCu) & BCa);
-        Ebu = BCu ^ ((~BCa) & BCe);
-
-        Abo ^= Do;
-        BCa = ROL(Abo, 28);
-        Agu ^= Du;
-        BCe = ROL(Agu, 20);
-        Aka ^= Da;
-        BCi = ROL(Aka, 3);
-        Ame ^= De;
-        BCo = ROL(Ame, 45);
-        Asi ^= Di;
-        BCu = ROL(Asi, 61);
-        Ega = BCa ^ ((~BCe) & BCi);
-        Ege = BCe ^ ((~BCi) & BCo);
-        Egi = BCi ^ ((~BCo) & BCu);
-        Ego = BCo ^ ((~BCu) & BCa);
-        Egu = BCu ^ ((~BCa) & BCe);
-
-        Abe ^= De;
-        BCa = ROL(Abe, 1);
-        Agi ^= Di;
-        BCe = ROL(Agi, 6);
-        Ako ^= Do;
-        BCi = ROL(Ako, 25);
-        Amu ^= Du;
-        BCo = ROL(Amu, 8);
-        Asa ^= Da;
-        BCu = ROL(Asa, 18);
-        Eka = BCa ^ ((~BCe) & BCi);
-        Eke = BCe ^ ((~BCi) & BCo);
-        Eki = BCi ^ ((~BCo) & BCu);
-        Eko = BCo ^ ((~BCu) & BCa);
-        Eku = BCu ^ ((~BCa) & BCe);
-
-        Abu ^= Du;
-        BCa = ROL(Abu, 27);
-        Aga ^= Da;
-        BCe = ROL(Aga, 36);
-        Ake ^= De;
-        BCi = ROL(Ake, 10);
-        Ami ^= Di;
-        BCo = ROL(Ami, 15);
-        Aso ^= Do;
-        BCu = ROL(Aso, 56);
-        Ema = BCa ^ ((~BCe) & BCi);
-        Eme = BCe ^ ((~BCi) & BCo);
-        Emi = BCi ^ ((~BCo) & BCu);
-        Emo = BCo ^ ((~BCu) & BCa);
-        Emu = BCu ^ ((~BCa) & BCe);
-
-        Abi ^= Di;
-        BCa = ROL(Abi, 62);
-        Ago ^= Do;
-        BCe = ROL(Ago, 55);
-        Aku ^= Du;
-        BCi = ROL(Aku, 39);
-        Ama ^= Da;
-        BCo = ROL(Ama, 41);
-        Ase ^= De;
-        BCu = ROL(Ase, 2);
-        Esa = BCa ^ ((~BCe) & BCi);
-        Ese = BCe ^ ((~BCi) & BCo);
-        Esi = BCi ^ ((~BCo) & BCu);
-        Eso = BCo ^ ((~BCu) & BCa);
-        Esu = BCu ^ ((~BCa) & BCe);
-
-        //    prepareTheta
-        BCa = Eba ^ Ega ^ Eka ^ Ema ^ Esa;
-        BCe = Ebe ^ Ege ^ Eke ^ Eme ^ Ese;
-        BCi = Ebi ^ Egi ^ Eki ^ Emi ^ Esi;
-        BCo = Ebo ^ Ego ^ Eko ^ Emo ^ Eso;
-        BCu = Ebu ^ Egu ^ Eku ^ Emu ^ Esu;
-
-        //thetaRhoPiChiIotaPrepareTheta(round+1, E, A)
-        Da = BCu ^ ROL(BCe, 1);
-        De = BCa ^ ROL(BCi, 1);
-        Di = BCe ^ ROL(BCo, 1);
-        Do = BCi ^ ROL(BCu, 1);
-        Du = BCo ^ ROL(BCa, 1);
-
-        Eba ^= Da;
-        BCa = Eba;
-        Ege ^= De;
-        BCe = ROL(Ege, 44);
-        Eki ^= Di;
-        BCi = ROL(Eki, 43);
-        Emo ^= Do;
-        BCo = ROL(Emo, 21);
-        Esu ^= Du;
-        BCu = ROL(Esu, 14);
-        Aba = BCa ^ ((~BCe) & BCi);
-        Aba ^= (uint64_t) KeccakF_RoundConstants[round + 1];
-        Abe = BCe ^ ((~BCi) & BCo);
-        Abi = BCi ^ ((~BCo) & BCu);
-        Abo = BCo ^ ((~BCu) & BCa);
-        Abu = BCu ^ ((~BCa) & BCe);
-
-        Ebo ^= Do;
-        BCa = ROL(Ebo, 28);
-        Egu ^= Du;
-        BCe = ROL(Egu, 20);
-        Eka ^= Da;
-        BCi = ROL(Eka, 3);
-        Eme ^= De;
-        BCo = ROL(Eme, 45);
-        Esi ^= Di;
-        BCu = ROL(Esi, 61);
-        Aga = BCa ^ ((~BCe) & BCi);
-        Age = BCe ^ ((~BCi) & BCo);
-        Agi = BCi ^ ((~BCo) & BCu);
-        Ago = BCo ^ ((~BCu) & BCa);
-        Agu = BCu ^ ((~BCa) & BCe);
-
-        Ebe ^= De;
-        BCa = ROL(Ebe, 1);
-        Egi ^= Di;
-        BCe = ROL(Egi, 6);
-        Eko ^= Do;
-        BCi = ROL(Eko, 25);
-        Emu ^= Du;
-        BCo = ROL(Emu, 8);
-        Esa ^= Da;
-        BCu = ROL(Esa, 18);
-        Aka = BCa ^ ((~BCe) & BCi);
-        Ake = BCe ^ ((~BCi) & BCo);
-        Aki = BCi ^ ((~BCo) & BCu);
-        Ako = BCo ^ ((~BCu) & BCa);
-        Aku = BCu ^ ((~BCa) & BCe);
-
-        Ebu ^= Du;
-        BCa = ROL(Ebu, 27);
-        Ega ^= Da;
-        BCe = ROL(Ega, 36);
-        Eke ^= De;
-        BCi = ROL(Eke, 10);
-        Emi ^= Di;
-        BCo = ROL(Emi, 15);
-        Eso ^= Do;
-        BCu = ROL(Eso, 56);
-        Ama = BCa ^ ((~BCe) & BCi);
-        Ame = BCe ^ ((~BCi) & BCo);
-        Ami = BCi ^ ((~BCo) & BCu);
-        Amo = BCo ^ ((~BCu) & BCa);
-        Amu = BCu ^ ((~BCa) & BCe);
-
-        Ebi ^= Di;
-        BCa = ROL(Ebi, 62);
-        Ego ^= Do;
-        BCe = ROL(Ego, 55);
-        Eku ^= Du;
-        BCi = ROL(Eku, 39);
-        Ema ^= Da;
-        BCo = ROL(Ema, 41);
-        Ese ^= De;
-        BCu = ROL(Ese, 2);
-        Asa = BCa ^ ((~BCe) & BCi);
-        Ase = BCe ^ ((~BCi) & BCo);
-        Asi = BCi ^ ((~BCo) & BCu);
-        Aso = BCo ^ ((~BCu) & BCa);
-        Asu = BCu ^ ((~BCa) & BCe);
-    }
-
-    //copyToState(state, A)
-    state[0] = Aba;
-    state[1] = Abe;
-    state[2] = Abi;
-    state[3] = Abo;
-    state[4] = Abu;
-    state[5] = Aga;
-    state[6] = Age;
-    state[7] = Agi;
-    state[8] = Ago;
-    state[9] = Agu;
-    state[10] = Aka;
-    state[11] = Ake;
-    state[12] = Aki;
-    state[13] = Ako;
-    state[14] = Aku;
-    state[15] = Ama;
-    state[16] = Ame;
-    state[17] = Ami;
-    state[18] = Amo;
-    state[19] = Amu;
-    state[20] = Asa;
-    state[21] = Ase;
-    state[22] = Asi;
-    state[23] = Aso;
-    state[24] = Asu;
-}
-
-static void keccak_absorb(uint64_t *s, unsigned int r,
-                          const unsigned char *m, unsigned long long mlen,
-                          unsigned char p) {
-    unsigned long long i;
-    unsigned char t[200];
-
-    while (mlen >= r) {
-        for (i = 0; i < r / 8; ++i) {
-            s[i] ^= load64(m + 8 * i);
+    for (unsigned int round = 0; round < NROUNDS; ++round) {
+        for (unsigned int column = 0; column < 5; ++column) {
+            workspace[column] = state[column] ^ state[column + 5]
+                                ^ state[column + 10] ^ state[column + 15]
+                                ^ state[column + 20];
         }
-        KeccakF1600_StatePermute(s);
-        mlen -= r;
-        m += r;
-    }
+        QRLLIB_COMPILER_BARRIER();
+        for (unsigned int column = 0; column < 5; ++column) {
+            const uint64_t mix = workspace[(column + 4) % 5]
+                                 ^ ROL(workspace[(column + 1) % 5], 1);
+            for (unsigned int lane = column; lane < 25; lane += 5) {
+                state[lane] ^= mix;
+            }
+        }
+        QRLLIB_COMPILER_BARRIER();
 
-    for (i = 0; i < r; ++i) {
-        t[i] = 0;
-    }
-    for (i = 0; i < mlen; ++i) {
-        t[i] = m[i];
-    }
-    t[i] = p;
-    t[r - 1] |= 128;
-    for (i = 0; i < r / 8; ++i) {
-        s[i] ^= load64(t + 8 * i);
+        uint64_t current = state[1];
+        for (unsigned int lane = 0; lane < NROUNDS; ++lane) {
+            const unsigned int destination = KeccakF_PiLane[lane];
+            const uint64_t next = state[destination];
+            state[destination] = ROL(current,
+                                     KeccakF_RotationOffsets[lane]);
+            current = next;
+        }
+        QRLLIB_COMPILER_BARRIER();
+
+        for (unsigned int row = 0; row < 25; row += 5) {
+            const uint64_t lane0 = state[row];
+            const uint64_t lane1 = state[row + 1];
+            const uint64_t lane2 = state[row + 2];
+            const uint64_t lane3 = state[row + 3];
+            const uint64_t lane4 = state[row + 4];
+            state[row] = lane0 ^ ((~lane1) & lane2);
+            state[row + 1] = lane1 ^ ((~lane2) & lane3);
+            state[row + 2] = lane2 ^ ((~lane3) & lane4);
+            state[row + 3] = lane3 ^ ((~lane4) & lane0);
+            state[row + 4] = lane4 ^ ((~lane0) & lane1);
+            QRLLIB_COMPILER_BARRIER();
+        }
+
+        state[0] ^= KeccakF_RoundConstants[round];
+        QRLLIB_COMPILER_BARRIER();
     }
 }
+
+#undef QRLLIB_XMSS_PERMUTE_ATTR
+#undef QRLLIB_COMPILER_BARRIER
 
 static void keccak_squeezeblocks(unsigned char *h, unsigned long long nblocks,
                                  uint64_t *s, unsigned int r) {
@@ -364,46 +166,114 @@ static void keccak_squeezeblocks(unsigned char *h, unsigned long long nblocks,
     }
 }
 
-void shake128(unsigned char *out, unsigned long long outlen,
-              const unsigned char *in, unsigned long long inlen) {
-    unsigned long long i;
-    uint64_t s[25];
-    unsigned char d[SHAKE128_RATE];
+static void keccak_absorb_segment(uint64_t *state,
+                                  unsigned int rate,
+                                  unsigned char *block,
+                                  unsigned int *used,
+                                  const unsigned char *input,
+                                  unsigned long long inputlen)
+{
+    while (inputlen != 0) {
+        if (*used == 0 && inputlen >= rate) {
+            for (unsigned int i = 0; i < rate / 8; ++i) {
+                state[i] ^= load64(input + 8 * i);
+            }
+            KeccakF1600_StatePermute(state);
+            input += rate;
+            inputlen -= rate;
+            continue;
+        }
 
-    for (i = 0; i < 25; i++) {
-        s[i] = 0;
-    }
-    keccak_absorb(s, SHAKE128_RATE, in, inlen, 0x1F);
+        const auto available = static_cast<unsigned long long>(rate - *used);
+        const auto take = inputlen < available ? inputlen : available;
+        std::memcpy(block + *used, input, static_cast<std::size_t>(take));
+        *used += static_cast<unsigned int>(take);
+        input += take;
+        inputlen -= take;
 
-    keccak_squeezeblocks(out, outlen / SHAKE128_RATE, s, SHAKE128_RATE);
-    out += (outlen / SHAKE128_RATE) * SHAKE128_RATE;
-
-    if (outlen % SHAKE128_RATE) {
-        keccak_squeezeblocks(d, 1, s, SHAKE128_RATE);
-        for (i = 0; i < outlen % SHAKE128_RATE; i++) {
-            out[i] = d[i];
+        if (*used == rate) {
+            for (unsigned int i = 0; i < rate / 8; ++i) {
+                state[i] ^= load64(block + 8 * i);
+            }
+            KeccakF1600_StatePermute(state);
+            std::memset(block, 0, rate);
+            *used = 0;
         }
     }
 }
 
+static void shake_three(unsigned char *out,
+                        unsigned long long outlen,
+                        unsigned int rate,
+                        const unsigned char *first,
+                        unsigned long long firstlen,
+                        const unsigned char *second,
+                        unsigned long long secondlen,
+                        const unsigned char *third,
+                        unsigned long long thirdlen)
+{
+    uint64_t state[25]{};
+    qrllib::secure_memory::RangeWipeGuard state_guard(state, sizeof(state));
+    unsigned char block[SHAKE128_RATE]{};
+    qrllib::secure_memory::RangeWipeGuard block_guard(block, sizeof(block));
+    unsigned int used = 0;
+
+    keccak_absorb_segment(state, rate, block, &used, first, firstlen);
+    keccak_absorb_segment(state, rate, block, &used, second, secondlen);
+    keccak_absorb_segment(state, rate, block, &used, third, thirdlen);
+
+    block[used] = 0x1f;
+    block[rate - 1] |= 0x80;
+    for (unsigned int i = 0; i < rate / 8; ++i) {
+        state[i] ^= load64(block + 8 * i);
+    }
+
+    const auto full_blocks = outlen / rate;
+    if (full_blocks != 0) {
+        keccak_squeezeblocks(out, full_blocks, state, rate);
+        out += full_blocks * rate;
+    }
+    if (outlen % rate != 0) {
+        std::memset(block, 0, rate);
+        keccak_squeezeblocks(block, 1, state, rate);
+        std::memcpy(out, block, static_cast<std::size_t>(outlen % rate));
+    }
+}
+
+void shake128(unsigned char *out, unsigned long long outlen,
+              const unsigned char *in, unsigned long long inlen) {
+    shake_three(out, outlen, SHAKE128_RATE,
+                in, inlen, nullptr, 0, nullptr, 0);
+}
+
+void shake128_3(unsigned char *out,
+                unsigned long long outlen,
+                const unsigned char *first,
+                unsigned long long firstlen,
+                const unsigned char *second,
+                unsigned long long secondlen,
+                const unsigned char *third,
+                unsigned long long thirdlen)
+{
+    shake_three(out, outlen, SHAKE128_RATE,
+                first, firstlen, second, secondlen, third, thirdlen);
+}
+
 void shake256(unsigned char *output, unsigned long long outlen,
               const unsigned char *in, unsigned long long inlen) {
-    unsigned long long i;
-    uint64_t s[25];
-    unsigned char d[SHAKE256_RATE];
+    shake_three(output, outlen, SHAKE256_RATE,
+                in, inlen, nullptr, 0, nullptr, 0);
+}
 
-    for (i = 0; i < 25; i++) {
-        s[i] = 0;
-    }
-    keccak_absorb(s, SHAKE256_RATE, in, inlen, 0x1F);
-
-    keccak_squeezeblocks(output, outlen / SHAKE256_RATE, s, SHAKE256_RATE);
-    output += (outlen / SHAKE256_RATE) * SHAKE256_RATE;
-
-    if (outlen % SHAKE256_RATE) {
-        keccak_squeezeblocks(d, 1, s, SHAKE256_RATE);
-        for (i = 0; i < outlen % SHAKE256_RATE; i++) {
-            output[i] = d[i];
-        }
-    }
+void shake256_3(unsigned char *out,
+                unsigned long long outlen,
+                const unsigned char *first,
+                unsigned long long firstlen,
+                const unsigned char *second,
+                unsigned long long secondlen,
+                const unsigned char *third,
+                unsigned long long thirdlen)
+{
+    shake_three(out, outlen, SHAKE256_RATE,
+                first, firstlen, second, secondlen, third, thirdlen);
 }

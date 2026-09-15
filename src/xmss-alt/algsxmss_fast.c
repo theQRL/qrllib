@@ -16,6 +16,30 @@ Public domain.
 #include "hash_address.h"
 #include <cstdio>
 #include <stdexcept>
+#include <crypto/secure_memory.h>
+
+namespace {
+constexpr size_t SUPPORTED_XMSS_N = 32;
+constexpr size_t SUPPORTED_XMSS_MAX_HEIGHT = 30;
+constexpr size_t SUPPORTED_XMSS_MAX_WOTS_KEYSIZE = 265 * SUPPORTED_XMSS_N;
+}
+
+static bool bds_state_has_storage(const bds_state *state,
+                                  const xmss_params *params)
+{
+    if (state == nullptr || params == nullptr || state->stack == nullptr ||
+        state->stacklevels == nullptr || state->auth == nullptr ||
+        state->keep == nullptr || state->treehash == nullptr ||
+        state->retain == nullptr) {
+        return false;
+    }
+    for (uint32_t i = 0; i < params->h - params->k; ++i) {
+        if (state->treehash[i].node == nullptr) {
+            return false;
+        }
+    }
+    return true;
+}
 
 /**
  * Used for pseudorandom keygeneration,
@@ -76,8 +100,17 @@ static void gen_leaf_wots(eHashFunction hash_func,
                           uint32_t ltree_addr[8],
                           uint32_t ots_addr[8])
 {
-    unsigned char seed[params->n];
-    unsigned char pk[params->wots_par.keysize];
+    if (!xmss_hash_function_is_valid(hash_func) ||
+        !xmss_params_are_valid(params) || leaf == nullptr ||
+        sk_seed == nullptr || pub_seed == nullptr || ltree_addr == nullptr ||
+        ots_addr == nullptr) {
+        return;
+    }
+    unsigned char seed[SUPPORTED_XMSS_N];
+    qrllib::secure_memory::RangeWipeGuard seed_guard(seed, sizeof(seed));
+    unsigned char pk[SUPPORTED_XMSS_MAX_WOTS_KEYSIZE];
+    qrllib::secure_memory::RangeWipeGuard pk_guard(
+            pk, params->wots_par.keysize);
 
     get_seed(hash_func, seed, sk_seed, params->n, ots_addr);
     wots_pkgen(hash_func, pk, seed, &(params->wots_par), pub_seed, ots_addr);
@@ -129,12 +162,12 @@ static void treehash_setup(eHashFunction hash_func,
     setType(node_addr, 2);
 
     uint32_t lastnode, i;
-    unsigned char stack[(height + 1) * n];
-    unsigned int stacklevels[height + 1];
+    unsigned char stack[(SUPPORTED_XMSS_MAX_HEIGHT + 1) * SUPPORTED_XMSS_N];
+    unsigned int stacklevels[SUPPORTED_XMSS_MAX_HEIGHT + 1];
     unsigned int stackoffset = 0;
     unsigned int nodeh;
 
-    lastnode = idx + (1 << height);
+    lastnode = idx + (1U << height);
 
     const int bound = h - k;
     for (i = 0; i < bound; i++) {
@@ -163,7 +196,7 @@ static void treehash_setup(eHashFunction hash_func,
                     memcpy(state->treehash[nodeh].node, stack + (stackoffset - 1) * n, n);
                 }
                 else if (nodeh >= h - k) {
-                    memcpy(state->retain + ((1 << (h - 1 - nodeh)) + nodeh - h + (((i >> nodeh) - 3) >> 1)) * n,
+                    memcpy(state->retain + ((1U << (h - 1 - nodeh)) + nodeh - h + (((i >> nodeh) - 3) >> 1)) * n,
                            stack + (stackoffset - 1) * n, n);
                 }
             }
@@ -203,7 +236,7 @@ treehash_update(eHashFunction hash_func,
     setLtreeADRS(ltree_addr, treehash->next_idx);
     setOTSADRS(ots_addr, treehash->next_idx);
 
-    unsigned char nodebuffer[2 * n];
+    unsigned char nodebuffer[2 * SUPPORTED_XMSS_N];
     unsigned int nodeheight = 0;
     gen_leaf_wots(hash_func, nodebuffer, sk_seed, params, pub_seed, ltree_addr, ots_addr);
     while (treehash->stackusage > 0 && state->stacklevels[state->stackoffset - 1] == nodeheight) {
@@ -240,7 +273,7 @@ validate_authpath(eHashFunction hash_func,
     unsigned int n = params->n;
 
     uint32_t i, j;
-    unsigned char buffer[2 * n];
+    unsigned char buffer[2 * SUPPORTED_XMSS_N];
 
     // If leafidx is odd (last bit = 1), current path element is a right child and authpath has to go to the left.
     // Otherwise, it is the other way around
@@ -343,7 +376,7 @@ static char bds_state_update(eHashFunction hash_func,
 
     int nodeh;
     int idx = state->next_leaf;
-    if (idx == 1 << XMSS_TREEHEIGHT) {
+    if (idx == 1U << XMSS_TREEHEIGHT) {
         return 1;
     }
 
@@ -384,7 +417,7 @@ static char bds_state_update(eHashFunction hash_func,
                 memcpy(state->treehash[nodeh].node, state->stack + (state->stackoffset - 1) * XMSS_N, XMSS_N);
             }
             else if (nodeh >= XMSS_TREEHEIGHT - XMSS_BDS_K) {
-                memcpy(state->retain + ((1 << (XMSS_TREEHEIGHT - 1 - nodeh)) + nodeh - XMSS_TREEHEIGHT
+                memcpy(state->retain + ((1U << (XMSS_TREEHEIGHT - 1 - nodeh)) + nodeh - XMSS_TREEHEIGHT
                     + (((idx >> nodeh) - 3) >> 1)) * XMSS_N, state->stack + (state->stackoffset - 1) * XMSS_N, XMSS_N);
             }
         }
@@ -427,7 +460,7 @@ bds_round(eHashFunction hash_func,
     unsigned int tau = h;
     unsigned int startidx;
     unsigned int offset, rowidx;
-    unsigned char buf[2 * n];
+    unsigned char buf[2 * SUPPORTED_XMSS_N];
 
     uint32_t ots_addr[8];
     uint32_t ltree_addr[8];
@@ -470,14 +503,14 @@ bds_round(eHashFunction hash_func,
                 memcpy(state->auth + i * n, state->treehash[i].node, n);
             }
             else {
-                offset = (1 << (h - 1 - i)) + i - h;
+                offset = (1U << (h - 1 - i)) + i - h;
                 rowidx = ((leaf_idx >> i) - 1) >> 1;
                 memcpy(state->auth + i * n, state->retain + (offset + rowidx) * n, n);
             }
         }
 
         for (i = 0; i < ((tau < h - k) ? tau : (h - k)); i++) {
-            startidx = leaf_idx + 1 + 3 * (1 << i);
+            startidx = leaf_idx + 1 + 3 * (1U << i);
             if (startidx < 1U << h) {
                 state->treehash[i].h = i;
                 state->treehash[i].next_idx = startidx;
@@ -500,8 +533,9 @@ int xmssfast_Genkeypair(eHashFunction hash_func,
                         bds_state *state,
                         unsigned char *seed)
 {
-    if (params->h & 1) {
-        printf("Not a valid h, only even numbers supported! Try again with an even number");
+    if (!xmss_hash_function_is_valid(hash_func) ||
+        !xmss_params_are_valid(params) || pk == nullptr || sk == nullptr ||
+        seed == nullptr || !bds_state_has_storage(state, params)) {
         return -1;
     }
     unsigned int k = params->k;
@@ -514,7 +548,8 @@ int xmssfast_Genkeypair(eHashFunction hash_func,
     sk[3] = 0;
 
     // Copy PUB_SEED to public key
-    unsigned char randombits[3 * n];
+    unsigned char randombits[3 * SUPPORTED_XMSS_N];
+    qrllib::secure_memory::RangeWipeGuard randombits_guard(randombits, sizeof(randombits));
     shake256(randombits, 3 * n, seed, 48);  // FIXME: seed size has been hardcoded to 48
     size_t rnd = 96;
     size_t pks = 32;
@@ -536,6 +571,11 @@ int xmssfast_update(eHashFunction hash_func,
                     bds_state *state,
                     uint32_t new_idx)
 {
+    if (!xmss_hash_function_is_valid(hash_func) ||
+        !xmss_params_are_valid(params) || sk == nullptr ||
+        !bds_state_has_storage(state, params)) {
+        return -1;
+    }
     const uint32_t num_elems = (1U << params->h);
 
     auto current_idx = static_cast<uint32_t>(
@@ -545,18 +585,25 @@ int xmssfast_update(eHashFunction hash_func,
         sk[3]);
 
     // Verify ranges
-    if (new_idx>=num_elems)
-    {
-        throw std::invalid_argument("index too high");
+    if (current_idx > num_elems || new_idx > num_elems ||
+        new_idx < current_idx) {
+        return -1;
     }
 
-    if (new_idx<current_idx)
-    {
-        throw std::invalid_argument("cannot rewind");
+    // The terminal value represents an exhausted key. No traversal state is
+    // needed after it is set, and running a final BDS round would step beyond
+    // the last leaf.
+    if (new_idx == num_elems) {
+        sk[0] = static_cast<unsigned char>((new_idx >> 24) & 255);
+        sk[1] = static_cast<unsigned char>((new_idx >> 16) & 255);
+        sk[2] = static_cast<unsigned char>((new_idx >> 8) & 255);
+        sk[3] = static_cast<unsigned char>(new_idx & 255);
+        return 0;
     }
 
     // Change index
     unsigned char sk_seed[32];
+    qrllib::secure_memory::RangeWipeGuard sk_seed_guard(sk_seed, sizeof(sk_seed));
     memcpy(sk_seed, sk + 4, 32);
 
     unsigned char pub_seed[32];
@@ -594,27 +641,39 @@ int xmssfast_Signmsg(eHashFunction hash_func,
                      unsigned char *sk,
                      bds_state *state,
                      unsigned char *sig_msg,
-                     unsigned char *msg,
+                     const unsigned char *msg,
                      unsigned long long msglen)
 {
+    if (!xmss_hash_function_is_valid(hash_func) ||
+        !xmss_params_are_valid(params) || sk == nullptr ||
+        sig_msg == nullptr || (msg == nullptr && msglen != 0) ||
+        !bds_state_has_storage(state, params)) {
+        return -1;
+    }
     unsigned int n = params->n;
     uint16_t i = 0;
 
     // Extract SK
     unsigned long idx =
         ((unsigned long) sk[0] << 24) | ((unsigned long) sk[1] << 16) | ((unsigned long) sk[2] << 8) | sk[3];
-    unsigned char sk_seed[n];
+    if (idx >= (uint32_t{1} << params->h)) {
+        return -1;
+    }
+    unsigned char sk_seed[SUPPORTED_XMSS_N];
+    qrllib::secure_memory::RangeWipeGuard sk_seed_guard(sk_seed, sizeof(sk_seed));
     memcpy(sk_seed, sk + 4, n);
-    unsigned char sk_prf[n];
+    unsigned char sk_prf[SUPPORTED_XMSS_N];
+    qrllib::secure_memory::RangeWipeGuard sk_prf_guard(sk_prf, sizeof(sk_prf));
     memcpy(sk_prf, sk + 4 + n, n);
-    unsigned char pub_seed[n];
+    unsigned char pub_seed[SUPPORTED_XMSS_N];
     memcpy(pub_seed, sk + 4 + 2 * n, n);
 
     // index as 32 bytes string
     unsigned char idx_bytes_32[32];
     to_byte(idx_bytes_32, idx, 32);
 
-    unsigned char hash_key[3 * n];
+    unsigned char hash_key[3 * SUPPORTED_XMSS_N];
+    qrllib::secure_memory::RangeWipeGuard hash_key_guard(hash_key, sizeof(hash_key));
 
     // Update SK
     sk[0] = ((idx + 1) >> 24) & 255;
@@ -625,9 +684,10 @@ int xmssfast_Signmsg(eHashFunction hash_func,
     // -- A productive implementation should use a file handle instead and write the updated secret key at this point!
     unsigned long long sig_msg_len;
     // Init working params
-    unsigned char R[n];
-    unsigned char msg_h[n];
-    unsigned char ots_seed[n];
+    unsigned char R[SUPPORTED_XMSS_N];
+    unsigned char msg_h[SUPPORTED_XMSS_N];
+    unsigned char ots_seed[SUPPORTED_XMSS_N];
+    qrllib::secure_memory::RangeWipeGuard ots_seed_guard(ots_seed, sizeof(ots_seed));
     uint32_t ots_addr[8] = {0, 0, 0, 0, 0, 0, 0, 0};
 
     // ---------------------------------
@@ -642,7 +702,9 @@ int xmssfast_Signmsg(eHashFunction hash_func,
     memcpy(hash_key + n, sk + 4 + 3 * n, n);
     to_byte(hash_key + 2 * n, idx, n);
     // Then use it for message digest
-    h_msg(hash_func, msg_h, msg, msglen, hash_key, 3 * n, n);
+    if (h_msg(hash_func, msg_h, msg, msglen, hash_key, 3 * n, n) != 0) {
+        return -1;
+    }
 
     // Start collecting signature
     sig_msg_len = 0;

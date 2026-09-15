@@ -3,12 +3,7 @@ use super::hash_address::{set_chain_adrs, set_hash_adrs};
 use super::hash_functions::HashFunction;
 use super::xmss_common::to_byte;
 use std::cmp::min;
-
-macro_rules! log2 {
-    ($val:expr, $type:ty) => {
-        ($val as f32).log2() as $type
-    };
-}
+use zeroize::Zeroizing;
 
 /**
  * WOTS parameter set
@@ -33,12 +28,21 @@ impl WOTSParams {
      * only n and w are required as inputs,
      * len, len_1, and len_2 are computed from those.
      *
-     * Assumes w is a power of 2
+     * Unsupported values produce an all-zero parameter set, matching the C++
+     * implementation. Public signing and verification entry points validate
+     * the result before use.
      */
     pub fn new(n: u32, w: u32) -> Self {
-        let log_w = log2!(w, u32);
-        let len_1 = ((8 * n) as f32 / (log_w as f32)).ceil() as u32;
-        let len_2 = (log2!(len_1 * (w - 1), f32) / log_w as f32).floor() as u32 + 1;
+        if n != 32 {
+            return Self::default();
+        }
+        let (log_w, len_1, len_2) = match w {
+            2 => (1, 256, 9),
+            4 => (2, 128, 5),
+            16 => (4, 64, 3),
+            256 => (8, 32, 2),
+            _ => return Self::default(),
+        };
         let len = len_1 + len_2;
         let keysize = len * n;
         WOTSParams {
@@ -96,9 +100,9 @@ fn gen_chain(
 
     for i in start..(min(start + steps, params.w)) {
         set_hash_adrs(addr, i);
-        let mut input = vec![0; out.len()];
+        let mut input = Zeroizing::new(vec![0; out.len()]);
         input.copy_from_slice(out);
-        hash_f(hash_func, out, &input, pub_seed, addr, params.n);
+        hash_f(hash_func, out, input.as_slice(), pub_seed, addr, params.n);
     }
 }
 
@@ -141,7 +145,7 @@ pub fn wots_pkgen(
 ) {
     expand_seed(hash_func, pk, sk, params.n, params.len);
     let pk_len = pk.len();
-    let mut pk_input = vec![0; pk_len];
+    let mut pk_input = Zeroizing::new(vec![0; pk_len]);
     pk_input.copy_from_slice(pk);
     for i in 0..params.len {
         set_chain_adrs(addr, i);
@@ -170,7 +174,7 @@ pub fn wots_sign(
     pub_seed: &[u8],
     addr: &mut [u32; 8],
 ) {
-    let mut basew: Vec<i32> = vec![0; params.len as usize];
+    let mut basew = Zeroizing::new(vec![0_i32; params.len as usize]);
     let mut csum = 0;
 
     base_w(&mut basew, params.len_1.try_into().unwrap(), msg, params);
@@ -179,14 +183,15 @@ pub fn wots_sign(
         csum += params.w as i32 - 1 - basew[i];
     }
 
-    csum = csum << (8 - ((params.len_2 * params.log_w) % 8));
+    let csum_shift = (8 - ((params.len_2 * params.log_w) % 8)) % 8;
+    csum <<= csum_shift;
 
     let len_2_bytes = ((params.len_2 * params.log_w) + 7) / 8;
 
-    let mut csum_bytes: Vec<u8> = vec![0; len_2_bytes as usize];
+    let mut csum_bytes = Zeroizing::new(vec![0; len_2_bytes as usize]);
     to_byte(&mut csum_bytes, csum.try_into().unwrap(), len_2_bytes);
 
-    let mut csum_basew: Vec<i32> = vec![0; params.len_2 as usize];
+    let mut csum_basew = Zeroizing::new(vec![0_i32; params.len_2 as usize]);
 
     base_w(&mut csum_basew, params.len_2 as usize, &csum_bytes, params);
 
@@ -200,12 +205,12 @@ pub fn wots_sign(
         set_chain_adrs(addr, i);
         let sig_length = sig.len();
         let sig_output_segment = sig.get_mut((i * params.n) as usize..sig_length).unwrap();
-        let mut sig_input_segment: Vec<u8> = vec![0; sig_output_segment.len()];
+        let mut sig_input_segment = Zeroizing::new(vec![0; sig_output_segment.len()]);
         sig_input_segment.copy_from_slice(sig_output_segment);
         gen_chain(
             hash_func,
             sig_output_segment,
-            &sig_input_segment,
+            sig_input_segment.as_slice(),
             0,
             basew[i as usize].try_into().unwrap(),
             params,
@@ -242,7 +247,8 @@ pub fn wots_pk_from_sig(
         csum += XMSS_WOTS_W - 1 - basew[i] as u32;
     }
 
-    csum = csum << (8 - ((XMSS_WOTS_LEN2 * XMSS_WOTS_LOG_W) % 8));
+    let csum_shift = (8 - ((XMSS_WOTS_LEN2 * XMSS_WOTS_LOG_W) % 8)) % 8;
+    csum <<= csum_shift;
 
     to_byte(
         &mut csum_bytes,

@@ -9,6 +9,7 @@
 
 #include "xmss-alt/eHashFunctions.h"
 #include "qrlAddressFormat.h"
+#include "xmssValidation.h"
 
 enum eSignatureType {
   XMSS = 0,
@@ -24,17 +25,25 @@ public:
             _hashFunction(hashFunction),
             _signatureType(signatureType),
             _height(height),
-            _addrFormatType(addrFormatType) { }
+            _addrFormatType(addrFormatType)
+    {
+        XmssValidation::hashFunction(hashFunction);
+        if (signatureType != eSignatureType::XMSS) {
+            throw std::invalid_argument("Unsupported signature type");
+        }
+        XmssValidation::height(height);
+        XmssValidation::addressFormat(addrFormatType);
+    }
 
-    eHashFunction getHashFunction() { return _hashFunction; }
+    eHashFunction getHashFunction() const { return _hashFunction; }
 
-    eSignatureType getSignatureType() { return _signatureType; }
+    eSignatureType getSignatureType() const { return _signatureType; }
 
-    uint8_t getHeight() { return _height; }
+    uint8_t getHeight() const { return _height; }
 
-    eAddrFormatType getAddrFormatType() { return _addrFormatType; }
+    eAddrFormatType getAddrFormatType() const { return _addrFormatType; }
 
-    static QRLDescriptor fromExtendedSeed(std::vector<uint8_t> extended_seed)
+    static QRLDescriptor fromExtendedSeed(const std::vector<uint8_t>& extended_seed)
     {
         if (extended_seed.size()!=51) {
             throw std::invalid_argument("Extended seed should be 51 bytes");
@@ -58,14 +67,12 @@ public:
                         extended_pk.cbegin()+QRLDescriptor::getSize()));
     }
 
-    static QRLDescriptor fromBytes(std::vector<uint8_t> bytes)
+    static QRLDescriptor fromBytes(const std::vector<uint8_t>& bytes)
     {
-        if (bytes.size()!=3) {
-            throw std::invalid_argument("Descriptor size should be 3 bytes");
-        }
+        XmssValidation::descriptorBytes(bytes);
 
         auto hashFunction = static_cast<eHashFunction>(bytes[0] & 0x0F);
-        auto signatureType = static_cast<eSignatureType>((bytes[0] >> 4) & 0xF0);
+        auto signatureType = static_cast<eSignatureType>((bytes[0] >> 4) & 0x0F);
         auto height = static_cast<uint8_t>((bytes[1] & 0x0F) << 1 );
         auto addrFormatType = static_cast<eAddrFormatType>((bytes[1] & 0xF0) >> 4 );
 
@@ -77,7 +84,7 @@ public:
         return 3;
     }
 
-    std::vector<uint8_t> getBytes()
+    std::vector<uint8_t> getBytes() const
     {
         // descriptor
         //  0.. 3   hash function    [ SHA2-256, SHA3, .. ]

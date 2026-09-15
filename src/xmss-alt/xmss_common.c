@@ -15,6 +15,70 @@ Public domain.
 #include <cstdio>
 #include <cstring>
 
+namespace {
+constexpr size_t SUPPORTED_XMSS_N = 32;
+constexpr size_t SUPPORTED_XMSS_MAX_WOTS_KEYSIZE = 265 * SUPPORTED_XMSS_N;
+}
+
+bool xmss_hash_function_is_valid(eHashFunction hash_func)
+{
+    return hash_func == eHashFunction::SHA2_256 ||
+           hash_func == eHashFunction::SHAKE_128 ||
+           hash_func == eHashFunction::SHAKE_256;
+}
+
+bool xmss_wots_params_are_valid(const wots_params *params)
+{
+    if (params == nullptr || params->n != 32) {
+        return false;
+    }
+
+    uint32_t expected_log_w = 0;
+    uint32_t expected_len_1 = 0;
+    uint32_t expected_len_2 = 0;
+    switch (params->w) {
+        case 2:
+            expected_log_w = 1;
+            expected_len_1 = 256;
+            expected_len_2 = 9;
+            break;
+        case 4:
+            expected_log_w = 2;
+            expected_len_1 = 128;
+            expected_len_2 = 5;
+            break;
+        case 16:
+            expected_log_w = 4;
+            expected_len_1 = 64;
+            expected_len_2 = 3;
+            break;
+        case 256:
+            expected_log_w = 8;
+            expected_len_1 = 32;
+            expected_len_2 = 2;
+            break;
+        default:
+            return false;
+    }
+
+    const uint32_t expected_len = expected_len_1 + expected_len_2;
+    return params->log_w == expected_log_w &&
+           params->len_1 == expected_len_1 &&
+           params->len_2 == expected_len_2 &&
+           params->len == expected_len &&
+           params->keysize == expected_len * params->n;
+}
+
+bool xmss_params_are_valid(const xmss_params *params)
+{
+    return params != nullptr &&
+           params->n == 32 &&
+           params->h >= 4 && params->h <= 30 &&
+           (params->h & 1U) == 0 &&
+           params->k == 2 &&
+           xmss_wots_params_are_valid(&params->wots_par);
+}
+
 void to_byte(unsigned char *out, unsigned long long in, uint32_t bytes) {
     int32_t i;
     for (i = bytes - 1; i >= 0; i--) {
@@ -28,7 +92,13 @@ void to_byte(unsigned char *out, unsigned long long in, uint32_t bytes) {
  * parameter names are the same as in the draft
  */
 void xmss_set_params(xmss_params *params, uint32_t n, uint32_t h, uint32_t w, uint32_t k) {
-    if (k >= h || k < 2 || (h - k) % 2) {
+    if (params == nullptr) {
+        return;
+    }
+    *params = {};
+    if (n != 32 || h < 4 || h > 30 || (h & 1U) != 0 ||
+        k != 2 || k >= h || (h - k) % 2 ||
+        (w != 2 && w != 4 && w != 16 && w != 256)) {
         fprintf(stderr, "For BDS traversal, H - K must be even, with H > K >= 2!\n");
         return;
     }
@@ -88,7 +158,7 @@ validate_authpath(eHashFunction hash_func,
                   const unsigned char *pub_seed,
                   uint32_t addr[8]) {
     uint32_t i, j;
-    unsigned char buffer[2 * n];
+    unsigned char buffer[2 * SUPPORTED_XMSS_N];
 
     // If leafidx is odd (last bit = 1), current path element is a right child and authpath has to go to the left.
     // Otherwise, it is the other way around
@@ -132,25 +202,30 @@ validate_authpath(eHashFunction hash_func,
  */
 int xmss_Verifysig(eHashFunction hash_func,
                    wots_params *wotsParams,
-                   unsigned char *msg,
+                   const unsigned char *msg,
                    const size_t msglen,
                    unsigned char *sig_msg,
                    const unsigned char *pk,
                    unsigned char h) {
 
-    auto sig_msg_len = static_cast<unsigned long long int>(4 + 32 + wotsParams->len * 32 + h * 32);
+    if (!xmss_hash_function_is_valid(hash_func) ||
+        !xmss_wots_params_are_valid(wotsParams) ||
+        (msg == nullptr && msglen != 0) || sig_msg == nullptr || pk == nullptr ||
+        h < 4 || h > 30 || (h & 1U) != 0) {
+        return -1;
+    }
 
     uint32_t n = wotsParams->n;
 
-    unsigned long long i, m_len;
+    unsigned long long i;
     unsigned long idx = 0;
-    unsigned char wots_pk[wotsParams->keysize];
-    unsigned char pkhash[n];
-    unsigned char root[n];
-    unsigned char msg_h[n];
-    unsigned char hash_key[3 * n];
+    unsigned char wots_pk[SUPPORTED_XMSS_MAX_WOTS_KEYSIZE];
+    unsigned char pkhash[SUPPORTED_XMSS_N];
+    unsigned char root[SUPPORTED_XMSS_N];
+    unsigned char msg_h[SUPPORTED_XMSS_N];
+    unsigned char hash_key[3 * SUPPORTED_XMSS_N];
 
-    unsigned char pub_seed[n];
+    unsigned char pub_seed[SUPPORTED_XMSS_N];
     memcpy(pub_seed, pk + n, n);
 
     // Init addresses
@@ -168,6 +243,10 @@ int xmss_Verifysig(eHashFunction hash_func,
           ((unsigned long) sig_msg[2] << 8) |
           sig_msg[3];
 
+    if (idx >= (uint32_t{1} << h)) {
+        return -1;
+    }
+
     // printf("verify:: idx = %lu\n", idx);
 
     // Generate hash key (R || root || idx)
@@ -176,13 +255,11 @@ int xmss_Verifysig(eHashFunction hash_func,
     to_byte(hash_key + 2 * n, idx, n);
 
     sig_msg += (n + 4);
-    sig_msg_len -= (n + 4);
 
     // hash message
-    unsigned long long tmp_sig_len = wotsParams->keysize + h * n;
-    m_len = sig_msg_len - tmp_sig_len;
-    //h_msg(msg_h, sig_msg + tmp_sig_len, m_len, hash_key, 3*n, n);
-    h_msg(hash_func, msg_h, msg, msglen, hash_key, 3 * n, n);
+    if (h_msg(hash_func, msg_h, msg, msglen, hash_key, 3 * n, n) != 0) {
+        return -1;
+    }
     //-----------------------
     // Verify signature
     //-----------------------
@@ -193,7 +270,6 @@ int xmss_Verifysig(eHashFunction hash_func,
     wots_pkFromSig(hash_func, wots_pk, sig_msg, msg_h, wotsParams, pub_seed, ots_addr);
 
     sig_msg += wotsParams->keysize;
-    sig_msg_len -= wotsParams->keysize;
 
     // Compute Ltree
     setLtreeADRS(ltree_addr, idx);
@@ -202,20 +278,12 @@ int xmss_Verifysig(eHashFunction hash_func,
     // Compute root
     validate_authpath(hash_func, root, pkhash, idx, sig_msg, n, h, pub_seed, node_addr);
 
-    sig_msg += h * n;
-    sig_msg_len -= h * n;
-
     for (i = 0; i < n; i++)
         if (root[i] != pk[i])
             goto fail;
 
-    for (i = 0; i < sig_msg_len; i++)
-        msg[i] = sig_msg[i];
-
     return 0;
 
     fail:
-    for (i = 0; i < sig_msg_len; i++)
-        msg[i] = 0;
     return -1;
 }

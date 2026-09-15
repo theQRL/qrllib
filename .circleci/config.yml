@@ -1,34 +1,154 @@
 version: 2.1
+
+commands:
+  verify_linux_x64:
+    steps:
+      - run:
+          name: Verify Linux x64 executor
+          command: |
+            test "$(uname -s)" = "Linux"
+            test "$(uname -m)" = "x86_64"
+
 jobs:
   build:
     docker:
       - image: qrledger/qrl-docker-ci@sha256:9090f3bb83e85b59bc09d22f6c8be42a7f07b0b1ed8194f63c89ff84c1bed9b0
     steps:
       - checkout
+      - verify_linux_x64
       - run: git submodule update --init --recursive
       - run: cmake -DBUILD_PYTHON=ON .
       - run: make
       - run: export GTEST_COLOR=1 && ctest -VV
 
+  test_native_macos_arm64:
+    macos:
+      xcode: 16.4.0
+    resource_class: m4pro.medium
+    steps:
+      - checkout
+      - run:
+          name: Install CMake
+          command: command -v cmake >/dev/null 2>&1 || brew install cmake
+      - run:
+          name: Verify native macOS arm64 executor
+          command: |
+            test "$(uname -s)" = "Darwin"
+            test "$(uname -m)" = "arm64"
+            cmake --version
+            /usr/bin/clang++ --version
+      - run:
+          name: Update submodules
+          command: git submodule update --init --recursive
+      - run:
+          name: Configure native tests
+          command: |
+            cmake -S . -B build-macos-arm64 \
+              -DBUILD_TESTS=ON \
+              -DBUILD_PYTHON=OFF \
+              -DBUILD_GO=OFF \
+              -DBUILD_WEBASSEMBLY=OFF \
+              -DCMAKE_BUILD_TYPE=Release \
+              -DCMAKE_C_COMPILER=/usr/bin/clang \
+              -DCMAKE_CXX_COMPILER=/usr/bin/clang++
+      - run:
+          name: Build native tests
+          command: cmake --build build-macos-arm64 --config Release --parallel 6
+      - run:
+          name: Run native tests
+          command: ctest --test-dir build-macos-arm64 --build-config Release --output-on-failure
+
+  test_native_windows_x64:
+    machine:
+      image: windows-server-2022-gui:current
+      shell: powershell.exe -ExecutionPolicy Bypass
+    resource_class: windows.medium
+    steps:
+      - checkout
+      - run:
+          name: Verify native Windows x64 executor
+          command: |
+            if (-not [Environment]::Is64BitOperatingSystem -or
+                -not [Environment]::Is64BitProcess -or
+                $env:PROCESSOR_ARCHITECTURE -ne 'AMD64') {
+              throw "Expected a native Windows x64 executor"
+            }
+            Write-Host "Windows architecture: $env:PROCESSOR_ARCHITECTURE"
+      - run:
+          name: Update submodules
+          command: |
+            git submodule update --init --recursive
+            if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - run:
+          name: Locate CMake
+          command: |
+            $cmake = Get-Command cmake.exe -ErrorAction SilentlyContinue
+            if ($null -eq $cmake) {
+              choco install cmake --yes --no-progress --installargs 'ADD_CMAKE_TO_PATH=System'
+              if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+              $cmakePath = 'C:\Program Files\CMake\bin\cmake.exe'
+            } else {
+              $cmakePath = $cmake.Source
+            }
+            if (-not (Test-Path $cmakePath)) {
+              throw "CMake executable was not found at $cmakePath"
+            }
+            $cmakePath | Set-Content .circleci\windows-cmake-path.txt
+            & $cmakePath --version
+            if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - run:
+          name: Configure native tests
+          command: |
+            $cmake = Get-Content .circleci\windows-cmake-path.txt
+            & $cmake -S . -B build-windows-x64 `
+              -G "Visual Studio 17 2022" `
+              -A x64 `
+              -DBUILD_TESTS=ON `
+              -DBUILD_PYTHON=OFF `
+              -DBUILD_GO=OFF `
+              -DBUILD_WEBASSEMBLY=OFF
+            if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - run:
+          name: Build Windows-compatible native tests
+          command: |
+            $cmake = Get-Content .circleci\windows-cmake-path.txt
+            & $cmake --build build-windows-x64 `
+              --config Release `
+              --parallel 4 `
+              --target qrllib_test xmss_allocation_test shasha_test
+            if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - run:
+          name: Run Windows-compatible native tests
+          command: |
+            $cmake = Get-Content .circleci\windows-cmake-path.txt
+            $ctest = Join-Path (Split-Path $cmake -Parent) 'ctest.exe'
+            & $ctest --test-dir build-windows-x64 `
+              -C Release `
+              --output-on-failure `
+              -R '^(qrllib_test|xmss_allocation_test|shasha_test)$'
+            if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
   test_rust:
-      docker:
-        - image: qrledger/qrl-docker-ci@sha256:9090f3bb83e85b59bc09d22f6c8be42a7f07b0b1ed8194f63c89ff84c1bed9b0
-      steps:
-        - checkout
-        - run:
-            name: Setup Rust environment
-            command: |
-              source ~/.cargo/env || true
-              rustc --version
-              cargo --version
-        - run: source ~/.cargo/env && cargo build -vv
-        - run: source ~/.cargo/env && cargo test
+    docker:
+      - image: qrledger/qrl-docker-ci@sha256:9090f3bb83e85b59bc09d22f6c8be42a7f07b0b1ed8194f63c89ff84c1bed9b0
+    steps:
+      - checkout
+      - verify_linux_x64
+      - run:
+          name: Setup Rust environment
+          command: |
+            source ~/.cargo/env || true
+            rustc --version
+            cargo --version
+      - run: source ~/.cargo/env && cargo build -vv
+      - run: source ~/.cargo/env && cargo test
 
   test_python:
     docker:
       - image: qrledger/qrl-docker-ci@sha256:9090f3bb83e85b59bc09d22f6c8be42a7f07b0b1ed8194f63c89ff84c1bed9b0
     steps:
       - checkout
+      - verify_linux_x64
       - run: git submodule update --init --recursive
       - run: pip install pytest pytest-cov
       - run: chown $(whoami) *.sh && chmod +x *.sh && ./ci_test.sh
@@ -38,6 +158,7 @@ jobs:
       - image: qrledger/qrl-docker-ci@sha256:9090f3bb83e85b59bc09d22f6c8be42a7f07b0b1ed8194f63c89ff84c1bed9b0
     steps:
       - checkout
+      - verify_linux_x64
       - run: git submodule update --init --recursive
       - run: |
           if [ ! -f go.mod ]; then
@@ -55,6 +176,7 @@ jobs:
       BASH_ENV: ".circleci/bash_env.sh"
     steps:
       - checkout
+      - verify_linux_x64
       - run:
           name: Update submodules
           command: git submodule update --init --recursive
@@ -88,6 +210,16 @@ workflows:
   build_all:
     jobs:
       - build:
+          filters:
+            tags:
+              only: /.*/
+
+      - test_native_macos_arm64:
+          filters:
+            tags:
+              only: /.*/
+
+      - test_native_windows_x64:
           filters:
             tags:
               only: /.*/

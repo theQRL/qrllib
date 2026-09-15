@@ -27,5 +27,5 @@ int xmss_Signmsg(eHashFunction hash_func,
                  xmss_params *params,
                  unsigned char *sk,
                  unsigned char *sig_msg,
-                 unsigned char *msg,
+                 const unsigned char *msg,
                  size_t msglen);

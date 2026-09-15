@@ -6,8 +6,10 @@ use crate::rust_wrapper::xmss_alt::algsxmss::xmss_gen_keypair;
 use crate::rust_wrapper::xmss_alt::algsxmss::xmss_sign_msg;
 use crate::rust_wrapper::{
     errors::QRLError,
+    qrl::xmss_validation::{signature_count, BDS_K, N},
     xmss_alt::{hash_functions::HashFunction, xmss_common::XMSSParams},
 };
+use zeroize::Zeroizing;
 
 pub struct XMSSBasic {
     base: XMSSBase,
@@ -16,7 +18,7 @@ pub struct XMSSBasic {
 
 impl XMSSBasic {
     pub fn new(
-        mut seed: TSEED,
+        seed: TSEED,
         height: u8,
         hash_function: HashFunction,
         addr_format_type: AddrFormatType,
@@ -33,8 +35,7 @@ impl XMSSBasic {
         //    32 pub_seed
         //    32 root
 
-        let mut sk: TKEY = vec![0; Self::SECRET_KEY_SIZE];
-        let mut tmp: TKEY = vec![0; 64];
+        let mut seed = Zeroizing::new(seed);
 
         // FIXME: At the moment, the lib takes 48 bytes from the seed vector
         if seed.len() != 48 {
@@ -43,21 +44,34 @@ impl XMSSBasic {
             ));
         }
 
-        let k: u32 = 2;
+        let k: u32 = BDS_K;
         let w: u32 = wots_param_w_option.unwrap_or(16);
-        let n: u32 = 32;
+        let n: u32 = N;
 
-        if k >= height as u32 || (height as u32 - k) % 2 != 0 {
+        let params = XMSSParams::new(n, height as u32, w, k)?;
+        let mut sk = Zeroizing::new(vec![0; Self::SECRET_KEY_SIZE]);
+        let mut tmp = Zeroizing::new(vec![0; 64]);
+
+        let status = xmss_gen_keypair(
+            &hash_function,
+            &params,
+            tmp.as_mut_slice(),
+            sk.as_mut_slice(),
+            seed.as_mut_slice(),
+        );
+        if status != 0 {
             return Err(QRLError::InvalidArgument(
-                "For BDS traversal, H - K must be even, with H > K >= 2!".to_owned(),
+                "XMSS key generation failed".to_owned(),
             ));
         }
 
-        let params = XMSSParams::new(n, height as u32, w, k)?;
-
-        xmss_gen_keypair(&hash_function, &params, &mut tmp, &mut sk, &mut seed);
-
-        let base = XMSSBase::new(hash_function, addr_format_type, height, sk, seed)?;
+        let base = XMSSBase::new(
+            hash_function,
+            addr_format_type,
+            height,
+            std::mem::take(&mut *sk),
+            std::mem::take(&mut *seed),
+        )?;
         Ok(Self { base, params })
     }
 }
@@ -90,18 +104,35 @@ impl XMSSBaseTrait for XMSSBasic {
 
 impl Sign for XMSSBasic {
     fn sign(&mut self, message: &TMESSAGE) -> Result<TSIGNATURE, QRLError> {
-        let mut signature: TSIGNATURE =
-            vec![0; self.get_signature_size(Some(self.params.wots_par.w)) as usize];
+        self.base.validate_state()?;
+        if self.params.n != N || self.params.h != self.base.height as u32 || self.params.k != BDS_K
+        {
+            return Err(QRLError::InvalidArgument(
+                "Invalid XMSS parameter state".to_owned(),
+            ));
+        }
+        if self.base.get_index() >= signature_count(self.base.height)? {
+            return Err(QRLError::InvalidArgument("index too high".to_owned()));
+        }
+
+        let mut signature = Zeroizing::new(vec![
+            0;
+            self.get_signature_size(Some(self.params.wots_par.w))
+                as usize
+        ]);
         let message_len = message.len();
-        xmss_sign_msg(
+        let status = xmss_sign_msg(
             &self.base.hash_function,
             &self.params,
             &mut self.base.sk,
-            &mut signature,
+            signature.as_mut_slice(),
             message,
             message_len,
         );
+        if status != 0 {
+            return Err(QRLError::InvalidArgument("XMSS signing failed".to_owned()));
+        }
 
-        return Ok(signature);
+        Ok(std::mem::take(&mut *signature))
     }
 }

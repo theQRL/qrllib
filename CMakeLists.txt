@@ -38,12 +38,14 @@ if(APPLE AND CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
     endif()
 endif()
 
-if(${CMAKE_VERSION} VERSION_GREATER "3.10.3")
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pthread")
-    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -pthread")
+if(NOT MSVC)
+    if(${CMAKE_VERSION} VERSION_GREATER "3.10.3")
+        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pthread")
+        set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -pthread")
+    endif()
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIC -Wno-deprecated-declarations")
+    set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS} -O3 -Wno-deprecated")
 endif()
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIC -Wno-deprecated-declarations")
-set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS} -O3 -Wno-deprecated")
 if(${CMAKE_VERSION} VERSION_GREATER "3.13")
     cmake_policy(SET CMP0078 OLD)
 endif()
@@ -56,6 +58,20 @@ option(BUILD_TESTS "Enable tests" ON)
 option(BUILD_GO "Enable go wrapper" OFF)
 option(BUILD_PYTHON "Enable python wrapper" OFF)
 option(BUILD_WEBASSEMBLY "Enable emscripten build" OFF)
+
+if (NOT WIN32 AND NOT BUILD_WEBASSEMBLY)
+    include(CheckSymbolExists)
+    check_symbol_exists(explicit_bzero "string.h" QRLLIB_HAVE_EXPLICIT_BZERO)
+    set(QRLLIB_SAVED_REQUIRED_DEFINITIONS ${CMAKE_REQUIRED_DEFINITIONS})
+    set(CMAKE_REQUIRED_DEFINITIONS -D__STDC_WANT_LIB_EXT1__=1)
+    check_symbol_exists(memset_s "string.h" QRLLIB_HAVE_MEMSET_S)
+    set(CMAKE_REQUIRED_DEFINITIONS ${QRLLIB_SAVED_REQUIRED_DEFINITIONS})
+    if (QRLLIB_HAVE_EXPLICIT_BZERO)
+        add_definitions(-DQRLLIB_HAVE_EXPLICIT_BZERO=1)
+    elseif (QRLLIB_HAVE_MEMSET_S)
+        add_definitions(-DQRLLIB_HAVE_MEMSET_S=1)
+    endif()
+endif()
 
 if (BUILD_WEBASSEMBLY)
     message(WARNING "webassembly enabled. Disabling other modules")
@@ -161,6 +177,29 @@ file(GLOB_RECURSE LIB_DILITHIUM_SRC
 file(GLOB_RECURSE LIB_KYBER_SRC
         "${CMAKE_CURRENT_SOURCE_DIR}/src/kyber/*.cpp")
 
+set(SECURE_MEMORY_SRC
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/crypto/secure_memory.cpp)
+
+set(SYSTEM_RANDOM_SRC
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/crypto/system_random.cpp)
+
+set(DILITHIUM_ENTROPY_ADAPTER_SRC
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/crypto/dilithium_entropy_adapter.cpp)
+
+set(DILITHIUM_SECURE_BACKEND_SRC
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/crypto/dilithium_secure_backend.cpp)
+
+set(KYBER_ENTROPY_ADAPTER_SRC
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/crypto/kyber_entropy_adapter.cpp)
+
+set(KYBER_SECURE_BACKEND_SRC
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/crypto/kyber_secure_backend.cpp)
+
+if (WIN32)
+    # BCryptGenRandom backs the parent-owned entropy implementation.
+    link_libraries(bcrypt)
+endif()
+
 set(LIBXMSSALT_SRC
         src/xmss-alt/algsxmss_fast.c
         src/xmss-alt/algsxmss.c
@@ -176,19 +215,22 @@ file(GLOB_RECURSE LIB_SHASHA_SRC
         )
 
 set(REF_DILITHIUM_SRC
-        ${CMAKE_CURRENT_SOURCE_DIR}/deps/dilithium/ref/randombytes.c
-        ${CMAKE_CURRENT_SOURCE_DIR}/deps/dilithium/ref/sign.c
+        ${SYSTEM_RANDOM_SRC}
+        ${DILITHIUM_ENTROPY_ADAPTER_SRC}
+        ${DILITHIUM_SECURE_BACKEND_SRC}
         ${CMAKE_CURRENT_SOURCE_DIR}/deps/dilithium/ref/polyvec.c
         ${CMAKE_CURRENT_SOURCE_DIR}/deps/dilithium/ref/packing.c
         ${CMAKE_CURRENT_SOURCE_DIR}/deps/dilithium/ref/poly.c
         ${CMAKE_CURRENT_SOURCE_DIR}/deps/dilithium/ref/reduce.c
         ${CMAKE_CURRENT_SOURCE_DIR}/deps/dilithium/ref/ntt.c
         ${CMAKE_CURRENT_SOURCE_DIR}/deps/dilithium/ref/rounding.c
-        ${CMAKE_CURRENT_SOURCE_DIR}/deps/dilithium/ref/fips202.c
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/crypto/dilithium_fips202.cpp
         )
 
 set(REF_KYBER_SRC
-        ${CMAKE_CURRENT_SOURCE_DIR}/deps/kyber/ref/randombytes.c
+        ${SYSTEM_RANDOM_SRC}
+        ${KYBER_ENTROPY_ADAPTER_SRC}
+        ${KYBER_SECURE_BACKEND_SRC}
         ${CMAKE_CURRENT_SOURCE_DIR}/deps/kyber/ref/kem.c
         ${CMAKE_CURRENT_SOURCE_DIR}/deps/kyber/ref/poly.c
         ${CMAKE_CURRENT_SOURCE_DIR}/deps/kyber/ref/polyvec.c
@@ -199,8 +241,39 @@ set(REF_KYBER_SRC
         ${CMAKE_CURRENT_SOURCE_DIR}/deps/kyber/ref/verify.c
         ${CMAKE_CURRENT_SOURCE_DIR}/deps/kyber/ref/indcpa.c
         ${CMAKE_CURRENT_SOURCE_DIR}/deps/kyber/ref/kex.c
-        ${CMAKE_CURRENT_SOURCE_DIR}/deps/kyber/ref/fips202.c
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/crypto/kyber_fips202.cpp
         )
+
+# Keep the vendored sources untouched while parent-owned adapters validate
+# entropy status before exposing their outputs.
+set_source_files_properties(
+        ${CMAKE_CURRENT_SOURCE_DIR}/deps/dilithium/ref/poly.c
+        PROPERTIES COMPILE_DEFINITIONS
+        "poly_uniform_eta=static qrllib_dilithium_poly_uniform_eta_legacy;poly_uniform_gamma1m1=static qrllib_dilithium_poly_uniform_gamma1m1_legacy;polyeta_pack=static qrllib_dilithium_polyeta_pack_legacy;polyt0_pack=static qrllib_dilithium_polyt0_pack_legacy;polyz_pack=static qrllib_dilithium_polyz_pack_legacy")
+set_source_files_properties(
+        ${CMAKE_CURRENT_SOURCE_DIR}/deps/dilithium/ref/polyvec.c
+        PROPERTIES COMPILE_DEFINITIONS
+        "polyvecl_pointwise_acc_invmontgomery=static qrllib_dilithium_polyvecl_pointwise_acc_legacy")
+set_source_files_properties(
+        ${CMAKE_CURRENT_SOURCE_DIR}/deps/kyber/ref/kem.c
+        PROPERTIES COMPILE_DEFINITIONS
+        "crypto_kem_keypair=static qrllib_kyber_crypto_kem_keypair_legacy;crypto_kem_enc=static qrllib_kyber_crypto_kem_enc_legacy;crypto_kem_dec=static qrllib_kyber_crypto_kem_dec_legacy")
+set_source_files_properties(
+        ${CMAKE_CURRENT_SOURCE_DIR}/deps/kyber/ref/indcpa.c
+        PROPERTIES COMPILE_DEFINITIONS
+        "indcpa_keypair=static qrllib_kyber_indcpa_keypair_legacy;indcpa_enc=static qrllib_kyber_indcpa_enc_legacy;indcpa_dec=static qrllib_kyber_indcpa_dec_legacy")
+set_source_files_properties(
+        ${CMAKE_CURRENT_SOURCE_DIR}/deps/kyber/ref/kex.c
+        PROPERTIES COMPILE_DEFINITIONS
+        "kyber_uake_initA=static qrllib_kyber_uake_initA_legacy;kyber_uake_sharedB=static qrllib_kyber_uake_sharedB_legacy;kyber_uake_sharedA=static qrllib_kyber_uake_sharedA_legacy;kyber_ake_initA=static qrllib_kyber_ake_initA_legacy;kyber_ake_sharedB=static qrllib_kyber_ake_sharedB_legacy;kyber_ake_sharedA=static qrllib_kyber_ake_sharedA_legacy")
+set_source_files_properties(
+        ${CMAKE_CURRENT_SOURCE_DIR}/deps/kyber/ref/poly.c
+        PROPERTIES COMPILE_DEFINITIONS
+        "poly_getnoise=static qrllib_kyber_poly_getnoise_legacy;poly_frommsg=static qrllib_kyber_poly_frommsg_legacy;poly_tobytes=static qrllib_kyber_poly_tobytes_legacy")
+set_source_files_properties(
+        ${CMAKE_CURRENT_SOURCE_DIR}/deps/kyber/ref/cbd.c
+        PROPERTIES COMPILE_DEFINITIONS
+        "cbd=static qrllib_kyber_cbd_legacy")
 
 file(GLOB_RECURSE TEST_QRL_SRC
         "${CMAKE_CURRENT_SOURCE_DIR}/tests/cpp/qrl/*.cpp")
@@ -232,6 +305,8 @@ target_include_directories(shasha PRIVATE ${LIB_SHASHA_INCLUDES} )
 
 add_library(qrllib STATIC
         ${LIB_QRL_SRC}
+        ${SECURE_MEMORY_SRC}
+        ${SYSTEM_RANDOM_SRC}
         ${LIBXMSSALT_SRC})
 target_include_directories(qrllib PRIVATE
         ${LIB_QRL_INCLUDES}
@@ -240,12 +315,14 @@ target_link_libraries(qrllib shasha)
 
 add_library(dilithium STATIC
         ${LIB_DILITHIUM_SRC}
+        ${SECURE_MEMORY_SRC}
         ${REF_DILITHIUM_SRC})
 target_include_directories(dilithium PRIVATE
         ${LIB_DILITHIUM_INCLUDES} )
 
 add_library(kyber STATIC
         ${LIB_KYBER_SRC}
+        ${SECURE_MEMORY_SRC}
         ${REF_KYBER_SRC})
 target_include_directories(kyber PRIVATE
         ${LIB_KYBER_INCLUDES} )
@@ -309,6 +386,40 @@ if (BUILD_TESTS)
             ${LIB_SHASHA_INCLUDES})
     target_link_libraries(xmss_allocation_test qrllib gtest_main)
     add_test(xmss_allocation_test ${PROJECT_BINARY_DIR}/xmss_allocation_test)
+
+    # Compile the entropy implementation with deterministic syscall hooks so
+    # partial reads and failure handling do not depend on host RNG behavior.
+    add_executable(system_random_test
+            tests/cpp/memory/randombytes_test.cpp
+            ${SECURE_MEMORY_SRC})
+    target_link_libraries(system_random_test gtest_main)
+    add_test(system_random_test ${PROJECT_BINARY_DIR}/system_random_test)
+
+    add_executable(dilithium_entropy_failure_test
+            tests/cpp/memory/entropyFailure_test.cpp
+            ${SECURE_MEMORY_SRC}
+            ${REF_DILITHIUM_SRC})
+    target_compile_definitions(dilithium_entropy_failure_test PRIVATE
+            QRLLIB_SYSTEM_RANDOM_TESTING=1
+            QRLLIB_TEST_DILITHIUM_ENTROPY_FAILURE=1)
+    target_include_directories(dilithium_entropy_failure_test PRIVATE
+            ${LIB_DILITHIUM_INCLUDES})
+    target_link_libraries(dilithium_entropy_failure_test gtest_main)
+    add_test(dilithium_entropy_failure_test
+            ${PROJECT_BINARY_DIR}/dilithium_entropy_failure_test)
+
+    add_executable(kyber_entropy_failure_test
+            tests/cpp/memory/entropyFailure_test.cpp
+            ${SECURE_MEMORY_SRC}
+            ${REF_KYBER_SRC})
+    target_compile_definitions(kyber_entropy_failure_test PRIVATE
+            QRLLIB_SYSTEM_RANDOM_TESTING=1
+            QRLLIB_TEST_KYBER_ENTROPY_FAILURE=1)
+    target_include_directories(kyber_entropy_failure_test PRIVATE
+            ${LIB_KYBER_INCLUDES})
+    target_link_libraries(kyber_entropy_failure_test gtest_main)
+    add_test(kyber_entropy_failure_test
+            ${PROJECT_BINARY_DIR}/kyber_entropy_failure_test)
 
     ###########################
 
@@ -374,6 +485,8 @@ if (BUILD_PYTHON)
                 ${language}
                 ${SWIG_INTERFACE}
                 ${LIB_QRL_SRC}
+                ${SECURE_MEMORY_SRC}
+                ${SYSTEM_RANDOM_SRC}
                 ${LIBXMSSALT_SRC}
                 )
     else()
@@ -384,6 +497,8 @@ if (BUILD_PYTHON)
                 TYPE MODULE
                 SOURCES ${SWIG_INTERFACE}
                 ${LIB_QRL_SRC}
+                ${SECURE_MEMORY_SRC}
+                ${SYSTEM_RANDOM_SRC}
                 ${LIBXMSSALT_SRC}
                 )
     endif()
@@ -434,6 +549,7 @@ if (BUILD_PYTHON)
                 ${language}
                 ${SWIG_INTERFACE}
                 ${LIB_DILITHIUM_SRC}
+                ${SECURE_MEMORY_SRC}
                 ${REF_DILITHIUM_SRC}
                 )
     else()
@@ -444,6 +560,7 @@ if (BUILD_PYTHON)
                 TYPE MODULE
                 SOURCES ${SWIG_INTERFACE}
                 ${LIB_DILITHIUM_SRC}
+                ${SECURE_MEMORY_SRC}
                 ${REF_DILITHIUM_SRC}
                 )
     endif()
@@ -480,6 +597,7 @@ if (BUILD_PYTHON)
                 ${language}
                 ${SWIG_INTERFACE}
                 ${LIB_KYBER_SRC}
+                ${SECURE_MEMORY_SRC}
                 ${REF_KYBER_SRC}
                 )
     else()
@@ -490,6 +608,7 @@ if (BUILD_PYTHON)
                 TYPE MODULE
                 SOURCES ${SWIG_INTERFACE}
                 ${LIB_KYBER_SRC}
+                ${SECURE_MEMORY_SRC}
                 ${REF_KYBER_SRC}
                 )
     endif()
@@ -518,6 +637,18 @@ endif ()
 if (BUILD_GO)
     message(STATUS "Go wrapper enabled")
 
+    # All Go modules share one ELF symbol namespace. The candidate-era
+    # implementations reuse global names for incompatible types (for example,
+    # Dilithium and Kyber both define poly_ntt), so bind each module's internal
+    # calls to its own definitions. The symbols remain visible because cgo
+    # compiles the generated wrapper again when it links the final executable.
+    function(qrllib_isolate_go_module target_name)
+        if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
+            set_property(TARGET ${target_name} APPEND_STRING PROPERTY LINK_FLAGS
+                    " -Wl,-Bsymbolic-functions")
+        endif()
+    endfunction()
+
     unset(CMAKE_LIBRARY_OUTPUT_DIRECTORY)
 
     if (NOT CMAKE_LIBRARY_OUTPUT_DIRECTORY)
@@ -540,12 +671,15 @@ if (BUILD_GO)
             ${language}
             ${SWIG_INTERFACE}
             ${LIB_QRL_SRC}
+            ${SECURE_MEMORY_SRC}
+            ${SYSTEM_RANDOM_SRC}
             ${LIBXMSSALT_SRC}
             )
 
     SWIG_LINK_LIBRARIES(goqrllib
             shasha
             ${SWIG_LANG_LIBRARIES})
+    qrllib_isolate_go_module(${SWIG_MODULE_goqrllib_REAL_NAME})
 
     include_directories(
             ${LIB_QRL_INCLUDES}
@@ -597,11 +731,13 @@ if (BUILD_GO)
             ${language}
             ${SWIG_INTERFACE}
             ${LIB_DILITHIUM_SRC}
+            ${SECURE_MEMORY_SRC}
             ${REF_DILITHIUM_SRC}
             )
 
     SWIG_LINK_LIBRARIES(godilithium
             ${SWIG_LANG_LIBRARIES})
+    qrllib_isolate_go_module(${SWIG_MODULE_godilithium_REAL_NAME})
 
     add_custom_command(TARGET ${SWIG_MODULE_godilithium_REAL_NAME}
             POST_BUILD
@@ -640,11 +776,13 @@ if (BUILD_GO)
             ${language}
             ${SWIG_INTERFACE}
             ${LIB_KYBER_SRC}
+            ${SECURE_MEMORY_SRC}
             ${REF_KYBER_SRC}
             )
 
     SWIG_LINK_LIBRARIES(gokyber
             ${SWIG_LANG_LIBRARIES})
+    qrllib_isolate_go_module(${SWIG_MODULE_gokyber_REAL_NAME})
 
     add_custom_command(TARGET ${SWIG_MODULE_gokyber_REAL_NAME}
             POST_BUILD
@@ -675,6 +813,7 @@ if (BUILD_WEBASSEMBLY)
     add_library(jsqrl STATIC
             ${JS_QRL_INTERFACE}
             ${LIB_QRL_SRC}
+            ${SECURE_MEMORY_SRC}
             ${LIB_SHASHA_SRC}
             ${LIBXMSSALT_SRC}
             )
@@ -693,6 +832,7 @@ if (BUILD_WEBASSEMBLY)
    add_library(jsdilithium STATIC
            ${JS_DILITHIUM_INTERFACE}
            ${LIB_DILITHIUM_SRC}
+           ${SECURE_MEMORY_SRC}
            ${LIBDILITHIUM_SRC}
            ${REF_DILITHIUM_SRC}
            ${LIB_QRL_SRC}
@@ -706,6 +846,7 @@ if (BUILD_WEBASSEMBLY)
    add_library(jskyber STATIC
            ${JS_KYBER_INTERFACE}
            ${LIB_KYBER_SRC}
+           ${SECURE_MEMORY_SRC}
            ${LIBKYBER_SRC}
            ${REF_KYBER_SRC}
            ${LIB_QRL_SRC}

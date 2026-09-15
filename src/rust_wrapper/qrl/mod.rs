@@ -8,3 +8,4 @@ pub mod xmss_base;
 pub mod xmss_basic;
 pub mod xmss_fast;
 pub mod xmss_pool;
+pub(crate) mod xmss_validation;

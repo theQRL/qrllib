@@ -27,7 +27,6 @@ fn instantiation() {
     let height = 6;
     let starting_index = 0;
     let pool_size = 0;
-    println!();
 
     let mut pool: XMSSPool = XMSSPool::new(baseseed, height, starting_index, pool_size).unwrap();
     for i in 0..5 {
@@ -44,7 +43,6 @@ fn instantiation_2() {
     let height = 6;
     let starting_index = 0;
     let pool_size = 5;
-    println!();
 
     let mut pool: XMSSPool = XMSSPool::new(baseseed, height, starting_index, pool_size).unwrap();
     for i in 0..5 {
@@ -61,7 +59,6 @@ fn instantiation_3() {
     let height = 6;
     let starting_index = 1;
     let pool_size = 4;
-    println!();
 
     let mut pool: XMSSPool = XMSSPool::new(baseseed, height, starting_index, pool_size).unwrap();
     for i in 1..5 {
@@ -69,4 +66,10 @@ fn instantiation_3() {
         let xmss = pool.get_next_tree().unwrap();
         assert_eq!(pks[i], encode(&xmss.get_pk()));
     }
+}
+
+#[test]
+fn index_overflow_returns_error() {
+    let mut pool = XMSSPool::new(vec![0; 48], 4, usize::MAX, 0).unwrap();
+    assert!(pool.get_next_tree().is_err());
 }

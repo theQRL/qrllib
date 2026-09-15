@@ -35,7 +35,7 @@ func TestXMSSCreationHeight4(t *testing.T) {
 
 	descr := goqrllib.QRLDescriptorFromExtendedPK(xmss.GetPK())
 	if descr.GetHeight() != 4 {
-		t.Errorf("Height Mismatch\nExpected: %d\nFound: %d", 6, descr.GetHeight())
+		t.Errorf("Height Mismatch\nExpected: %d\nFound: %d", 4, descr.GetHeight())
 	}
 
 	if descr.GetHashFunction() != goqrllib.SHAKE_128 {
@@ -135,7 +135,7 @@ func TestXMSSExceptionConstructor(t *testing.T) {
 		t,
 		func() {
 			goqrllib.NewXmssFast(seed, HEIGHT, goqrllib.SHAKE_128)
-		}, "For BDS traversal, H - K must be even, with H > K >= 2!")
+		}, "XMSS height must be even and between 4 and 30")
 }
 
 func TestXMSSExceptionVerify(t *testing.T) {
@@ -156,12 +156,20 @@ func TestXMSSChangeIndexTooHigh(t *testing.T) {
 	assert.Panic(t, func() {xmss.SetIndex(20)}, "index too high")
 }
 
-func TestXMSSChangeIndexHigh(t *testing.T) {
+func TestXMSSChangeIndexExhausted(t *testing.T) {
 	HEIGHT := uint8(4)
 	seed := goqrllib.NewUcharVector(int64(48))
 	xmss := goqrllib.NewXmssFast(seed, HEIGHT, goqrllib.SHAKE_128)
 
-	assert.Panic(t, func() {xmss.SetIndex(16)}, "index too high")
+	if index := xmss.SetIndex(16); index != 16 {
+		t.Errorf("Index Mismatch\nExpected: %d\nFound: %d", 16, index)
+	}
+	if remaining := xmss.GetRemainingSignatures(); remaining != 0 {
+		t.Errorf("Remaining Signatures Mismatch\nExpected: %d\nFound: %d", 0, remaining)
+	}
+
+	message := goqrllib.NewUcharVector(int64(1))
+	assert.Panic(t, func() { xmss.Sign(message) }, "index too high")
 }
 
 func TestXMSSChangeIndexLimit(t *testing.T) {

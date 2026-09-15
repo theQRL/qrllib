@@ -16,7 +16,13 @@ public:
 
     Dilithium(const std::vector<uint8_t> &pk, const std::vector<uint8_t> &sk);
 
-    virtual ~Dilithium() = default;
+#ifndef SWIG
+    Dilithium(const Dilithium& other);
+
+    Dilithium& operator=(const Dilithium& other);
+#endif
+
+    virtual ~Dilithium();
 
     std::vector<uint8_t> sign(const std::vector<uint8_t> &message);
 

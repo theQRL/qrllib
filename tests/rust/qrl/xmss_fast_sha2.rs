@@ -27,15 +27,6 @@ fn instantiation() {
     )
     .unwrap();
 
-    let pk = xmss.get_pk();
-    let sk = xmss.get_sk();
-
-    println!();
-    println!();
-    println!("seed: {} bytes\n {}", seed.len(), encode(&seed));
-    println!("pk  : {} bytes\n {}", pk.len(), encode(&pk));
-    println!("sk  : {} bytes\n {}", sk.len(), encode(&sk));
-
     assert_eq!(seed, *xmss.get_seed());
 }
 
@@ -70,26 +61,9 @@ fn sign() {
 
     let signature = xmss.sign(&data_to_sign).unwrap();
 
-    println!();
-    println!();
-    println!("data       : {} bytes\n{}", data.len(), encode(&data));
-    println!(
-        "signature  :{} bytes\n{}",
-        signature.len(),
-        encode(&signature)
-    );
     assert_eq!(xmss.get_index(), 1);
 
     let signature2 = xmss.sign(&data_to_sign).unwrap();
-
-    println!();
-    println!();
-    println!("data       : {} bytes\n{}", data.len(), encode(&data));
-    println!(
-        "signature  :{} bytes\n{}",
-        signature2.len(),
-        encode(&signature2)
-    );
 
     assert_ne!(encode(&signature), encode(&signature2));
     assert_eq!(xmss.get_index(), 2);
@@ -113,24 +87,9 @@ fn verify() {
     let mut data_to_sign = Vec::from(data);
 
     let pk = xmss.get_pk();
-    let sk = xmss.get_sk();
-    println!();
-    println!("seed:{} bytes\n{}", seed.len(), encode(&seed));
-    println!("pk  :{} bytes\n{}", pk.len(), encode(&pk));
-    println!("sk  :{} bytes\n{}", sk.len(), encode(&sk));
-
     let mut signature = xmss.sign(&data_to_sign).unwrap();
 
     assert_eq!(Vec::from(data), data_to_sign);
-
-    println!();
-    println!();
-    println!("data       :{} bytes\n{}", data.len(), encode(&data));
-    println!(
-        "signature  :{} bytes\n{}",
-        signature.len(),
-        encode(&signature)
-    );
 
     assert!(XMSSBase::verify(&mut data_to_sign, &signature.clone(), &pk, None).is_ok());
 
@@ -159,26 +118,9 @@ fn sign_with_w4() {
 
     let mut signature = xmss.sign(&data_to_sign).unwrap();
 
-    println!();
-    println!();
-    println!("data       :{} bytes\n{}", data.len(), encode(&data));
-    println!(
-        "signature  :{} bytes\n{}",
-        signature.len(),
-        encode(&signature)
-    );
     assert_eq!(xmss.get_index(), 1);
 
     let signature2 = xmss.sign(&data_to_sign).unwrap();
-
-    println!();
-    println!();
-    println!("data       : {} bytes\n{}", data.len(), encode(&data));
-    println!(
-        "signature  :{} bytes\n{}",
-        signature2.len(),
-        encode(&signature2)
-    );
 
     assert_ne!(encode(&signature), encode(&signature2));
     assert_eq!(xmss.get_index(), 2);
@@ -202,22 +144,7 @@ fn verify_with_w4() {
     let mut data_to_sign = Vec::from(data);
 
     let pk = xmss.get_pk();
-    let sk = xmss.get_sk();
-    println!();
-    println!("seed:{} bytes\n{}", seed.len(), encode(&seed));
-    println!("pk  :{} bytes\n{}", pk.len(), encode(&pk));
-    println!("sk  :{} bytes\n{}", sk.len(), encode(&sk));
-
     let mut signature = xmss.sign(&data_to_sign).unwrap();
-
-    println!();
-    println!();
-    println!("data       :{} bytes\n{}", data.len(), encode(&data));
-    println!(
-        "signature  :{} bytes\n{}",
-        signature.len(),
-        encode(&signature)
-    );
 
     assert!(XMSSBase::verify(&mut data_to_sign, &signature.clone(), &pk, Some(4)).is_ok());
     assert!(XMSSBase::verify(&mut data_to_sign, &signature.clone(), &xmss.get_pk(), None).is_err());

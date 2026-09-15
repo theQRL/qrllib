@@ -17,13 +17,7 @@ namespace {
         XmssFast xmss(seed, XMSS_HEIGHT, eHashFunction::SHA2_256);
 
         auto pk = xmss.getPK();
-        auto sk = xmss.getSK();
 
-        std::cout << std::endl;
-        std::cout << std::endl;
-        std::cout << "seed:" << seed.size() << " bytes\n" << bin2hstr(seed, 48) << std::endl;
-        std::cout << "pk  :" << pk.size() << " bytes\n" << bin2hstr(pk, 48) << std::endl;
-        std::cout << "sk  :" << sk.size() << " bytes\n" << bin2hstr(sk, 48) << std::endl;
 
         EXPECT_EQ(seed, xmss.getSeed());
     }
@@ -49,18 +43,10 @@ namespace {
 
         auto signature = xmss.sign(data);
 
-        std::cout << std::endl;
-        std::cout << std::endl;
-        std::cout << "data       :" << data.size() << " bytes\n" << bin2hstr(data, 64) << std::endl;
-        std::cout << "signature  :" << signature.size() << " bytes\n" << bin2hstr(signature, 64) << std::endl;
         EXPECT_EQ(xmss.getIndex(), 1);
 
         auto signature2 = xmss.sign(data);
 
-        std::cout << std::endl;
-        std::cout << std::endl;
-        std::cout << "data       :" << data.size() << " bytes\n" << bin2hstr(data, 64) << std::endl;
-        std::cout << "signature  :" << signature.size() << " bytes\n" << bin2hstr(signature, 64) << std::endl;
 
         EXPECT_NE(bin2hstr(signature), bin2hstr(signature2));
         EXPECT_EQ(xmss.getIndex(), 2);
@@ -77,20 +63,11 @@ namespace {
         std::vector<unsigned char> data(message.begin(), message.end());
 
         auto pk = xmss.getPK();
-        auto sk = xmss.getSK();
-        std::cout << std::endl;
-        std::cout << "seed:" << seed.size() << " bytes\n" << bin2hstr(seed, 32) << std::endl;
-        std::cout << "pk  :" << pk.size() << " bytes\n" << bin2hstr(pk, 32) << std::endl;
-        std::cout << "sk  :" << sk.size() << " bytes\n" << bin2hstr(sk, 32) << std::endl;
 
         auto signature = xmss.sign(data);
 
         EXPECT_EQ(data, data_ref);
 
-        std::cout << std::endl;
-        std::cout << std::endl;
-        std::cout << "data       :" << data.size() << " bytes\n" << bin2hstr(data, 64) << std::endl;
-        std::cout << "signature  :" << signature.size() << " bytes\n" << bin2hstr(signature, 64) << std::endl;
 
         EXPECT_TRUE(XmssBasic::verify(data, signature, pk));
 

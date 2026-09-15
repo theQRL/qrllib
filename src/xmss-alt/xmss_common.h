@@ -20,6 +20,10 @@ Public domain.
 
 void xmss_set_params(xmss_params *params, uint32_t n, uint32_t h, uint32_t w, uint32_t k);
 
+bool xmss_hash_function_is_valid(eHashFunction hash_func);
+bool xmss_wots_params_are_valid(const wots_params *params);
+bool xmss_params_are_valid(const xmss_params *params);
+
 
 void to_byte(unsigned char *output, unsigned long long in, uint32_t bytes);
 
@@ -35,12 +39,12 @@ void l_tree(eHashFunction hash_func,
 /**
  * Verifies a given message signature pair under a given public key.
  *
- * Note: msg and msglen are pure outputs which carry the message in case verification succeeds. The (input) message is assumed to be within sig_msg which has the form (sig||msg).
+ * msg/msglen and sig_msg are detached verification inputs.
  */
 
 int xmss_Verifysig(eHashFunction hash_func,
                    wots_params *wotsParams,
-                   unsigned char *msg,
+                   const unsigned char *msg,
                    size_t msglen,
                    unsigned char *sig_msg,
                    const unsigned char *pk,

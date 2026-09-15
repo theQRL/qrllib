@@ -26,13 +26,7 @@ namespace {
         typename TestFixture::TXMSS xmss(seed, XMSS_HEIGHT, eHashFunction::SHAKE_128, eAddrFormatType::SHA256_2X);
 
         auto pk = xmss.getPK();
-        auto sk = xmss.getSK();
 
-        std::cout << std::endl;
-        std::cout << std::endl;
-        std::cout << "seed:" << seed.size() << " bytes\n" << bin2hstr(seed, 48) << std::endl;
-        std::cout << "pk  :" << pk.size() << " bytes\n" << bin2hstr(pk, 48) << std::endl;
-        std::cout << "sk  :" << sk.size() << " bytes\n" << bin2hstr(sk, 48) << std::endl;
 
         EXPECT_EQ(seed, xmss.getSeed());
     }
@@ -57,10 +51,6 @@ namespace {
 
         auto signature = xmss.sign(data);
 
-        std::cout << std::endl;
-        std::cout << std::endl;
-        std::cout << "data       :" << data.size() << " bytes\n" << bin2hstr(data, 64) << std::endl;
-        std::cout << "signature  :" << signature.size() << " bytes\n" << bin2hstr(signature, 64) << std::endl;
     }
 
     TYPED_TEST(XmssGenericTest, SignManyTimesIndexMoves) {
@@ -74,12 +64,8 @@ namespace {
         for(int i=0; i < 10; i++)
         {
             EXPECT_EQ(i, xmss.getIndex());
-            auto sk = xmss.getSK();
             auto pk = xmss.getPK();
-            std::cout << "sk  :" << sk.size() << " bytes\n" << bin2hstr(sk, 32) << std::endl;
-            std::cout << "pk  :" << sk.size() << " bytes\n" << bin2hstr(pk, 32) << std::endl;
             auto signature = xmss.sign(data);
-            std::cout << "sign:" << sk.size() << " bytes\n" << bin2hstr(signature, 32) << std::endl;
 
             EXPECT_EQ(i+1, xmss.getIndex());
         }
@@ -96,11 +82,8 @@ namespace {
         for(int i=0; i < 10; i++)
         {
             EXPECT_EQ(i, xmss.getIndex());
-            auto sk = xmss.getSK();
             auto pk = xmss.getPK();
 
-            std::cout << "sk  :" << sk.size() << " bytes\n" << bin2hstr(sk, 32) << std::endl;
-            std::cout << "pk  :" << sk.size() << " bytes\n" << bin2hstr(pk, 32) << std::endl;
             auto signature = xmss.sign(data);
 
             EXPECT_EQ(i+1, xmss.getIndex());
@@ -119,19 +102,11 @@ namespace {
         std::vector<unsigned char> data(message.begin(), message.end());
 
         auto pk = xmss.getPK();
-        auto sk = xmss.getSK();
-        std::cout << std::endl;
-        std::cout << "seed:" << seed.size() << " bytes\n" << bin2hstr(seed, 32) << std::endl;
-        std::cout << "pk  :" << pk.size() << " bytes\n" << bin2hstr(pk, 32) << std::endl;
-        std::cout << "sk  :" << sk.size() << " bytes\n" << bin2hstr(sk, 32) << std::endl;
 
         auto signature1 = xmss.sign(data);
 
         EXPECT_EQ(data, data_ref);      // Data was not modified
 
-        std::cout << "---------------------------------------------" << std::endl;
-        std::cout << "data       :" << data.size() << " bytes\n" << bin2hstr(data, 64) << std::endl;
-        std::cout << "signature  :" << signature1.size() << " bytes\n" << bin2hstr(signature1) << std::endl;
 
         EXPECT_TRUE(TestFixture::TXMSS::verify(data, signature1, pk));
 
@@ -139,14 +114,9 @@ namespace {
 
         EXPECT_EQ(data, data_ref);      // Data was not modified
 
-        std::cout << "---------------------------------------------" << std::endl;
-        std::cout << "data       :" << data.size() << " bytes\n" << bin2hstr(data, 64) << std::endl;
-        std::cout << "signature  :" << signature2.size() << " bytes\n" << bin2hstr(signature2) << std::endl;
 
         EXPECT_TRUE(TestFixture::TXMSS::verify(data, signature2, pk));
 
-        std::cout << "---------------------------------------------" << std::endl;
-        std::cout << "---------------------------------------------" << std::endl;
         signature1[1] += 1;
         // FIXME: This is intentionally breaking the index
         EXPECT_FALSE(TestFixture::TXMSS::verify(data, signature1, xmss.getPK()));
@@ -173,7 +143,6 @@ namespace {
         for (int i=0; i < 1; i++)
         {
             auto signature = xmss.sign(data);
-            std::cout << "signature  :" << signature.size() << " bytes\n" << bin2hstr(signature) << std::endl;
             EXPECT_TRUE(TestFixture::TXMSS::verify(data, signature, pk));
         }
     }

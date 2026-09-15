@@ -18,13 +18,7 @@ TEST(XmssFast, Instantiation)
     XmssFast xmss(seed, XMSS_HEIGHT);
 
     auto pk = xmss.getPK();
-    auto sk = xmss.getSK();
 
-    std::cout << std::endl;
-    std::cout << std::endl;
-    std::cout << "seed:" << seed.size() << " bytes\n" << bin2hstr(seed, 48) << std::endl;
-    std::cout << "pk  :" << pk.size() << " bytes\n" << bin2hstr(pk, 48) << std::endl;
-    std::cout << "sk  :" << sk.size() << " bytes\n" << bin2hstr(sk, 48) << std::endl;
 
     EXPECT_EQ(seed, xmss.getSeed());
 }
@@ -52,18 +46,10 @@ TEST(XmssFast, Sign)
 
     auto signature = xmss.sign(data);
 
-    std::cout << std::endl;
-    std::cout << std::endl;
-    std::cout << "data       :" << data.size() << " bytes\n" << bin2hstr(data, 64) << std::endl;
-    std::cout << "signature  :" << signature.size() << " bytes\n" << bin2hstr(signature, 64) << std::endl;
     EXPECT_EQ(xmss.getIndex(), 1);
 
     auto signature2 = xmss.sign(data);
 
-    std::cout << std::endl;
-    std::cout << std::endl;
-    std::cout << "data       :" << data.size() << " bytes\n" << bin2hstr(data, 64) << std::endl;
-    std::cout << "signature  :" << signature.size() << " bytes\n" << bin2hstr(signature, 64) << std::endl;
 
     EXPECT_NE(bin2hstr(signature), bin2hstr(signature2));
     EXPECT_EQ(xmss.getIndex(), 2);
@@ -80,20 +66,11 @@ TEST(XmssFast, Verify)
     std::vector<unsigned char> data(message.begin(), message.end());
 
     auto pk = xmss.getPK();
-    auto sk = xmss.getSK();
-    std::cout << std::endl;
-    std::cout << "seed:" << seed.size() << " bytes\n" << bin2hstr(seed, 32) << std::endl;
-    std::cout << "pk  :" << pk.size() << " bytes\n" << bin2hstr(pk, 32) << std::endl;
-    std::cout << "sk  :" << sk.size() << " bytes\n" << bin2hstr(sk, 32) << std::endl;
 
     auto signature = xmss.sign(data);
 
     EXPECT_EQ(data, data_ref);
 
-    std::cout << std::endl;
-    std::cout << std::endl;
-    std::cout << "data       :" << data.size() << " bytes\n" << bin2hstr(data, 64) << std::endl;
-    std::cout << "signature  :" << signature.size() << " bytes\n" << bin2hstr(signature, 64) << std::endl;
 
     EXPECT_TRUE(XmssBasic::verify(data, signature, pk));
 
@@ -114,18 +91,10 @@ TEST(XmssFast, SignWithW4)
 
     auto signature = xmss.sign(data);
 
-    std::cout << std::endl;
-    std::cout << std::endl;
-    std::cout << "data       :" << data.size() << " bytes\n" << bin2hstr(data, 64) << std::endl;
-    std::cout << "signature  :" << signature.size() << " bytes\n" << bin2hstr(signature, 64) << std::endl;
     EXPECT_EQ(xmss.getIndex(), 1);
 
     auto signature2 = xmss.sign(data);
 
-    std::cout << std::endl;
-    std::cout << std::endl;
-    std::cout << "data       :" << data.size() << " bytes\n" << bin2hstr(data, 64) << std::endl;
-    std::cout << "signature  :" << signature.size() << " bytes\n" << bin2hstr(signature, 64) << std::endl;
 
     EXPECT_NE(bin2hstr(signature), bin2hstr(signature2));
     EXPECT_EQ(xmss.getIndex(), 2);
@@ -144,18 +113,9 @@ TEST(XmssFast, VerifyWithW4)
     std::vector<unsigned char> data = hstr2bin("56454c9621c549cd05c112de496ba32f");
 
     auto pk = xmss.getPK();
-    auto sk = xmss.getSK();
-    std::cout << std::endl;
-    std::cout << "seed:" << seed.size() << " bytes\n" << bin2hstr(seed, 32) << std::endl;
-    std::cout << "pk  :" << pk.size() << " bytes\n" << bin2hstr(pk, 32) << std::endl;
-    std::cout << "sk  :" << sk.size() << " bytes\n" << bin2hstr(sk, 32) << std::endl;
 
     auto signature = xmss.sign(data);
 
-    std::cout << std::endl;
-    std::cout << std::endl;
-    std::cout << "data       :" << data.size() << " bytes\n" << bin2hstr(data, 64) << std::endl;
-    std::cout << "signature  :" << signature.size() << " bytes\n" << bin2hstr(signature, 64) << std::endl;
 
     EXPECT_TRUE(XmssBasic::verify(data, signature, pk, 4));
     EXPECT_FALSE(XmssBasic::verify(data, signature, xmss.getPK()));
@@ -191,6 +151,16 @@ TEST(XmssFast, BadInputConstructor)
     std::vector<unsigned char> seed(48, 0);
 
     EXPECT_THROW(XmssFast xmss(seed, 3), std::invalid_argument);
+    EXPECT_THROW(XmssFast xmss(seed, 4, static_cast<eHashFunction>(3)), std::invalid_argument);
+    EXPECT_THROW(XmssFast xmss(seed, 4, eHashFunction::SHAKE_128,
+                               static_cast<eAddrFormatType>(1)), std::invalid_argument);
+
+    std::vector<unsigned char> short_seed(47, 0);
+    EXPECT_THROW(XmssFast xmss(short_seed, 4), std::invalid_argument);
+
+    std::vector<unsigned char> malformed_extended_seed(51, 0);
+    malformed_extended_seed[0] = 3;
+    EXPECT_THROW(XmssFast xmss(malformed_extended_seed), std::invalid_argument);
 }
 
 TEST(XmssFast, BadInputVerify)
@@ -228,6 +198,10 @@ TEST(XmssFast, IndexLimit)
     XmssFast xmss1(seed, 4);
 
     ASSERT_THROW( xmss1.setIndex(100), std::invalid_argument);
+    EXPECT_EQ(16u, xmss1.setIndex(16));
+    EXPECT_EQ(0u, xmss1.getRemainingSignatures());
+    EXPECT_THROW(xmss1.sign({0x01}), std::invalid_argument);
+    EXPECT_THROW(xmss1.setIndex(17), std::invalid_argument);
 }
 
 TEST(XmssFast, IndexBackwards)
@@ -240,6 +214,18 @@ TEST(XmssFast, IndexBackwards)
     EXPECT_EQ(10, xmss1.getIndex());
 
     ASSERT_THROW( xmss1.setIndex(2), std::invalid_argument);
+}
+
+TEST(XmssFast, ReinitializationCannotResetSigningIndex)
+{
+    std::vector<unsigned char> seed(48, 0);
+    XmssFast xmss(seed, 4);
+    const std::vector<unsigned char> message{0x01};
+
+    (void)xmss.sign(message);
+    ASSERT_EQ(1u, xmss.getIndex());
+    EXPECT_THROW(xmss.initialize_tree(), std::invalid_argument);
+    EXPECT_EQ(1u, xmss.getIndex());
 }
 
 TEST(XmssFast, IndexSame)
