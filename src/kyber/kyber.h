@@ -20,7 +20,13 @@ public:
     Kyber(const std::vector<uint8_t> &pk,
           const std::vector<uint8_t> &sk);
 
-    virtual ~Kyber() = default;
+#ifndef SWIG
+    Kyber(const Kyber& other);
+
+    Kyber& operator=(const Kyber& other);
+#endif
+
+    virtual ~Kyber();
 
     std::vector<uint8_t> getPK() { return _pk; }
 

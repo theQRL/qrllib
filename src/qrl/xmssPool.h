@@ -24,12 +24,14 @@
 // on a single instance.
 class XmssPool {
 public:
+    static constexpr size_t MAX_POOL_SIZE = 16;
+
     XmssPool(const TSEED &base_seed,
              unsigned char height,
              size_t starting_index,
              size_t pool_size);
 
-    ~XmssPool() = default;
+    ~XmssPool();
 
     std::shared_ptr<XmssFast> getNextTree();
 
@@ -50,6 +52,8 @@ private:
 
     // Caller must hold _mutex.
     void fillCache();
+
+    void drainCache() noexcept;
 
     // Derives a tree from _base_seed and _height, both immutable after
     // construction, so this is safe to call concurrently and without the lock.

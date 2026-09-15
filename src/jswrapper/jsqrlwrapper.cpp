@@ -8,6 +8,7 @@
 #include <wordlist.h>
 #include <qrlHelper.h>
 #include <qrlDescriptor.h>
+#include <crypto/secure_memory.h>
 
 namespace Xmss {
 
@@ -48,16 +49,22 @@ public:
         return 'Q' + bin2hstr(_xmss.getAddress());
     }
 
-    std::string getHexSeed()
+    emscripten::val getHexSeed()
     {
         auto extended_seed = _xmss.getExtendedSeed();
-        return bin2hstr(extended_seed);
+        qrllib::secure_memory::WipeGuard<uint8_t> guard(extended_seed);
+        auto encoded = bin2hstr(extended_seed);
+        qrllib::secure_memory::StringWipeGuard encoded_guard(encoded);
+        return emscripten::val::u8string(encoded.c_str());
     }
 
-    std::string getMnemonic()
+    emscripten::val getMnemonic()
     {
         auto extended_seed = _xmss.getExtendedSeed();
-        return bin2mnemonic(extended_seed);
+        qrllib::secure_memory::WipeGuard<uint8_t> guard(extended_seed);
+        auto mnemonic = bin2mnemonic(extended_seed);
+        qrllib::secure_memory::StringWipeGuard mnemonic_guard(mnemonic);
+        return emscripten::val::u8string(mnemonic.c_str());
     }
 
     /////////////////////////////////////
@@ -71,15 +78,18 @@ public:
         return XmssWrapper(random_bytes, height, hash_function);
     }
 
-    static XmssWrapper fromHexSeed(const std::string hexseed)
+    static XmssWrapper fromHexSeed(std::string hexseed)
     {
+        qrllib::secure_memory::StringWipeGuard hex_guard(hexseed);
         auto extended_seed = hstr2bin(hexseed);
+        qrllib::secure_memory::WipeGuard<uint8_t> extended_guard(extended_seed);
         auto descr = QRLDescriptor::fromExtendedSeed(extended_seed);
 
         auto raw_seed = std::vector<uint8_t>(
             extended_seed.cbegin()+QRLDescriptor::getSize(),
             extended_seed.cend()
         );
+        qrllib::secure_memory::WipeGuard<uint8_t> raw_guard(raw_seed);
 
         return XmssWrapper(
             raw_seed,
@@ -88,15 +98,18 @@ public:
         );
     }
 
-    static XmssWrapper fromMnemonic(const std::string mnemonic)
+    static XmssWrapper fromMnemonic(std::string mnemonic)
     {
+        qrllib::secure_memory::StringWipeGuard mnemonic_guard(mnemonic);
         auto extended_seed = mnemonic2bin(mnemonic);
+        qrllib::secure_memory::WipeGuard<uint8_t> extended_guard(extended_seed);
         auto descr = QRLDescriptor::fromExtendedSeed(extended_seed);
 
         auto raw_seed = std::vector<uint8_t>(
             extended_seed.cbegin()+QRLDescriptor::getSize(),
             extended_seed.cend()
         );
+        qrllib::secure_memory::WipeGuard<uint8_t> raw_guard(raw_seed);
 
         return XmssWrapper(
             raw_seed,
@@ -164,10 +177,13 @@ public:
         return _xmssbasic.sign(message);
     }
 
-    std::string getHexSeed()
+    emscripten::val getHexSeed()
     {
         auto extended_seed = _xmssbasic.getExtendedSeed();
-        return bin2hstr(extended_seed);
+        qrllib::secure_memory::WipeGuard<uint8_t> guard(extended_seed);
+        auto encoded = bin2hstr(extended_seed);
+        qrllib::secure_memory::StringWipeGuard encoded_guard(encoded);
+        return emscripten::val::u8string(encoded.c_str());
     }
 
     int getHeight()

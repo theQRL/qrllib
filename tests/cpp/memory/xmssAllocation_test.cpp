@@ -90,23 +90,20 @@ protected:
     }
 };
 
-TEST_F(XmssAllocation, Sha2ExceptionReleasesAllocatedTree)
+TEST_F(XmssAllocation, Sha2SigningDoesNotAllocateAfterTree)
 {
     XmssBasic signer(TSEED(48, 1), 4, eHashFunction::SHA2_256,
                      eAddrFormatType::SHA256_2X);
-    bool threw = false;
+    TSIGNATURE signature;
     {
         FailureScope reset;
         failAfterTreeAllocation = true;
-        try { signer.sign(message); }
-        catch (const std::bad_alloc&) { threw = true; }
+        EXPECT_NO_THROW(signature = signer.sign(message));
     }
-    ASSERT_TRUE(threw);
     EXPECT_EQ(1u, treeAllocations);
     ASSERT_EQ(0u, liveTrees);
     EXPECT_EQ(1u, signer.getIndex());
-    EXPECT_TRUE(XmssBase::verify(message, signer.sign(message), signer.getPK()));
-    EXPECT_EQ(2u, signer.getIndex());
+    EXPECT_TRUE(XmssBase::verify(message, signature, signer.getPK()));
 }
 
 TEST_F(XmssAllocation, NullTreeAllocationConsumesIndexAndAllowsRetry)

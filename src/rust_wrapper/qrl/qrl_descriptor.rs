@@ -1,4 +1,5 @@
 use super::qrl_address_format::AddrFormatType;
+use super::xmss_validation::validate_height;
 use crate::rust_wrapper::errors::QRLError;
 use crate::rust_wrapper::xmss_alt::hash_functions::HashFunction;
 
@@ -48,9 +49,19 @@ impl QRLDescriptor {
     }
 
     pub fn from_bytes(bytes: &Vec<u8>) -> Result<Self, QRLError> {
+        Self::parse(bytes)
+    }
+
+    fn parse(bytes: &[u8]) -> Result<Self, QRLError> {
         if bytes.len() != 3 {
             return Err(QRLError::InvalidArgument(
                 "Descriptor size should be 3 bytes".to_string(),
+            ));
+        }
+
+        if bytes[2] != 0 {
+            return Err(QRLError::InvalidArgument(
+                "XMSS descriptor reserved byte must be zero".to_string(),
             ));
         }
 
@@ -64,7 +75,7 @@ impl QRLDescriptor {
                 ))
             }
         };
-        let signature_type: SignatureType = match (bytes[0] >> 4) & 0xF0 {
+        let signature_type: SignatureType = match (bytes[0] >> 4) & 0x0F {
             0 => SignatureType::XMSS,
             _ => {
                 return Err(QRLError::FailedConversion(
@@ -73,6 +84,7 @@ impl QRLDescriptor {
             }
         };
         let height: u8 = (bytes[1] & 0x0F) << 1;
+        validate_height(height)?;
         let addr_format_type: AddrFormatType = match (bytes[1] & 0xF0) >> 4 {
             0 => AddrFormatType::SHA256_2X,
             _ => {
@@ -101,8 +113,7 @@ impl QRLDescriptor {
             ));
         }
 
-        let bytes = extended_seed.get(0..Self::SIZE as usize).unwrap();
-        return QRLDescriptor::from_bytes(&bytes.to_vec());
+        Self::parse(&extended_seed[..Self::SIZE as usize])
     }
 
     pub fn from_extended_pk(extended_pk: &Vec<u8>) -> Result<Self, QRLError> {
@@ -112,8 +123,7 @@ impl QRLDescriptor {
             ));
         }
 
-        let bytes = extended_pk.get(0..Self::SIZE as usize).unwrap();
-        return QRLDescriptor::from_bytes(&bytes.to_vec());
+        Self::parse(&extended_pk[..Self::SIZE as usize])
     }
 
     pub fn get_bytes(&self) -> Vec<u8> {

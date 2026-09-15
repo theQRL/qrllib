@@ -8,6 +8,8 @@ use super::hash_functions::HashFunction;
 use super::wots::{wots_pkgen, wots_sign};
 use super::xmss_common::{l_tree, to_byte, XMSSParams};
 use crate::rust_wrapper::errors::QRLError;
+use crate::rust_wrapper::qrl::xmss_validation::{signature_count, SECRET_KEY_SIZE, SEED_SIZE};
+use zeroize::{Zeroize, Zeroizing};
 
 #[derive(Clone, Default)]
 pub struct TreeHashInst {
@@ -16,6 +18,12 @@ pub struct TreeHashInst {
     stackusage: u32,
     completed: u8,
     pub node: Vec<u8>,
+}
+
+impl Drop for TreeHashInst {
+    fn drop(&mut self) {
+        self.node.zeroize();
+    }
 }
 
 #[derive(Default)]
@@ -28,6 +36,58 @@ pub struct BDSState {
     pub treehash: Vec<TreeHashInst>,
     pub retain: Vec<u8>,
     pub next_leaf: u32,
+}
+
+impl Drop for BDSState {
+    fn drop(&mut self) {
+        self.stack.zeroize();
+        self.stacklevels.zeroize();
+        self.auth.zeroize();
+        self.keep.zeroize();
+        for treehash in &mut self.treehash {
+            treehash.node.zeroize();
+        }
+        self.treehash.clear();
+        self.retain.zeroize();
+        self.stackoffset = 0;
+        self.next_leaf = 0;
+    }
+}
+
+fn validate_params(params: &XMSSParams) -> Result<(), QRLError> {
+    params.validate()
+}
+
+fn validate_bds_state(params: &XMSSParams, state: &BDSState) -> Result<(), QRLError> {
+    validate_params(params)?;
+    let height = params.h as usize;
+    let n = params.n as usize;
+    let signature_limit = signature_count(params.h as u8)?;
+    if state.stack.len() != (height + 1) * n
+        || state.stackoffset as usize > height
+        || state.stacklevels.len() != height + 1
+        || state
+            .stacklevels
+            .iter()
+            .any(|level| *level as usize > height)
+        || state.auth.len() != height * n
+        || state.keep.len() != (height >> 1) * n
+        || state.treehash.len() != height - params.k as usize
+        || state.treehash.iter().enumerate().any(|(index, treehash)| {
+            treehash.node.len() != n
+                || treehash.h as usize > index
+                || treehash.next_idx > signature_limit
+                || treehash.stackusage > state.stackoffset
+                || treehash.completed > 1
+        })
+        || state.retain.len() != ((1_usize << params.k) - params.k as usize - 1) * n
+        || state.next_leaf > signature_limit
+    {
+        return Err(QRLError::InvalidArgument(
+            "Invalid XMSS traversal state".to_owned(),
+        ));
+    }
+    Ok(())
 }
 
 /**
@@ -67,14 +127,14 @@ fn gen_leaf_wots(
     ltree_addr: &mut [u32; 8],
     ots_addr: &mut [u32; 8],
 ) {
-    let mut seed: Vec<u8> = vec![0; params.n as usize];
-    let mut pk: Vec<u8> = vec![0; params.wots_par.keysize as usize];
+    let mut seed = Zeroizing::new(vec![0; params.n as usize]);
+    let mut pk = Zeroizing::new(vec![0; params.wots_par.keysize as usize]);
 
     get_seed(hash_func, &mut seed, sk_seed, params.n, ots_addr);
     wots_pkgen(
         hash_func,
-        &mut pk,
-        &seed,
+        pk.as_mut_slice(),
+        seed.as_slice(),
         &(params.wots_par),
         pub_seed,
         ots_addr,
@@ -84,7 +144,7 @@ fn gen_leaf_wots(
         hash_func,
         &params.wots_par,
         leaf,
-        &mut pk,
+        pk.as_mut_slice(),
         pub_seed,
         ltree_addr,
     );
@@ -687,9 +747,22 @@ pub fn xmss_fast_gen_keypair(
     state: &mut BDSState,
     seed: &mut [u8],
 ) -> Result<(), QRLError> {
-    if (params.h & 1) != 0 {
+    if let Err(error) = validate_params(params) {
+        pk.zeroize();
+        sk.zeroize();
+        return Err(error);
+    }
+    if let Err(error) = validate_bds_state(params, state) {
+        pk.zeroize();
+        sk.zeroize();
+        return Err(error);
+    }
+    if pk.len() != (2 * params.n) as usize || sk.len() != SECRET_KEY_SIZE || seed.len() != SEED_SIZE
+    {
+        pk.zeroize();
+        sk.zeroize();
         return Err(QRLError::InvalidArgument(
-            "Not a valid h, only even numbers supported! Try again with an even number".to_owned(),
+            "Invalid XMSS key-generation buffer size".to_owned(),
         ));
     }
     let n = params.n;
@@ -701,8 +774,8 @@ pub fn xmss_fast_gen_keypair(
     sk[3] = 0;
 
     // Copy PUB_SEED to public key
-    let mut randombits: Vec<u8> = vec![0; 3 * n as usize];
-    shake256(&mut randombits, 3 * n as usize, seed, 48); // FIXME: seed size has been hardcoded to 48
+    let mut randombits = Zeroizing::new(vec![0; 3 * n as usize]);
+    shake256(randombits.as_mut_slice(), 3 * n as usize, seed, 48); // FIXME: seed size has been hardcoded to 48
     let rnd: usize = 96;
     let pks: usize = 32;
 
@@ -745,14 +818,20 @@ pub fn xmss_fast_update(
     state: &mut BDSState,
     new_idx: u32,
 ) -> Result<i32, QRLError> {
-    let num_elems = 1 << params.h;
+    validate_bds_state(params, state)?;
+    if sk.len() != SECRET_KEY_SIZE {
+        return Err(QRLError::InvalidArgument(
+            "Invalid XMSS secret state".to_owned(),
+        ));
+    }
+    let num_elems = signature_count(params.h as u8)?;
 
     let current_idx =
         (((sk[0] as u64) << 24) | ((sk[1] as u64) << 16) | ((sk[2] as u64) << 8) | sk[3] as u64)
             as u32;
 
     // Verify ranges
-    if new_idx >= num_elems {
+    if current_idx > num_elems || new_idx > num_elems {
         return Err(QRLError::InvalidArgument("index too high".to_string()));
     }
 
@@ -761,31 +840,37 @@ pub fn xmss_fast_update(
     }
 
     // Change index
-    let sk_seed: &mut [u8; 32] = &mut [0; 32];
+    let mut sk_seed = Zeroizing::new([0_u8; 32]);
     let src = sk.get(4..32 + 4).unwrap();
-    sk_seed.get_mut(0..32).unwrap().copy_from_slice(src);
+    sk_seed.copy_from_slice(src);
 
-    let pub_seed: &mut [u8; 32] = &mut [0; 32];
+    let mut pub_seed = [0_u8; 32];
     let src = sk.get(4 + 2 * 32..4 + 2 * 32 + 32).unwrap();
-    pub_seed.get_mut(0..32).unwrap().copy_from_slice(src);
+    pub_seed.copy_from_slice(src);
 
     let ots_addr: &mut [u32; 8] = &mut [0; 8];
 
     for j in current_idx..new_idx {
-        if j >= num_elems {
-            return Ok(-1);
+        if j == num_elems - 1 {
+            continue;
         }
 
         bds_round(
-            hash_func, state, j as u64, sk_seed, params, pub_seed, ots_addr,
+            hash_func,
+            state,
+            j as u64,
+            sk_seed.as_slice(),
+            params,
+            &pub_seed,
+            ots_addr,
         );
         bds_treehash_update(
             hash_func,
             state,
             (params.h - params.k) >> 1,
-            sk_seed,
+            sk_seed.as_slice(),
             params,
-            pub_seed,
+            &pub_seed,
             ots_addr,
         );
     }
@@ -808,17 +893,42 @@ pub fn xmss_fast_sign_msg(
     msg: &[u8],
     msglen: usize,
 ) -> u32 {
+    let expected_signature_size = (4_u32)
+        .checked_add(params.n)
+        .and_then(|size| size.checked_add(params.wots_par.keysize))
+        .and_then(|size| size.checked_add(params.h.saturating_mul(params.n)))
+        .map(|size| size as usize);
+    if validate_bds_state(params, state).is_err()
+        || sk.len() != SECRET_KEY_SIZE
+        || expected_signature_size != Some(sig_msg.len())
+        || msglen != msg.len()
+    {
+        sig_msg.zeroize();
+        return 1;
+    }
     let n = params.n;
 
     // Extract SK
     let idx =
         (((sk[0] as u64) << 24) | ((sk[1] as u64) << 16) | ((sk[2] as u64) << 8) | sk[3] as u64)
             as u32;
-    let mut sk_seed: Vec<u8> = vec![0; n as usize];
+    let signature_limit = match signature_count(params.h as u8) {
+        Ok(limit) => limit,
+        Err(_) => {
+            sig_msg.zeroize();
+            return 1;
+        }
+    };
+    if idx >= signature_limit {
+        sig_msg.zeroize();
+        return 1;
+    }
+
+    let mut sk_seed = Zeroizing::new(vec![0; n as usize]);
     let src = sk.get(4..(4 + n) as usize).unwrap();
     sk_seed.copy_from_slice(src);
 
-    let mut sk_prf: Vec<u8> = vec![0; n as usize];
+    let mut sk_prf = Zeroizing::new(vec![0; n as usize]);
     let src = sk.get((4 + n) as usize..(4 + n + n) as usize).unwrap();
     sk_prf.copy_from_slice(src);
 
@@ -827,10 +937,10 @@ pub fn xmss_fast_sign_msg(
     pub_seed.copy_from_slice(src);
 
     // index as 32 bytes string
-    let mut idx_bytes_32: Vec<u8> = vec![0; 32];
+    let mut idx_bytes_32 = Zeroizing::new(vec![0; 32]);
     to_byte(&mut idx_bytes_32, idx.into(), 32);
 
-    let mut hash_key: Vec<u8> = vec![0; 3 * n as usize];
+    let mut hash_key = Zeroizing::new(vec![0; 3 * n as usize]);
 
     // Update SK
     sk[0] = ((idx + 1) >> 24) as u8 & 255;
@@ -841,9 +951,9 @@ pub fn xmss_fast_sign_msg(
     // -- A productive implementation should use a file handle instead and write the updated secret key at this point!
     let mut _sig_msg_len: u64;
     // Init working params
-    let mut R: Vec<u8> = vec![0; n as usize];
-    let mut msg_h: Vec<u8> = vec![0; n as usize];
-    let mut ots_seed: Vec<u8> = vec![0; n as usize];
+    let mut R = Zeroizing::new(vec![0; n as usize]);
+    let mut msg_h = Zeroizing::new(vec![0; n as usize]);
+    let mut ots_seed = Zeroizing::new(vec![0; n as usize]);
     let ots_addr: &mut [u32; 8] = &mut [0; 8];
 
     // ---------------------------------
@@ -852,7 +962,13 @@ pub fn xmss_fast_sign_msg(
 
     // Message Hash:
     // First compute pseudorandom value
-    prf(hash_func, &mut R, &idx_bytes_32, &sk_prf, n);
+    prf(
+        hash_func,
+        &mut R,
+        idx_bytes_32.as_slice(),
+        sk_prf.as_slice(),
+        n,
+    );
     // Generate hash key (R || root || idx)
     let dest = hash_key.get_mut(0..n as usize).unwrap();
     dest.copy_from_slice(&R);
@@ -865,15 +981,23 @@ pub fn xmss_fast_sign_msg(
     let out = hash_key.get_mut(2 * n as usize..hash_key_len).unwrap();
     to_byte(out, idx.into(), n.into());
     // Then use it for message digest
-    h_msg(
+    let Ok(message_length) = u64::try_from(msglen) else {
+        sig_msg.zeroize();
+        return 1;
+    };
+    if h_msg(
         hash_func,
-        &mut msg_h,
+        msg_h.as_mut_slice(),
         msg,
-        msglen.try_into().unwrap(),
-        &hash_key,
+        message_length,
+        hash_key.as_slice(),
         3 * n,
         n,
-    );
+    ) != 0
+    {
+        sig_msg.zeroize();
+        return 1;
+    }
 
     // Start collecting signature
     _sig_msg_len = 0;
@@ -906,14 +1030,20 @@ pub fn xmss_fast_sign_msg(
     set_ots_adrs(ots_addr, idx);
 
     // Compute seed for OTS key pair
-    get_seed(hash_func, &mut ots_seed, &sk_seed, n, ots_addr);
+    get_seed(
+        hash_func,
+        ots_seed.as_mut_slice(),
+        sk_seed.as_slice(),
+        n,
+        ots_addr,
+    );
 
     // Compute WOTS signature
     wots_sign(
         hash_func,
         sig_msg,
-        &msg_h,
-        &ots_seed,
+        msg_h.as_slice(),
+        ots_seed.as_slice(),
         &params.wots_par,
         &pub_seed,
         ots_addr,
@@ -933,13 +1063,19 @@ pub fn xmss_fast_sign_msg(
 
     if idx < ((1 as u32) << params.h) - 1 {
         bds_round(
-            hash_func, state, idx as u64, &sk_seed, params, &pub_seed, ots_addr,
+            hash_func,
+            state,
+            idx as u64,
+            sk_seed.as_slice(),
+            params,
+            &pub_seed,
+            ots_addr,
         );
         bds_treehash_update(
             hash_func,
             state,
             (params.h - params.k) >> 1,
-            &sk_seed,
+            sk_seed.as_slice(),
             params,
             &pub_seed,
             ots_addr,

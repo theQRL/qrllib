@@ -10,15 +10,6 @@ const XMSS_HEIGHT: u8 = 4;
 fn instantiation<T: XMSSBaseTrait + Sign>(xmss: T) {
     let seed: Vec<u8> = vec![0; 48];
 
-    let pk = xmss.get_pk();
-    let sk = xmss.get_sk();
-
-    println!();
-    println!();
-    println!("seed: {} bytes\n {}", seed.len(), encode(&seed));
-    println!("pk  : {} bytes\n {}", pk.len(), encode(&pk));
-    println!("sk  : {} bytes\n {}", sk.len(), encode(&sk));
-
     assert_eq!(seed, *xmss.get_seed());
 }
 
@@ -106,15 +97,6 @@ fn sign<T: XMSSBaseTrait + Sign>(mut xmss: T) {
     let data_to_sign = data.to_vec();
 
     let signature = xmss.sign(&data_to_sign).unwrap();
-
-    println!();
-    println!();
-    println!("data: {} bytes\n {}", data.len(), encode(&data));
-    println!(
-        "signature: {} bytes\n {}",
-        signature.len(),
-        encode(&signature)
-    );
 }
 
 #[test]
@@ -152,17 +134,7 @@ fn sign_many_times_index_moves<T: XMSSBaseTrait + Sign>(mut xmss: T) {
 
     for i in 0..10 {
         assert_eq!(i, xmss.get_index());
-        let sk = xmss.get_sk();
-        let pk = xmss.get_pk();
-        println!("sk: {} bytes\n {}", sk.len(), encode(&sk));
-        println!("pk: {} bytes\n {}", pk.len(), encode(&pk));
-
         let signature = xmss.sign(&data_to_sign).unwrap();
-        println!(
-            "signature: {} bytes\n {}",
-            signature.len(),
-            encode(&signature)
-        );
 
         assert_eq!(i + 1, xmss.get_index());
     }
@@ -204,17 +176,7 @@ fn sign_many_times_signature_changes<T: XMSSBaseTrait + Sign>(mut xmss: T) {
     let mut prev_sig: Vec<u8> = vec![0; xmss.get_signature_size(None) as usize];
     for i in 0..10 {
         assert_eq!(i, xmss.get_index());
-        let sk = xmss.get_sk();
-        let pk = xmss.get_pk();
-        println!("sk: {} bytes\n {}", sk.len(), encode(&sk));
-        println!("pk: {} bytes\n {}", pk.len(), encode(&pk));
-
         let signature = xmss.sign(&data_to_sign).unwrap();
-        println!(
-            "signature: {} bytes\n {}",
-            signature.len(),
-            encode(&signature)
-        );
         assert_ne!(signature, prev_sig);
         assert_eq!(i + 1, xmss.get_index());
         prev_sig = signature;
@@ -254,41 +216,16 @@ fn verify<T: XMSSBaseTrait + Sign>(mut xmss: T) {
     let data = message.as_bytes();
     let mut data_to_sign = data.to_vec();
 
-    let seed = xmss.get_seed();
     let pk = xmss.get_pk();
-    let sk = xmss.get_sk();
-    println!();
-    println!("seed: {} bytes\n {}", seed.len(), encode(&seed));
-    println!("pk: {} bytes\n {}", pk.len(), encode(&pk));
-    println!("sk: {} bytes\n {}", sk.len(), encode(&sk));
-
     let mut signature1 = xmss.sign(&data_to_sign).unwrap();
-
-    println!("---------------------------------------------");
-    println!("data: {} bytes\n {}", data.len(), encode(&data));
-    println!(
-        "signature: {} bytes\n {}",
-        signature1.len(),
-        encode(&signature1)
-    );
 
     assert!(T::verify(&mut data_to_sign, &signature1, &pk, None).is_ok());
 
     let mut signature2 = xmss.sign(&data_to_sign).unwrap();
     assert_eq!(data, data_to_sign);
 
-    println!("---------------------------------------------");
-    println!("data: {} bytes\n {}", data.len(), encode(&data));
-    println!(
-        "signature: {} bytes\n {}",
-        signature1.len(),
-        encode(&signature1)
-    );
-
     assert!(T::verify(&mut data_to_sign, &signature2, &pk, None).is_ok());
 
-    println!("---------------------------------------------");
-    println!("---------------------------------------------");
     signature1[1] += 1;
     // FIXME: This is intentionally breaking the index
     assert!(T::verify(&mut data_to_sign, &signature1, &pk, None).is_err());
@@ -335,11 +272,6 @@ fn sign_verify_index_shift<T: XMSSBaseTrait + Sign>(mut xmss: T) {
     let pk = xmss.get_pk();
     for i in 0..10 {
         let signature = xmss.sign(&data_to_sign).unwrap();
-        println!(
-            "signature: {} bytes\n {}",
-            signature.len(),
-            encode(&signature)
-        );
         assert_eq!(data, data_to_sign);
         assert!(T::verify(&mut data_to_sign, &signature, &pk, None).is_ok());
     }

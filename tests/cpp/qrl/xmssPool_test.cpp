@@ -5,6 +5,7 @@
 #include <atomic>
 #include <iostream>
 #include <set>
+#include <limits>
 #include <thread>
 #include <vector>
 #include "gtest/gtest.h"
@@ -30,7 +31,6 @@ namespace {
         const uint32_t height = 6;
         const uint32_t starting_index = 0;
         const uint32_t pool_size = 0;
-        std::cout << "\n";
 
         XmssPool pool(baseseed, height, starting_index, pool_size);
 
@@ -48,7 +48,6 @@ namespace {
         const uint32_t height = 6;
         const uint32_t starting_epoch = 0;
         const uint32_t pool_size = 5;
-        std::cout << "\n";
 
         XmssPool pool(seed, height, starting_epoch, pool_size);
 
@@ -66,7 +65,6 @@ namespace {
         const uint32_t height = 6;
         const uint32_t starting_epoch = 1;
         const uint32_t pool_size = 4;
-        std::cout << "\n";
 
         XmssPool pool(seed, height, starting_epoch, pool_size);
 
@@ -98,6 +96,18 @@ namespace {
         // Drains the cache one tree at a time; isAvailable() must stay callable
         // throughout rather than depending on the cache being non-empty.
         EXPECT_NO_THROW(pool.isAvailable());
+    }
+
+    TEST(XmssPool, RejectsInvalidResourceParameters) {
+        std::vector<unsigned char> seed(48, 0);
+        std::vector<unsigned char> short_seed(47, 0);
+
+        EXPECT_THROW(XmssPool(short_seed, 4, 0, 0), std::invalid_argument);
+        EXPECT_THROW(XmssPool(seed, 3, 0, 0), std::invalid_argument);
+        EXPECT_THROW(XmssPool(seed, 4, 0, XmssPool::MAX_POOL_SIZE + 1),
+                     std::invalid_argument);
+        EXPECT_THROW(XmssPool(seed, 4, std::numeric_limits<size_t>::max(), 0),
+                     std::invalid_argument);
     }
 
     // XMSS is a stateful one-time signature scheme, so an index must never be

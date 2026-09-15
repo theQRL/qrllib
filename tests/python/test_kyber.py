@@ -6,6 +6,7 @@ import unittest
 from unittest import TestCase
 
 from pyqrllib.kyber import Kyber
+from pyqrllib.pyqrllib import ucharVector
 
 
 class TestKyber(TestCase):
@@ -32,6 +33,35 @@ class TestKyber(TestCase):
 
         self.assertTrue(valid)
         self.assertEqual(alice_key, bob_key)
+
+    def test_fixed_size_boundaries_and_implicit_rejection(self):
+        recipient = Kyber()
+        sender = Kyber()
+        peer_pk = recipient.getPK()
+
+        for size in (0, 1087, 1089):
+            self.assertTrue(sender.kem_encode(peer_pk))
+            self.assertFalse(sender.kem_encode(ucharVector(size, 0)))
+            self.assertEqual(0, len(sender.getMyKey()))
+            self.assertEqual(0, len(sender.getCypherText()))
+
+        self.assertTrue(sender.kem_encode(peer_pk))
+        ciphertext = sender.getCypherText()
+        self.assertEqual(1152, len(ciphertext))
+
+        for size in (0, 1151, 1153):
+            self.assertTrue(recipient.kem_decode(ciphertext))
+            self.assertFalse(recipient.kem_decode(ucharVector(size, 0)))
+            self.assertEqual(0, len(recipient.getMyKey()))
+
+        self.assertTrue(recipient.kem_decode(ciphertext))
+        accepted_key = bytes(recipient.getMyKey())
+        rejected_ciphertext = ucharVector([value for value in ciphertext])
+        rejected_ciphertext[0] ^= 1
+        self.assertFalse(recipient.kem_decode(rejected_ciphertext))
+        rejection_key = bytes(recipient.getMyKey())
+        self.assertEqual(32, len(rejection_key))
+        self.assertNotEqual(accepted_key, rejection_key)
 
 
 if __name__ == '__main__':

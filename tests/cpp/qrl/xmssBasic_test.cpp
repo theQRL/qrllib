@@ -17,15 +17,7 @@ TEST(XmssBasic_Default, Instantiation)
     XmssBasic xmss(seed, XMSS_HEIGHT, eHashFunction::SHAKE_128, eAddrFormatType::SHA256_2X);
 
     auto pk = xmss.getPK();
-    auto sk = xmss.getSK();
 
-    std::cout << std::endl;
-    std::cout << std::endl;
-    std::cout << "seed:" << seed.size() << " bytes\n" << bin2hstr(seed, 16) << std::endl;
-    std::cout << "pk  :" << pk.size() << " bytes\n" << bin2hstr(pk, 16) << std::endl;
-    std::cout << "sk  :" << sk.size() << " bytes\n" << bin2hstr(sk, 16) << std::endl;
-    std::cout << "descr:" << bin2hstr(xmss.getDescriptor().getBytes()) << std::endl;
-    std::cout << "addr :" << bin2hstr(xmss.getAddress()) << std::endl;
 
     EXPECT_EQ(seed, xmss.getSeed());
     EXPECT_EQ("000000000000000000000000000000000000000000000000"
@@ -75,6 +67,30 @@ TEST(XmssBasic_Default, SignatureLen)
     EXPECT_EQ(2372, xmss6.getSignatureSize());
 }
 
+TEST(XmssBasic_Default, RejectsUnsupportedWotsParameters)
+{
+    std::vector<unsigned char> seed(48, 0);
+    EXPECT_THROW(XmssBasic(seed, 4, eHashFunction::SHAKE_128,
+                           eAddrFormatType::SHA256_2X, 0), std::invalid_argument);
+    EXPECT_THROW(XmssBasic(seed, 4, eHashFunction::SHAKE_128,
+                           eAddrFormatType::SHA256_2X, 3), std::invalid_argument);
+    EXPECT_THROW(XmssBase::calculateSignatureBaseSize(8), std::invalid_argument);
+}
+
+TEST(XmssBasic_Default, IndexIsMonotonicAndAllowsExhaustedSentinel)
+{
+    std::vector<unsigned char> seed(48, 0);
+    XmssBasic xmss(seed, 4, eHashFunction::SHAKE_128,
+                   eAddrFormatType::SHA256_2X);
+
+    EXPECT_EQ(1u, xmss.setIndex(1));
+    EXPECT_THROW(xmss.setIndex(0), std::invalid_argument);
+    EXPECT_EQ(16u, xmss.setIndex(16));
+    EXPECT_EQ(0u, xmss.getRemainingSignatures());
+    EXPECT_THROW(xmss.sign({0x01}), std::invalid_argument);
+    EXPECT_THROW(xmss.setIndex(17), std::invalid_argument);
+}
+
 TEST(XmssBasic_Default, Sign)
 {
     std::vector<unsigned char> seed(48, 0);
@@ -87,18 +103,10 @@ TEST(XmssBasic_Default, Sign)
 
     auto signature = xmss.sign(data);
 
-    std::cout << std::endl;
-    std::cout << std::endl;
-    std::cout << "data       :" << data.size() << " bytes\n" << bin2hstr(data, 64) << std::endl;
-    std::cout << "signature  :" << signature.size() << " bytes\n" << bin2hstr(signature, 64) << std::endl;
     EXPECT_EQ(xmss.getIndex(), 1);
 
     auto signature2 = xmss.sign(data);
 
-    std::cout << std::endl;
-    std::cout << std::endl;
-    std::cout << "data       :" << data.size() << " bytes\n" << bin2hstr(data, 64) << std::endl;
-    std::cout << "signature  :" << signature.size() << " bytes\n" << bin2hstr(signature, 64) << std::endl;
 
     EXPECT_NE(bin2hstr(signature), bin2hstr(signature2));
     EXPECT_EQ(xmss.getIndex(), 2);
@@ -117,20 +125,11 @@ TEST(XmssBasic_Default, Verify)
     std::vector<unsigned char> data(message.begin(), message.end());
 
     auto pk = xmss.getPK();
-    auto sk = xmss.getSK();
-    std::cout << std::endl;
-    std::cout << "seed:" << seed.size() << " bytes\n" << bin2hstr(seed, 32) << std::endl;
-    std::cout << "pk  :" << pk.size() << " bytes\n" << bin2hstr(pk, 32) << std::endl;
-    std::cout << "sk  :" << sk.size() << " bytes\n" << bin2hstr(sk, 32) << std::endl;
 
     auto signature = xmss.sign(data);
 
     EXPECT_EQ(data, data_ref);
 
-    std::cout << std::endl;
-    std::cout << std::endl;
-    std::cout << "data       :" << data.size() << " bytes\n" << bin2hstr(data, 64) << std::endl;
-    std::cout << "signature  :" << signature.size() << " bytes\n" << bin2hstr(signature, 64) << std::endl;
 
     EXPECT_TRUE(XmssBasic::verify(data, signature, pk));
 
@@ -151,20 +150,11 @@ TEST(XmssBasic_Default, VerifyBadSig)
     std::vector<unsigned char> data(message.begin(), message.end());
 
     auto pk = xmss.getPK();
-    auto sk = xmss.getSK();
-    std::cout << std::endl;
-    std::cout << "seed:" << seed.size() << " bytes\n" << bin2hstr(seed, 32) << std::endl;
-    std::cout << "pk  :" << pk.size() << " bytes\n" << bin2hstr(pk, 32) << std::endl;
-    std::cout << "sk  :" << sk.size() << " bytes\n" << bin2hstr(sk, 32) << std::endl;
 
     auto signature = xmss.sign(data);
 
     EXPECT_EQ(data, data_ref);
 
-    std::cout << std::endl;
-    std::cout << std::endl;
-    std::cout << "data       :" << data.size() << " bytes\n" << bin2hstr(data, 64) << std::endl;
-    std::cout << "signature  :" << signature.size() << " bytes\n" << bin2hstr(signature, 64) << std::endl;
 
     EXPECT_TRUE(XmssBasic::verify(data, signature, pk));
 

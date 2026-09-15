@@ -14,8 +14,7 @@ for (var i = 0; i < 48; i++) {
 }
 
 mnemonic_random = libqrl.bin2mnemonic(seed_random2);
-console.log("Seed    : ", libqrl.bin2hstr(seed_random2));
-console.log("Mnemonic: ", mnemonic_random);
+console.log("Generated a random seed and mnemonic");
 
 
 console.log("\n========== CREATE FIXED SEED ========");
@@ -26,8 +25,7 @@ for (var i = 0; i < 48; i++) {
 }
 
 mnemonic = libqrl.bin2mnemonic(seed_in);
-console.log("Seed    : ", libqrl.bin2hstr(seed_in));
-console.log("Mnemonic: ", mnemonic);
+console.log("Loaded the fixed test seed through its mnemonic");
 seed_out = libqrl.mnemonic2bin(mnemonic);
 
 assert(libqrl.bin2hstr(seed_in) === libqrl.bin2hstr(seed_out), "Seeds after mnemonic conversion do not match");
@@ -40,15 +38,11 @@ known_address = "Q67b08ac802fc97ad513836296bdd4017d7c58352a36b517af02ec948ec3263
 xmss = new libqrl.Xmss(seed_in, tree_height);
 console.log("Address : ", xmss.getAddress());
 console.log("PK      : ", libqrl.bin2hstr(xmss.getPK()));
-console.log("SK      : ", libqrl.bin2hstr(xmss.getSK()));
-console.log("Seed    : ", libqrl.bin2hstr(xmss.getSeed()));
 console.log("Height  : ", xmss.getHeight());
 console.log("Index   : ", xmss.getIndex());
 
 console.log("Root    : ", libqrl.bin2hstr(xmss.getRoot()));
 console.log("PKSeed  : ", libqrl.bin2hstr(xmss.getPKSeed()));
-console.log("SKSeed  : ", libqrl.bin2hstr(xmss.getSKSeed()));
-console.log("SKPRF   : ", libqrl.bin2hstr(xmss.getSKPRF()));
 
 
 assert(xmss.getAddress() === known_address, "ADDRESS DOES NOT MATCH");
@@ -79,14 +73,12 @@ assert(libqrl.bin2hstr(msg_in) === message_hstr, "MSG DOES NOT MATCH");
 console.log("\n========== FIRST SIGNATURE ========");
 console.log("Index  : ", xmss.getIndex());
 signature1 = xmss.sign(msg_in);
-console.log("Sig1   : ", libqrl.bin2hstr(signature1));
 assert(libqrl.bin2hstr(signature1) === signature1_known_hstr, "SIGNATURE DOES NOT MATCH");
 
 
 console.log("\n========== SECOND SIGNATURE ========");
 console.log("Index  : ", xmss.getIndex());
 signature2 = xmss.sign(msg_in);
-console.log("Sig2   : ", libqrl.bin2hstr(signature2));
 assert(libqrl.bin2hstr(signature2) === signature2_known_hstr, "SIGNATURE DOES NOT MATCH");
 
 console.log("\n========== VERIFY SIGNATURE ========");
@@ -95,4 +87,4 @@ verification1 = libqrl.Xmss.verify(msg_in, signature1, sigpk);
 verification2 = libqrl.Xmss.verify(msg_in, signature2, sigpk);
 
 console.log("Verif1      : ", verification1);
-console.log("Verif2      : ", verification2); 
+console.log("Verif2      : ", verification2);

@@ -1,6 +1,11 @@
 // Distributed under the MIT software license, see the accompanying
 // file LICENSE or http://www.opensource.org/licenses/mit-license.php.
 
+%{
+#include <crypto/secure_memory.h>
+#include <utility>
+%}
+
 %include "stdint.i"
 %include "carrays.i"
 %include "cdata.i"
@@ -51,11 +56,29 @@ SWIGEXPORT void HandleAllExceptions()
 
 #endif
 
+#if defined(SWIGGO)
+%typemap(out) std::vector<unsigned char> {
+    qrllib::secure_memory::WipeGuard<unsigned char> result_guard($1);
+    *(std::vector<unsigned char> **)&$result =
+        new std::vector<unsigned char>(std::move($1));
+}
+#endif
+
 %array_class(unsigned char, ucharCArray)
 %array_class(unsigned int, uintCArray)
 %array_class(uint32_t, uint32CArray)
 
 namespace std {
+#if defined(SWIGGO)
+  %extend vector<unsigned char> {
+    ~vector() {
+      if ($self != nullptr) {
+        qrllib::secure_memory::wipe(*$self);
+      }
+      delete $self;
+    }
+  }
+#endif
   %template(intVector) vector<int>;
   %template(uintVector) vector<unsigned int>;
   %template(ucharVector) vector<unsigned char>;
@@ -64,6 +87,13 @@ namespace std {
   %template(_string_list) vector<string>;
   %template(_string_list_list) vector<vector<unsigned char>>;
 }
+
+#if defined(SWIGPYTHON)
+%typemap(out) std::vector<unsigned char> {
+    qrllib::secure_memory::WipeGuard<unsigned char> result_guard($1);
+    $result = swig::from($1);
+}
+#endif
 
 %module kyber
 %{

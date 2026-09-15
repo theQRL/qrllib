@@ -18,15 +18,6 @@ fn instantiation() {
 
     let xmss = XMSSFast::new(seed.clone(), XMSS_HEIGHT, None, None, None).unwrap();
 
-    let pk = xmss.get_pk();
-    let sk = xmss.get_sk();
-
-    println!();
-    println!();
-    println!("seed: {} bytes\n {}", seed.len(), encode(&seed));
-    println!("pk  : {} bytes\n {}", pk.len(), encode(&pk));
-    println!("sk  : {} bytes\n {}", sk.len(), encode(&sk));
-
     assert_eq!(seed, *xmss.get_seed());
 }
 
@@ -54,26 +45,9 @@ fn sign() {
 
     let signature = xmss.sign(&data_to_sign).unwrap();
 
-    println!();
-    println!();
-    println!("data       : {} bytes\n{}", data.len(), encode(&data));
-    println!(
-        "signature  :{} bytes\n{}",
-        signature.len(),
-        encode(&signature)
-    );
     assert_eq!(xmss.get_index(), 1);
 
     let signature2 = xmss.sign(&data_to_sign).unwrap();
-
-    println!();
-    println!();
-    println!("data       : {} bytes\n{}", data.len(), encode(&data));
-    println!(
-        "signature  :{} bytes\n{}",
-        signature2.len(),
-        encode(&signature2)
-    );
 
     assert_ne!(encode(&signature), encode(&signature2));
     assert_eq!(xmss.get_index(), 2);
@@ -90,24 +64,9 @@ fn verify() {
     let mut data_to_sign = Vec::from(data);
 
     let pk = xmss.get_pk();
-    let sk = xmss.get_sk();
-    println!();
-    println!("seed:{} bytes\n{}", seed.len(), encode(&seed));
-    println!("pk  :{} bytes\n{}", pk.len(), encode(&pk));
-    println!("sk  :{} bytes\n{}", sk.len(), encode(&sk));
-
     let mut signature = xmss.sign(&data_to_sign).unwrap();
 
     assert_eq!(Vec::from(data), data_to_sign);
-
-    println!();
-    println!();
-    println!("data       :{} bytes\n{}", data.len(), encode(&data));
-    println!(
-        "signature  :{} bytes\n{}",
-        signature.len(),
-        encode(&signature)
-    );
 
     assert!(XMSSBase::verify(&mut data_to_sign, &signature.clone(), &pk, None).is_ok());
 
@@ -129,26 +88,9 @@ fn sign_with_w4() {
 
     let mut signature = xmss.sign(&data_to_sign).unwrap();
 
-    println!();
-    println!();
-    println!("data       :{} bytes\n{}", data.len(), encode(&data));
-    println!(
-        "signature  :{} bytes\n{}",
-        signature.len(),
-        encode(&signature)
-    );
     assert_eq!(xmss.get_index(), 1);
 
     let signature2 = xmss.sign(&data_to_sign).unwrap();
-
-    println!();
-    println!();
-    println!("data       : {} bytes\n{}", data.len(), encode(&data));
-    println!(
-        "signature  :{} bytes\n{}",
-        signature2.len(),
-        encode(&signature2)
-    );
 
     assert_ne!(encode(&signature), encode(&signature2));
     assert_eq!(xmss.get_index(), 2);
@@ -172,22 +114,7 @@ fn verify_with_w4() {
     let mut data_to_sign = Vec::from(data);
 
     let pk = xmss.get_pk();
-    let sk = xmss.get_sk();
-    println!();
-    println!("seed:{} bytes\n{}", seed.len(), encode(&seed));
-    println!("pk  :{} bytes\n{}", pk.len(), encode(&pk));
-    println!("sk  :{} bytes\n{}", sk.len(), encode(&sk));
-
     let mut signature = xmss.sign(&data_to_sign).unwrap();
-
-    println!();
-    println!();
-    println!("data       :{} bytes\n{}", data.len(), encode(&data));
-    println!(
-        "signature  :{} bytes\n{}",
-        signature.len(),
-        encode(&signature)
-    );
 
     assert!(XMSSBase::verify(&mut data_to_sign, &signature.clone(), &pk, Some(4)).is_ok());
     assert!(XMSSBase::verify(&mut data_to_sign, &signature.clone(), &xmss.get_pk(), None).is_err());
@@ -294,4 +221,41 @@ fn index_same() {
 
     xmss1.set_index(10);
     assert_eq!(10, xmss1.get_index());
+}
+
+#[test]
+fn final_signature_advances_to_exhausted_sentinel() {
+    let mut xmss = XMSSFast::new(vec![0; 48], 4, None, None, None).unwrap();
+
+    assert_eq!(15, xmss.set_index(15).unwrap());
+    assert!(xmss.sign(&Vec::new()).is_ok());
+    assert_eq!(16, xmss.get_index());
+    assert_eq!(0, xmss.get_remaining_signatures());
+    assert!(xmss.sign(&Vec::new()).is_err());
+    assert_eq!(16, xmss.set_index(16).unwrap());
+    assert!(xmss.set_index(17).is_err());
+    assert!(xmss.set_index(15).is_err());
+}
+
+#[test]
+fn used_tree_cannot_be_reinitialized_to_rewind_index() {
+    let mut xmss = XMSSFast::new(vec![0; 48], 4, None, None, None).unwrap();
+    assert!(xmss.sign(&Vec::new()).is_ok());
+    assert_eq!(1, xmss.get_index());
+
+    assert!(xmss.initialize_tree(None).is_err());
+    assert_eq!(1, xmss.get_index());
+}
+
+#[test]
+fn constructor_rejects_invalid_lengths_heights_and_wots_parameters() {
+    for seed_length in [0, 47, 49] {
+        assert!(XMSSFast::new(vec![0; seed_length], 4, None, None, None).is_err());
+    }
+    for height in [0, 2, 3, 31, 32] {
+        assert!(XMSSFast::new(vec![0; 48], height, None, None, None).is_err());
+    }
+    for wots in [0, 3, 8, 32] {
+        assert!(XMSSFast::new(vec![0; 48], 4, None, None, Some(wots)).is_err());
+    }
 }

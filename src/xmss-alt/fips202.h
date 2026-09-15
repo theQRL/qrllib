@@ -20,9 +20,27 @@ void shake128(unsigned char *out,
               const unsigned char *in,
               unsigned long long inlen);
 
+void shake128_3(unsigned char *out,
+                unsigned long long outlen,
+                const unsigned char *first,
+                unsigned long long firstlen,
+                const unsigned char *second,
+                unsigned long long secondlen,
+                const unsigned char *third,
+                unsigned long long thirdlen);
+
 void shake256(unsigned char *out,
               unsigned long long outlen,
               const unsigned char *in,
               unsigned long long inlen);
+
+void shake256_3(unsigned char *out,
+                unsigned long long outlen,
+                const unsigned char *first,
+                unsigned long long firstlen,
+                const unsigned char *second,
+                unsigned long long secondlen,
+                const unsigned char *third,
+                unsigned long long thirdlen);
 
 #endif

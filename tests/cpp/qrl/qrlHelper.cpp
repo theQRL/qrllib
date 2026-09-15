@@ -7,12 +7,14 @@
 namespace {
 TEST(QRL_Helper, validateAddress)
 {
-    std::vector<unsigned char> pk(QRLDescriptor::getSize()+64, 0);
+    auto pk = QRLDescriptor(eHashFunction::SHA2_256,
+                            eSignatureType::XMSS,
+                            4,
+                            eAddrFormatType::SHA256_2X).getBytes();
+    pk.resize(QRLDescriptor::getSize()+64, 0);
 
     auto address = QRLHelper::getAddress(pk);
 
-    std::cout << std::endl;
-    std::cout << bin2hstr(address) << std::endl;
 
     EXPECT_TRUE(QRLHelper::addressIsValid(address));
 
@@ -30,8 +32,6 @@ TEST(QRL_Helper, validateAddress)
 TEST(QRL_Helper, validateAddressEmpty)
 {
     auto address = std::vector<uint8_t>();
-    std::cout << std::endl;
-    std::cout << bin2hstr(address) << std::endl;
 
     EXPECT_FALSE(QRLHelper::addressIsValid(address));
 }

@@ -76,3 +76,27 @@ fn shake256() {
         "b3453cb0cbd37d726a842eb750e6091b15a92efd2695e3191a96d8d07413db04"
     );
 }
+
+#[test]
+fn shake128_handles_multiple_absorb_blocks() {
+    let input: Vec<u8> = (0..400).map(|i| (i % 251) as u8).collect();
+    let output = hashing::shake128(64, &input);
+
+    assert_eq!(
+        bin2hstr(&output, 0),
+        "66ff5bd43df370b9e275fb51e3db24ddef80f56fd5e98db17b142cd3e635836b2\
+         dea411e2d34318d02b9880a6cbcb004677ef3e6ce95e5faa91a32dab7b7d75b"
+    );
+}
+
+#[test]
+fn shake256_handles_multiple_absorb_blocks() {
+    let input: Vec<u8> = (0..400).map(|i| (i % 251) as u8).collect();
+    let output = hashing::shake256(64, &input);
+
+    assert_eq!(
+        bin2hstr(&output, 0),
+        "7dd381eec9130f2352d17583703d4a133deb6cd11fbd2e1831d67e7724c4e4744\
+         147007a1feac614f60790223337187d4e629d8efc1968465b6c9970b321c1ed"
+    );
+}

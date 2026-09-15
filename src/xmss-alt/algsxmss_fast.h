@@ -79,7 +79,7 @@ int xmssfast_Signmsg(eHashFunction hash_func,
                      unsigned char *sk,
                      bds_state *state,
                      unsigned char *sig_msg,
-                     unsigned char *msg,
+                     const unsigned char *msg,
                      unsigned long long msglen);
 
 int xmssfast_update(eHashFunction hash_func,

@@ -2,6 +2,10 @@
 // file LICENSE or http://www.opensource.org/licenses/mit-license.php.
 #include <hashing.h>
 #include <misc.h>
+#include <xmss-alt/hash.h>
+#include <xmss-alt/xmss_common.h>
+#include <algorithm>
+#include <utility>
 #include "gtest/gtest.h"
 
 namespace {
@@ -71,5 +75,22 @@ namespace {
 
         EXPECT_EQ(bin2hstr(input_bin), "54686973206973206120746573742058");
         EXPECT_EQ(bin2hstr(output_hashed), "b3453cb0cbd37d726a842eb750e6091b15a92efd2695e3191a96d8d07413db04");
+    }
+
+    TEST(Hashing, HMsgUsesBoundedStackForLargeMessages) {
+        std::vector<unsigned char> message(10U * 1024U * 1024U, 0x5a);
+        std::vector<unsigned char> key(96, 0x3c);
+        std::vector<unsigned char> actual(32, 0);
+
+        ASSERT_EQ(0, h_msg(eHashFunction::SHA2_256,
+                           actual.data(), message.data(), message.size(),
+                           key.data(), key.size(), actual.size()));
+
+        std::vector<unsigned char> concatenated(32 + key.size() + message.size(), 0);
+        to_byte(concatenated.data(), 2, 32);
+        std::copy(key.begin(), key.end(), concatenated.begin() + 32);
+        std::copy(message.begin(), message.end(),
+                  concatenated.begin() + 32 + key.size());
+        EXPECT_EQ(sha2_256(std::move(concatenated)), actual);
     }
 }

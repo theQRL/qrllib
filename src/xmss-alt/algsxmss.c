@@ -6,11 +6,19 @@
 #include "algsxmss.h"
 #include <cstdlib>
 #include <cstring>
+#include <limits>
 #include <memory>
+#include <crypto/secure_memory.h>
 
 #include "hash.h"
 #include "hash_address.h"
 #include "fips202.h"
+
+namespace {
+constexpr size_t SUPPORTED_XMSS_N = 32;
+constexpr size_t SUPPORTED_XMSS_MAX_HEIGHT = 30;
+constexpr size_t SUPPORTED_XMSS_MAX_WOTS_KEYSIZE = 265 * SUPPORTED_XMSS_N;
+}
 
 /**
  * Used for pseudorandom keygeneration,
@@ -43,8 +51,17 @@ void gen_leaf_wots(eHashFunction hash_func,
                           const unsigned char *pub_seed,
                           uint32_t ltree_addr[8],
                           uint32_t ots_addr[8]) {
-    unsigned char seed[params->n];
-    unsigned char pk[params->wots_par.keysize];
+    if (!xmss_hash_function_is_valid(hash_func) ||
+        !xmss_params_are_valid(params) || leaf == nullptr ||
+        sk_seed == nullptr || pub_seed == nullptr || ltree_addr == nullptr ||
+        ots_addr == nullptr) {
+        return;
+    }
+    unsigned char seed[SUPPORTED_XMSS_N];
+    qrllib::secure_memory::RangeWipeGuard seed_guard(seed, sizeof(seed));
+    unsigned char pk[SUPPORTED_XMSS_MAX_WOTS_KEYSIZE];
+    qrllib::secure_memory::RangeWipeGuard pk_guard(
+            pk, params->wots_par.keysize);
 
     get_seed(hash_func, seed, sk_seed, params->n, ots_addr);
     wots_pkgen(hash_func, pk, seed, &(params->wots_par), pub_seed, ots_addr);
@@ -84,11 +101,11 @@ treehash(eHashFunction hash_func,
     setType(node_addr, 2);
 
     uint32_t lastnode, i;
-    unsigned char stack[(height + 1) * n];
-    uint16_t stacklevels[height + 1];
+    unsigned char stack[(SUPPORTED_XMSS_MAX_HEIGHT + 1) * SUPPORTED_XMSS_N];
+    uint16_t stacklevels[SUPPORTED_XMSS_MAX_HEIGHT + 1];
     unsigned int stackoffset = 0;
 
-    lastnode = idx + (1 << height);
+    lastnode = idx + (1U << height);
 
     for (; idx < lastnode; idx++) {
         setLtreeADRS(ltree_addr, idx);
@@ -126,7 +143,11 @@ static int compute_authpath_wots(eHashFunction hash_func,
     uint32_t n = params->n;
     uint32_t h = params->h;
 
-    const size_t tree_size = (size_t) 2 * ((size_t) 1 << h) * n;
+    const size_t leaf_count = size_t{1} << h;
+    if (n == 0 || leaf_count > std::numeric_limits<size_t>::max() / (2U * n)) {
+        return -1;
+    }
+    const size_t tree_size = 2U * leaf_count * n;
     // SHA2 hashing can throw while building the tree; retain ownership on unwind.
     std::unique_ptr<unsigned char, decltype(&free)> tree_owner(
             static_cast<unsigned char *>(malloc(tree_size)), &free);
@@ -150,26 +171,37 @@ static int compute_authpath_wots(eHashFunction hash_func,
     for (i = 0; i < (1U << h); i++) {
         setLtreeADRS(ltree_addr, i);
         setOTSADRS(ots_addr, i);
-        gen_leaf_wots(hash_func, tree + ((1 << h) * n + i * n), sk_seed, params, pub_seed, ltree_addr, ots_addr);
+        const size_t leaf_offset = leaf_count * n + static_cast<size_t>(i) * n;
+        gen_leaf_wots(hash_func, tree + leaf_offset, sk_seed, params,
+                      pub_seed, ltree_addr, ots_addr);
     }
 
 
     level = 0;
     // Compute tree:
     // Outer loop: For each inner layer
-    for (i = (1 << h); i > 1; i >>= 1) {
+    for (i = (1U << h); i > 1; i >>= 1) {
         setTreeHeight(node_addr, level);
         // Inner loop: for each pair of sibling nodes
         for (j = 0; j < i; j += 2) {
             setTreeIndex(node_addr, j >> 1);
-            hash_h(hash_func, tree + (i >> 1) * n + (j >> 1) * n, tree + i * n + j * n, pub_seed, node_addr, n);
+            const size_t output_offset =
+                (static_cast<size_t>(i) >> 1) * n +
+                (static_cast<size_t>(j) >> 1) * n;
+            const size_t input_offset =
+                static_cast<size_t>(i) * n + static_cast<size_t>(j) * n;
+            hash_h(hash_func, tree + output_offset, tree + input_offset,
+                   pub_seed, node_addr, n);
         }
         level++;
     }
 
     // copy authpath
     for (i = 0; i < h; i++)
-        memcpy(authpath + i * n, tree + ((1 << h) >> i) * n + ((leaf_idx >> i) ^ 1) * n, n);
+        memcpy(authpath + static_cast<size_t>(i) * n,
+               tree + (leaf_count >> i) * n +
+                   static_cast<size_t>((leaf_idx >> i) ^ 1UL) * n,
+               n);
 
     // copy root
     memcpy(root, tree + n, n);
@@ -183,6 +215,11 @@ int xmss_Genkeypair(eHashFunction hash_func,
                     unsigned char *pk,
                     unsigned char *sk,
                     unsigned char *seed) {
+    if (!xmss_hash_function_is_valid(hash_func) ||
+        !xmss_params_are_valid(params) ||
+        pk == nullptr || sk == nullptr || seed == nullptr) {
+        return -1;
+    }
     unsigned int n = params->n;
     // Set idx = 0
     sk[0] = 0;
@@ -191,7 +228,8 @@ int xmss_Genkeypair(eHashFunction hash_func,
     sk[3] = 0;
 
     //Construct SK_SEED (n byte), SK_PRF (n byte), and PUB_SEED (n byte) from n-byte seed
-    unsigned char randombits[3 * n];
+    unsigned char randombits[3 * SUPPORTED_XMSS_N];
+    qrllib::secure_memory::RangeWipeGuard randombits_guard(randombits, sizeof(randombits));
     shake256(randombits, 3 * n, seed, 48);
 
     // Copy PUB_SEED to public key
@@ -208,6 +246,9 @@ int xmss_Genkeypair(eHashFunction hash_func,
 }
 
 int xmss_updateSK(unsigned char *sk, unsigned long k) {
+    if (sk == nullptr || k > UINT32_MAX) {
+        return -1;
+    }
     //unsigned long idxkey=0;
     //idxkey = ((unsigned long)sig_msg[0] << 24) | ((unsigned long)sig_msg[1] << 16) | ((unsigned long)sig_msg[2] << 8) | sig_msg[3];
     uint32_t idxkey =
@@ -230,19 +271,30 @@ int xmss_Signmsg(eHashFunction hash_func,
                  xmss_params *params,
                  unsigned char *sk,
                  unsigned char *sig_msg,
-                 unsigned char *msg,
+                 const unsigned char *msg,
                  size_t msglen) {
+    if (!xmss_hash_function_is_valid(hash_func) ||
+        !xmss_params_are_valid(params) ||
+        sk == nullptr || sig_msg == nullptr ||
+        (msg == nullptr && msglen != 0)) {
+        return -1;
+    }
     unsigned long long sig_msg_len;
     uint16_t n = params->n;
     uint16_t i = 0;
 
     // Extract SK
     uint32_t idx = ((unsigned long) sk[0] << 24) | ((unsigned long) sk[1] << 16) | ((unsigned long) sk[2] << 8) | sk[3];
-    unsigned char sk_seed[n];
+    if (idx >= (uint32_t{1} << params->h)) {
+        return -1;
+    }
+    unsigned char sk_seed[SUPPORTED_XMSS_N];
+    qrllib::secure_memory::RangeWipeGuard sk_seed_guard(sk_seed, sizeof(sk_seed));
     memcpy(sk_seed, sk + 4, n);
-    unsigned char sk_prf[n];
+    unsigned char sk_prf[SUPPORTED_XMSS_N];
+    qrllib::secure_memory::RangeWipeGuard sk_prf_guard(sk_prf, sizeof(sk_prf));
     memcpy(sk_prf, sk + 4 + n, n);
-    unsigned char pub_seed[n];
+    unsigned char pub_seed[SUPPORTED_XMSS_N];
     memcpy(pub_seed, sk + 4 + 2 * n, n);
 
     // index as 32 bytes string
@@ -250,7 +302,8 @@ int xmss_Signmsg(eHashFunction hash_func,
     to_byte(idx_bytes_32, idx, 32);
 
 
-    unsigned char hash_key[3 * n];
+    unsigned char hash_key[3 * SUPPORTED_XMSS_N];
+    qrllib::secure_memory::RangeWipeGuard hash_key_guard(hash_key, sizeof(hash_key));
 
     // Update SK
     sk[0] = ((idx + 1) >> 24) & 255;
@@ -261,10 +314,11 @@ int xmss_Signmsg(eHashFunction hash_func,
     // -- A productive implementation should use a file handle instead and write the updated secret key at this point!
 
     // Init working params
-    unsigned char R[n];
-    unsigned char msg_h[n];
-    unsigned char root[n];
-    unsigned char ots_seed[n];
+    unsigned char R[SUPPORTED_XMSS_N];
+    unsigned char msg_h[SUPPORTED_XMSS_N];
+    unsigned char root[SUPPORTED_XMSS_N];
+    unsigned char ots_seed[SUPPORTED_XMSS_N];
+    qrllib::secure_memory::RangeWipeGuard ots_seed_guard(ots_seed, sizeof(ots_seed));
     uint32_t ots_addr[8] = {0, 0, 0, 0, 0, 0, 0, 0};
 
     // ---------------------------------
@@ -279,7 +333,9 @@ int xmss_Signmsg(eHashFunction hash_func,
     memcpy(hash_key + n, sk + 4 + 3 * n, n);
     to_byte(hash_key + 2 * n, idx, n);
     // Then use it for message digest
-    h_msg(hash_func, msg_h, msg, msglen, hash_key, 3 * n, n);
+    if (h_msg(hash_func, msg_h, msg, msglen, hash_key, 3 * n, n) != 0) {
+        return -1;
+    }
 
     // Start collecting signature
     sig_msg_len = 0;

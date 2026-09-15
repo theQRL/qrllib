@@ -370,15 +370,21 @@ test.describe('libjsqrl browser tests', () => {
                 const initialIndex = xmss_basic_object.getIndex();
                 xmss_basic_object.setIndex(1);
                 const afterSetIndex = xmss_basic_object.getIndex();
-                xmss_basic_object.setIndex(0);
+                let rewindRejected = false;
+                try {
+                    xmss_basic_object.setIndex(0);
+                } catch (error) {
+                    rewindRejected = true;
+                }
                 const finalIndex = xmss_basic_object.getIndex();
 
-                return { initialIndex, afterSetIndex, finalIndex };
+                return { initialIndex, afterSetIndex, finalIndex, rewindRejected };
             });
 
             expect(result.initialIndex).toBe(0);
             expect(result.afterSetIndex).toBe(1);
-            expect(result.finalIndex).toBe(0);
+            expect(result.finalIndex).toBe(1);
+            expect(result.rewindRejected).toBe(true);
         });
 
         test('can correctly sign a message', async ({ page }) => {

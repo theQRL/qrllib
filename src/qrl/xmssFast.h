@@ -29,7 +29,7 @@ public:
     // the destination unchanged.
     XmssFast& operator=(const XmssFast& other);
     XmssFast& operator=(XmssFast&& other) noexcept;
-    ~XmssFast() override = default;
+    ~XmssFast() override;
 #endif
 
     TSIGNATURE sign(const TMESSAGE& message) override;
@@ -39,8 +39,10 @@ public:
 protected:
     // Point the traversal state at this object's buffers.
     void rebindState();
+    void validateState() const;
+    void wipeState() noexcept;
 
-    bds_state _state;
+    bds_state _state{};
     unsigned int _stackoffset = 0;
     std::vector<unsigned char> _stack;
     std::vector<unsigned char> _stacklevels;

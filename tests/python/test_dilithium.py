@@ -4,7 +4,7 @@ from __future__ import print_function
 
 from unittest import TestCase
 
-from pyqrllib.pyqrllib import ucharVector, bin2hstr, hstr2bin
+from pyqrllib.pyqrllib import ucharVector, hstr2bin
 from pyqrllib.dilithium import Dilithium
 
 
@@ -179,12 +179,12 @@ class TestDilithium(TestCase):
         message = bytes(b"This is a test")
         message_signed = dilithium.sign(message)
         data_out = ucharVector(len(message_signed))
-        Dilithium.sign_open(data_out, message_signed, dilithium.getPK())
+        self.assertTrue(Dilithium.sign_open(data_out, message_signed, dilithium.getPK()))
+        self.assertEqual(message, bytes(data_out))
 
         message_signed_ucv = ucharVector(len(message_signed))
         for i, value in enumerate(message_signed):
             message_signed_ucv[i] = value
-        print(len(message_signed_ucv))
         message_out = Dilithium.extract_message(message_signed_ucv)
         signature_out = Dilithium.extract_signature(message_signed_ucv)
 
@@ -195,9 +195,6 @@ class TestDilithium(TestCase):
         self.assertEqual(message_signed[:-len(message_out)], signature_out)
         self.assertEqual(message, bytes(message_out))
         self.assertEqual(b"This is a test", bytes(message_out))
-
-        print(bin2hstr(dilithium.getPK()))
-        print(bin2hstr(dilithium.getSK()))
 
     def test_dilithium_reference2(self):
         pk = bytes(hstr2bin(self.PK1_HSTR))
@@ -212,7 +209,8 @@ class TestDilithium(TestCase):
         message_signed = dilithium.sign(message)
         data_out = ucharVector(len(message_signed))
 
-        Dilithium.sign_open(data_out, message_signed, dilithium.getPK())
+        self.assertTrue(Dilithium.sign_open(data_out, message_signed, dilithium.getPK()))
+        self.assertEqual(message, bytes(data_out))
 
         message_signed_ucv = ucharVector(len(message_signed))
         for i, value in enumerate(message_signed):
@@ -228,3 +226,57 @@ class TestDilithium(TestCase):
         self.assertEqual(message_signed[:-len(message_out)], signature_out)
         self.assertEqual(message, bytes(message_out))
         self.assertEqual(b"This is a test", bytes(message_out))
+
+    def test_fixed_size_boundaries(self):
+        generated = Dilithium()
+        pk = bytes(generated.getPK())
+        sk = bytes(generated.getSK())
+
+        Dilithium(pk, sk)
+        for size in (0, 1471, 1473):
+            with self.assertRaises(ValueError):
+                Dilithium(bytes(size), sk)
+        for size in (0, 3503, 3505):
+            with self.assertRaises(ValueError):
+                Dilithium(pk, bytes(size))
+
+        message = b"boundary"
+        signed = generated.sign(message)
+        empty_signed = generated.sign(b"")
+        self.assertEqual(2701, len(empty_signed))
+        empty_output = ucharVector(13, 0xa5)
+        self.assertTrue(Dilithium.sign_open(empty_output, empty_signed, pk))
+        self.assertEqual(0, len(empty_output))
+        for size in (0, 1471, 1473):
+            output = ucharVector(13, 0xa5)
+            self.assertFalse(Dilithium.sign_open(output, signed, bytes(size)))
+            self.assertEqual(0, len(output))
+
+        for size in (0, 2700):
+            signed_boundary = ucharVector(size, 0xa5)
+            output = ucharVector(13, 0x3c)
+            self.assertEqual(0, len(Dilithium.extract_message(signed_boundary)))
+            self.assertEqual(0, len(Dilithium.extract_signature(signed_boundary)))
+            self.assertFalse(Dilithium.sign_open(output, signed_boundary, pk))
+            self.assertEqual(0, len(output))
+
+        exact = ucharVector(2701, 0xa5)
+        self.assertEqual(0, len(Dilithium.extract_message(exact)))
+        self.assertEqual(2701, len(Dilithium.extract_signature(exact)))
+        exact_output = ucharVector(13, 0x3c)
+        self.assertFalse(Dilithium.sign_open(exact_output, exact, pk))
+        self.assertEqual(0, len(exact_output))
+
+        plus_one = ucharVector(2702, 0xa5)
+        plus_one[2701] = 0x42
+        self.assertEqual(b"\x42", bytes(Dilithium.extract_message(plus_one)))
+        self.assertEqual(2701, len(Dilithium.extract_signature(plus_one)))
+        plus_one_output = ucharVector(13, 0x3c)
+        self.assertFalse(Dilithium.sign_open(plus_one_output, plus_one, pk))
+        self.assertEqual(0, len(plus_one_output))
+
+        tampered = ucharVector([value for value in signed])
+        tampered[0] ^= 1
+        stale_output = ucharVector(13, 0xa5)
+        self.assertFalse(Dilithium.sign_open(stale_output, tampered, pk))
+        self.assertEqual(0, len(stale_output))

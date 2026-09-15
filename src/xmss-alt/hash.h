@@ -15,7 +15,13 @@ This code was taken from the XMSS reference implementation by Andreas Hülsing a
 #ifndef HASH_H
 #define HASH_H
 
+#include "eHashFunctions.h"
+
 #include <cstdint>
+
+int sha2_256_secure(unsigned char *out,
+                    const unsigned char *in,
+                    unsigned long long inlen);
 
 unsigned char *addr_to_byte(unsigned char *bytes, const uint32_t addr[8]);
 

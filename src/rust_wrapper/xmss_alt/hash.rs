@@ -3,6 +3,7 @@ use super::hash_address::set_key_and_mask;
 use super::hash_functions::HashFunction;
 use super::xmss_common::to_byte;
 use crate::rust_wrapper::shasha::shasha::sha2_256;
+use zeroize::Zeroizing;
 
 pub fn u32_slice_to_bytes(input: &[u32], num_bytes: usize) -> Vec<u8> {
     let mut bytes = Vec::with_capacity(4 * input.len());
@@ -37,47 +38,61 @@ pub fn core_hash(
     inlen: u32,
     n: u32,
 ) -> u32 {
-    let buf_size = (inlen + n + keylen) as usize;
-    let mut buf: Vec<u8> = vec![0; buf_size];
+    if !matches!(n, 32 | 64)
+        || key.len() < keylen as usize
+        || input.len() < inlen as usize
+        || out.len() < n as usize
+    {
+        out.fill(0);
+        return 1;
+    }
+    let Some(buf_size) = (inlen as usize)
+        .checked_add(n as usize)
+        .and_then(|size| size.checked_add(keylen as usize))
+    else {
+        out.fill(0);
+        return 1;
+    };
+    let mut buf = Zeroizing::new(vec![0; buf_size]);
 
     // Input is (toByte(X, 32) || KEY || M)
 
     // set toByte
     to_byte(&mut buf, type_t.into(), n);
 
-    for i in 0..keylen as usize {
-        buf[i + n as usize] = key[i];
-    }
-
-    for i in 0..inlen {
-        buf[(keylen + n + i) as usize] = input[i as usize];
-    }
+    let key_start = n as usize;
+    let input_start = key_start + keylen as usize;
+    buf[key_start..input_start].copy_from_slice(&key[..keylen as usize]);
+    buf[input_start..buf_size].copy_from_slice(&input[..inlen as usize]);
 
     match hash_func {
         HashFunction::Shake128 if n == 32 => {
-            shake128(out, 32, &buf, (inlen + keylen + n).into());
+            shake128(out, 32, &buf, buf_size as u64);
             0
         }
         HashFunction::Shake128 if n == 64 => {
-            shake128(out, 64, &buf, (inlen + keylen + n).into());
+            shake128(out, 64, &buf, buf_size as u64);
             0
         }
         HashFunction::Shake256 if n == 32 => {
-            shake256(out, 32, &buf, (inlen + keylen + n).into());
+            shake256(out, 32, &buf, buf_size as u64);
             0
         }
         HashFunction::Shake256 if n == 64 => {
-            shake256(out, 64, &buf, (inlen + keylen + n).into());
+            shake256(out, 64, &buf, buf_size as u64);
             0
         }
         HashFunction::SHA2_256 if n == 32 => {
-            let buf_sha2_256 = sha2_256(&buf);
+            let buf_sha2_256 = Zeroizing::new(sha2_256(&buf));
             out.get_mut(0..buf_sha2_256.len())
                 .unwrap()
                 .copy_from_slice(buf_sha2_256.as_slice());
             0
         }
-        _ => 1,
+        _ => {
+            out[..n as usize].fill(0);
+            1
+        }
     }
 }
 
@@ -100,23 +115,16 @@ pub fn h_msg(
     keylen: u32,
     n: u32,
 ) -> u32 {
-    if keylen != 3 * n {
+    if n.checked_mul(3) != Some(keylen) || inlen > u32::MAX as u64 || inlen as usize != input.len()
+    {
         eprintln!(
             "H_msg takes 3n-bit keys, we got n={} but a keylength of {}.\n",
             n, keylen
         );
+        out.fill(0);
         return 1;
     }
-    return core_hash(
-        hash_func,
-        out,
-        2,
-        key,
-        keylen,
-        input,
-        inlen.try_into().unwrap(),
-        n,
-    );
+    return core_hash(hash_func, out, 2, key, keylen, input, inlen as u32, n);
 }
 
 /**
@@ -130,6 +138,18 @@ pub fn hash_h(
     addr: &mut [u32; 8],
     n: u32,
 ) -> u32 {
+    let Some(input_length) = (n as usize).checked_mul(2) else {
+        out.fill(0);
+        return 1;
+    };
+    if !matches!(n, 32 | 64)
+        || out.len() < n as usize
+        || input.len() < input_length
+        || pub_seed.len() < n as usize
+    {
+        out.fill(0);
+        return 1;
+    }
     let mut buf: Vec<u8> = vec![0; 2 * n as usize];
     let mut key: Vec<u8> = vec![0; n as usize];
     let mut bitmask: Vec<u8> = vec![0; 2 * n as usize];
@@ -161,7 +181,15 @@ pub fn hash_f(
     addr: &mut [u32; 8],
     n: u32,
 ) -> u32 {
-    let mut buf: Vec<u8> = vec![0; n as usize];
+    if !matches!(n, 32 | 64)
+        || out.len() < n as usize
+        || input.len() < n as usize
+        || pub_seed.len() < n as usize
+    {
+        out.fill(0);
+        return 1;
+    }
+    let mut buf = Zeroizing::new(vec![0; n as usize]);
     let mut key: Vec<u8> = vec![0; n as usize];
     let mut bitmask: Vec<u8> = vec![0; n as usize];
     let mut byte_addr: Vec<u8> = vec![0; 32];

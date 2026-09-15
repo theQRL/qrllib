@@ -7,6 +7,8 @@ use super::hash_address::{
 use super::hash_functions::HashFunction;
 use super::wots::{wots_pkgen, wots_sign};
 use super::xmss_common::{l_tree, to_byte, XMSSParams};
+use crate::rust_wrapper::qrl::xmss_validation::{signature_count, SECRET_KEY_SIZE, SEED_SIZE};
+use zeroize::{Zeroize, Zeroizing};
 
 /**
  * Used for pseudorandom keygeneration,
@@ -44,14 +46,14 @@ pub fn gen_leaf_wots(
     ltree_addr: &mut [u32; 8],
     ots_addr: &mut [u32; 8],
 ) {
-    let mut seed: Vec<u8> = vec![0; params.n as usize];
-    let mut pk: Vec<u8> = vec![0; params.wots_par.keysize as usize];
+    let mut seed = Zeroizing::new(vec![0; params.n as usize]);
+    let mut pk = Zeroizing::new(vec![0; params.wots_par.keysize as usize]);
 
     get_seed(hash_func, &mut seed, sk_seed, params.n, ots_addr);
     wots_pkgen(
         hash_func,
-        &mut pk,
-        &seed,
+        pk.as_mut_slice(),
+        seed.as_slice(),
         &(params.wots_par),
         pub_seed,
         ots_addr,
@@ -61,7 +63,7 @@ pub fn gen_leaf_wots(
         hash_func,
         &params.wots_par,
         leaf,
-        &mut pk,
+        pk.as_mut_slice(),
         pub_seed,
         ltree_addr,
     );
@@ -235,6 +237,15 @@ pub fn xmss_gen_keypair(
     sk: &mut [u8],
     seed: &mut [u8],
 ) -> u32 {
+    if params.validate().is_err()
+        || pk.len() != (2 * params.n) as usize
+        || sk.len() != SECRET_KEY_SIZE
+        || seed.len() != SEED_SIZE
+    {
+        pk.zeroize();
+        sk.zeroize();
+        return 1;
+    }
     let n = params.n;
     // Set idx = 0
     sk[0] = 0;
@@ -243,8 +254,8 @@ pub fn xmss_gen_keypair(
     sk[3] = 0;
 
     //Construct SK_SEED (n byte), SK_PRF (n byte), and PUB_SEED (n byte) from n-byte seed
-    let mut randombits: Vec<u8> = vec![0; 3 * n as usize];
-    shake256(&mut randombits, 3 * n as usize, seed, 48);
+    let mut randombits = Zeroizing::new(vec![0; 3 * n as usize]);
+    shake256(randombits.as_mut_slice(), 3 * n as usize, seed, 48);
 
     // Copy PUB_SEED to public key
     let dest = sk.get_mut(4..4 + (3 * n) as usize).unwrap();
@@ -284,6 +295,9 @@ pub fn xmss_gen_keypair(
 pub fn xmss_update_sk(sk: &mut [u8], k: u64) -> i32 {
     //unsigned long idxkey=0;
     //idxkey = ((unsigned long)sig_msg[0] << 24) | ((unsigned long)sig_msg[1] << 16) | ((unsigned long)sig_msg[2] << 8) | sig_msg[3];
+    if sk.len() != SECRET_KEY_SIZE || k > u32::MAX as u64 {
+        return -1;
+    }
     let idxkey: u32 =
         ((sk[0] as u32) << 24) | ((sk[1] as u32) << 16) | ((sk[2] as u32) << 8) | sk[3] as u32;
     if idxkey as u64 >= k {
@@ -308,18 +322,42 @@ pub fn xmss_sign_msg(
     msg: &[u8],
     msglen: usize,
 ) -> u32 {
+    let expected_signature_size = (4_u32)
+        .checked_add(params.n)
+        .and_then(|size| size.checked_add(params.wots_par.keysize))
+        .and_then(|size| size.checked_add(params.h.saturating_mul(params.n)))
+        .map(|size| size as usize);
+    if params.validate().is_err()
+        || sk.len() != SECRET_KEY_SIZE
+        || expected_signature_size != Some(sig_msg.len())
+        || msglen != msg.len()
+    {
+        sig_msg.zeroize();
+        return 1;
+    }
     let n: u16 = params.n as u16;
 
     // Extract SK
     let idx =
         (((sk[0] as u64) << 24) | ((sk[1] as u64) << 16) | ((sk[2] as u64) << 8) | sk[3] as u64)
             as u32;
+    let signature_limit = match signature_count(params.h as u8) {
+        Ok(limit) => limit,
+        Err(_) => {
+            sig_msg.zeroize();
+            return 1;
+        }
+    };
+    if idx >= signature_limit {
+        sig_msg.zeroize();
+        return 1;
+    }
 
-    let mut sk_seed: Vec<u8> = vec![0; n as usize];
+    let mut sk_seed = Zeroizing::new(vec![0; n as usize]);
     let src = sk.get(4..(4 + n) as usize).unwrap();
     sk_seed.copy_from_slice(src);
 
-    let mut sk_prf: Vec<u8> = vec![0; n as usize];
+    let mut sk_prf = Zeroizing::new(vec![0; n as usize]);
     let src = sk.get((4 + n) as usize..(4 + n + n) as usize).unwrap();
     sk_prf.copy_from_slice(src);
 
@@ -328,10 +366,10 @@ pub fn xmss_sign_msg(
     pub_seed.copy_from_slice(src);
 
     // index as 32 bytes string
-    let mut idx_bytes_32: Vec<u8> = vec![0; 32];
+    let mut idx_bytes_32 = Zeroizing::new(vec![0; 32]);
     to_byte(&mut idx_bytes_32, idx.into(), 32);
 
-    let mut hash_key: Vec<u8> = vec![0; 3 * n as usize];
+    let mut hash_key = Zeroizing::new(vec![0; 3 * n as usize]);
 
     // Update SK
     sk[0] = ((idx + 1) >> 24) as u8 & 255;
@@ -342,10 +380,10 @@ pub fn xmss_sign_msg(
     // -- A productive implementation should use a file handle instead and write the updated secret key at this point!
 
     // Init working params
-    let mut R: Vec<u8> = vec![0; n as usize];
-    let mut msg_h: Vec<u8> = vec![0; n as usize];
+    let mut R = Zeroizing::new(vec![0; n as usize]);
+    let mut msg_h = Zeroizing::new(vec![0; n as usize]);
     let mut root: Vec<u8> = vec![0; n as usize];
-    let mut ots_seed: Vec<u8> = vec![0; n as usize];
+    let mut ots_seed = Zeroizing::new(vec![0; n as usize]);
     let ots_addr: &mut [u32; 8] = &mut [0; 8];
 
     // ---------------------------------
@@ -354,7 +392,13 @@ pub fn xmss_sign_msg(
 
     // Message Hash:
     // First compute pseudorandom value
-    prf(hash_func, &mut R, &idx_bytes_32, &sk_prf, n.into());
+    prf(
+        hash_func,
+        &mut R,
+        idx_bytes_32.as_slice(),
+        sk_prf.as_slice(),
+        n.into(),
+    );
     // Generate hash key (R || root || idx)
     let dest = hash_key.get_mut(0..n as usize).unwrap();
     dest.copy_from_slice(&R);
@@ -367,15 +411,23 @@ pub fn xmss_sign_msg(
     let out = hash_key.get_mut(2 * n as usize..hash_key_len).unwrap();
     to_byte(out, idx.into(), n.into());
     // Then use it for message digest
-    h_msg(
+    let Ok(message_length) = u64::try_from(msglen) else {
+        sig_msg.zeroize();
+        return 1;
+    };
+    if h_msg(
         hash_func,
-        &mut msg_h,
+        msg_h.as_mut_slice(),
         msg,
-        msglen.try_into().unwrap(),
-        &hash_key,
+        message_length,
+        hash_key.as_slice(),
         3 * n as u32,
         n.into(),
-    );
+    ) != 0
+    {
+        sig_msg.zeroize();
+        return 1;
+    }
 
     // Start collecting signature
     let mut _sig_msg_len: u64 = 0;
@@ -407,14 +459,20 @@ pub fn xmss_sign_msg(
     set_ots_adrs(ots_addr, idx);
 
     // Compute seed for OTS key pair
-    get_seed(hash_func, &mut ots_seed, &sk_seed, n.into(), ots_addr);
+    get_seed(
+        hash_func,
+        ots_seed.as_mut_slice(),
+        sk_seed.as_slice(),
+        n.into(),
+        ots_addr,
+    );
 
     // Compute WOTS signature
     wots_sign(
         hash_func,
         sig_msg,
-        &msg_h,
-        &ots_seed,
+        msg_h.as_slice(),
+        ots_seed.as_slice(),
         &params.wots_par,
         &pub_seed,
         ots_addr,
@@ -431,7 +489,7 @@ pub fn xmss_sign_msg(
         &mut root,
         sig_msg,
         idx as u64,
-        &sk_seed,
+        sk_seed.as_slice(),
         params,
         &mut pub_seed,
         ots_addr,

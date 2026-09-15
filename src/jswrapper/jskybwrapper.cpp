@@ -1,10 +1,40 @@
 #include <emscripten.h>
 #include <emscripten/bind.h>
+#include <cctype>
 #include <iostream>
+#include <stdexcept>
+#include <crypto/secure_memory.h>
 #include <kyber.h>
 #include <misc.h>
 
 namespace {
+
+    std::vector<uint8_t> decode_sensitive_hex(const std::string& input)
+    {
+        if (input.size() % 2 != 0) {
+            throw std::invalid_argument(
+                "hex string is expected to have an even number of characters");
+        }
+
+        std::vector<uint8_t> result;
+        qrllib::secure_memory::WipeGuard<uint8_t> result_guard(result);
+        result.reserve(input.size() / 2);
+        for (std::size_t i = 0; i < input.size(); i += 2) {
+            const auto first = static_cast<unsigned char>(input[i]);
+            const auto second = static_cast<unsigned char>(input[i + 1]);
+            if (!std::isxdigit(first) || !std::isxdigit(second)) {
+                throw std::invalid_argument("invalid hex digits in the string");
+            }
+
+            const auto high = std::tolower(first);
+            const auto low = std::tolower(second);
+            const auto high_value = std::isdigit(high) ? high - '0' : high - 'a' + 10;
+            const auto low_value = std::isdigit(low) ? low - '0' : low - 'a' + 10;
+            result.push_back(static_cast<uint8_t>((high_value << 4) + low_value));
+        }
+        result_guard.release();
+        return result;
+    }
 
     class KyberWrapper {
         
@@ -23,9 +53,13 @@ namespace {
             return _kyber.getSK() ;
         }
 
-        std::string getSK()
+        emscripten::val getSK()
         {
-            return bin2hstr( _kyber.getSK() );
+            auto secret_key = _kyber.getSK();
+            qrllib::secure_memory::WipeGuard<uint8_t> sk_guard(secret_key);
+            auto encoded = bin2hstr(secret_key);
+            qrllib::secure_memory::StringWipeGuard encoded_guard(encoded);
+            return emscripten::val::u8string(encoded.c_str());
         }
 
         std::vector<uint8_t> getPKRaw()
@@ -40,12 +74,19 @@ namespace {
 
         bool kem_encode(const std::string& input)
         {
-            return _kyber.kem_encode( hstr2bin(input) );
+            // Parsing can throw before the native size boundary is reached.
+            // Clear the prior operation result first so that path cannot leave
+            // an old shared key or ciphertext observable.
+            _kyber.kem_encode({});
+            const auto peer_pk = hstr2bin(input);
+            return _kyber.kem_encode(peer_pk);
         }
 
         bool kem_decode(const std::string& input)
         {
-            return _kyber.kem_decode( hstr2bin(input) );
+            _kyber.kem_decode({});
+            const auto ciphertext = hstr2bin(input);
+            return _kyber.kem_decode(ciphertext);
         }
 
         std::string getCypherText()
@@ -53,9 +94,13 @@ namespace {
             return bin2hstr( _kyber.getCypherText() );
         }
 
-        std::string getMyKey()
+        emscripten::val getMyKey()
         {
-            return bin2hstr( _kyber.getMyKey() );
+            auto shared_key = _kyber.getMyKey();
+            qrllib::secure_memory::WipeGuard<uint8_t> key_guard(shared_key);
+            auto encoded = bin2hstr(shared_key);
+            qrllib::secure_memory::StringWipeGuard encoded_guard(encoded);
+            return emscripten::val::u8string(encoded.c_str());
         }
 
         /////////////////////////////////////
@@ -68,9 +113,13 @@ namespace {
 
         static KyberWrapper fromKeys(
             const std::string& pk,
-            const std::string& sk)
+            std::string sk)
         {
-            return KyberWrapper( hstr2bin(pk), hstr2bin(sk) );
+            qrllib::secure_memory::StringWipeGuard encoded_sk_guard(sk);
+            const auto public_key = hstr2bin(pk);
+            auto secret_key = decode_sensitive_hex(sk);
+            qrllib::secure_memory::WipeGuard<uint8_t> sk_guard(secret_key);
+            return KyberWrapper(public_key, secret_key);
         }
 
     private:
@@ -100,7 +149,9 @@ crypto_kem_keypair(
     unsigned char pk,
     unsigned char sk)
 {
-    return crypto_kem_keypair(pk, sk);
+    (void) pk;
+    (void) sk;
+    return -1;
 }
 
 using namespace emscripten;
@@ -118,7 +169,8 @@ EMSCRIPTEN_BINDINGS(my_module) {
         .function("kem_decode", &KyberWrapper::kem_decode)
         .function("getPKRaw", &KyberWrapper::getPKRaw)
         .function("getPK", &KyberWrapper::getPK)
-        .function("getSKRaw", &KyberWrapper::getSKRaw)
+        .function("getSKRaw", &KyberWrapper::getSKRaw,
+                  return_value_policy::take_ownership())
         .function("getSK", &KyberWrapper::getSK)
         .function("getCypherText", &KyberWrapper::getCypherText)
         .function("getMyKey", &KyberWrapper::getMyKey);

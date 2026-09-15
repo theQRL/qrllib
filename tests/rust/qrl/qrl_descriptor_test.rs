@@ -58,3 +58,26 @@ fn check_attributes_from_bytes() {
     let expected_descriptor_bytes = vec![0x01, 0x08, 0x00];
     assert_eq!(expected_descriptor_bytes, desc.get_bytes());
 }
+
+#[test]
+fn rejects_non_xmss_signature_nibble() {
+    assert!(QRLDescriptor::from_bytes(&vec![0x10, 0x02, 0x00]).is_err());
+}
+
+#[test]
+fn rejects_nonzero_reserved_byte() {
+    assert!(QRLDescriptor::from_bytes(&vec![0x00, 0x02, 0x01]).is_err());
+}
+
+#[test]
+fn rejects_unsupported_descriptor_heights() {
+    for height_nibble in [0x00, 0x01] {
+        assert!(QRLDescriptor::from_bytes(&vec![0x00, height_nibble, 0x00]).is_err());
+    }
+    assert_eq!(
+        30,
+        QRLDescriptor::from_bytes(&vec![0x00, 0x0f, 0x00])
+            .unwrap()
+            .get_height()
+    );
+}

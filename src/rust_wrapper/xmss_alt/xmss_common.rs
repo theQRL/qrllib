@@ -6,6 +6,9 @@ use super::{
     wots::{wots_pk_from_sig, WOTSParams},
 };
 use crate::rust_wrapper::errors::QRLError;
+use crate::rust_wrapper::qrl::xmss_validation::{
+    signature_count, validate_height, validate_wots, BDS_K, N,
+};
 
 #[derive(Default)]
 pub struct XMSSParams {
@@ -21,14 +24,47 @@ impl XMSSParams {
      * parameter names are the same as in the draft
      */
     pub fn new(n: u32, h: u32, w: u32, k: u32) -> Result<Self, QRLError> {
-        if k >= h || k < 2 || (h - k) % 2 != 0 {
-            Err(QRLError::InvalidArgument(
-                "For BDS traversal, H - K must be even, with H > K >= 2!".to_owned(),
-            ))
-        } else {
-            let wots_par = WOTSParams::new(n, w);
-            Ok(XMSSParams { wots_par, n, h, k })
+        if n != N {
+            return Err(QRLError::InvalidArgument(
+                "Unsupported XMSS hash size".to_owned(),
+            ));
         }
+        let height = u8::try_from(h)
+            .map_err(|_| QRLError::InvalidArgument("XMSS height is out of range".to_owned()))?;
+        validate_height(height)?;
+        validate_wots(w)?;
+        if k != BDS_K || k >= h || (h - k) % 2 != 0 {
+            return Err(QRLError::InvalidArgument(
+                "For BDS traversal, H - K must be even, with H > K >= 2!".to_owned(),
+            ));
+        }
+        let wots_par = WOTSParams::new(n, w);
+        Ok(XMSSParams { wots_par, n, h, k })
+    }
+
+    pub(crate) fn validate(&self) -> Result<(), QRLError> {
+        let height = u8::try_from(self.h)
+            .map_err(|_| QRLError::InvalidArgument("XMSS height is out of range".to_owned()))?;
+        validate_height(height)?;
+        validate_wots(self.wots_par.w)?;
+        if self.n != N || self.k != BDS_K || self.k >= self.h || (self.h - self.k) % 2 != 0 {
+            return Err(QRLError::InvalidArgument(
+                "Invalid XMSS parameter state".to_owned(),
+            ));
+        }
+        let expected = WOTSParams::new(self.n, self.wots_par.w);
+        if self.wots_par.n != expected.n
+            || self.wots_par.log_w != expected.log_w
+            || self.wots_par.len_1 != expected.len_1
+            || self.wots_par.len_2 != expected.len_2
+            || self.wots_par.len != expected.len
+            || self.wots_par.keysize != expected.keysize
+        {
+            return Err(QRLError::InvalidArgument(
+                "Invalid XMSS WOTS parameter state".to_owned(),
+            ));
+        }
+        Ok(())
     }
 }
 
@@ -159,9 +195,36 @@ pub fn xmss_verify_sig(
     pk: &[u8],
     h: u8,
 ) -> i32 {
-    let mut sig_msg_len = (4 + 32 + wotsParams.len * 32 + h as u32 * 32) as u64;
+    if validate_height(h).is_err() || validate_wots(wotsParams.w).is_err() {
+        return -1;
+    }
+    let expected_wots = WOTSParams::new(N, wotsParams.w);
+    if wotsParams.n != expected_wots.n
+        || wotsParams.w != expected_wots.w
+        || wotsParams.log_w != expected_wots.log_w
+        || wotsParams.len != expected_wots.len
+        || wotsParams.len_1 != expected_wots.len_1
+        || wotsParams.len_2 != expected_wots.len_2
+        || wotsParams.keysize != expected_wots.keysize
+        || pk.len() != (2 * N) as usize
+        || msglen != msg.len()
+    {
+        return -1;
+    }
+    let expected_signature_size = match 4_u32
+        .checked_add(N)
+        .and_then(|size| size.checked_add(wotsParams.keysize))
+        .and_then(|size| size.checked_add((h as u32).checked_mul(N)?))
+    {
+        Some(size) => size as usize,
+        None => return -1,
+    };
+    if sig_msg.len() != expected_signature_size {
+        return -1;
+    }
 
     let n = wotsParams.n;
+    let mut sig_msg_len = expected_signature_size as u64;
 
     let mut wots_pk: Vec<u8> = vec![0; wotsParams.keysize as usize];
     let mut pkhash: Vec<u8> = vec![0; n.try_into().unwrap()];
@@ -186,6 +249,13 @@ pub fn xmss_verify_sig(
         | ((sig_msg[1] as u32) << 16)
         | ((sig_msg[2] as u32) << 8)
         | sig_msg[3] as u32;
+    let signature_limit = match signature_count(h) {
+        Ok(limit) => limit,
+        Err(_) => return -1,
+    };
+    if idx >= signature_limit {
+        return -1;
+    }
 
     // printf("verify:: idx = %lu\n", idx);
 
@@ -201,15 +271,21 @@ pub fn xmss_verify_sig(
     sig_msg_len -= n as u64 + 4;
 
     // hash message
-    h_msg(
+    let Ok(message_length) = u64::try_from(msglen) else {
+        return -1;
+    };
+    if h_msg(
         hash_func,
         &mut msg_h,
         msg,
-        msglen.try_into().unwrap(),
+        message_length,
         &hash_key,
         3 * n,
         n,
-    );
+    ) != 0
+    {
+        return -1;
+    }
     //-----------------------
     // Verify signature
     //-----------------------
