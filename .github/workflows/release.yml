@@ -202,14 +202,10 @@ jobs:
           VERSION="${TAG#v}"
           ok=""
           for attempt in 1 2 3 4 5 6 7 8 9 10; do
-            served="$(python3 - <<'PY'
-import json
-import urllib.request
-
-with urllib.request.urlopen("https://pypi.org/pypi/pyqrllib/json", timeout=20) as response:
-    print(json.load(response)["info"]["version"])
-PY
-)"
+            # `|| true` matches the npm check above: a transient network error
+            # should let the retry loop run, not abort the step under `set -e`.
+            served="$(curl -fsS --max-time 20 https://pypi.org/pypi/pyqrllib/json 2>/dev/null \
+                      | python3 -c 'import json,sys; print(json.load(sys.stdin)["info"]["version"])' 2>/dev/null || true)"
             if [ "${served}" = "${VERSION}" ]; then
               echo "confirmed pyqrllib==${VERSION} on attempt ${attempt}"
               ok=1
