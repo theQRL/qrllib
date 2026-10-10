@@ -143,12 +143,28 @@ jobs:
         env:
           NPM_CONFIG_PROVENANCE: 'true'
           NPM_CONFIG_ACCESS: public
+          TAG: ${{ github.ref_name }}
         # The ./ prefix is load-bearing: without it npm parses a bare
         # `dir/file.tgz` spec as a GitHub owner/repo shorthand and tries to
         # git-clone it instead of publishing the local tarball.
+        #
+        # Idempotent so a re-run can complete a release whose publish already
+        # landed: if the registry already serves this version with the same
+        # integrity as our tarball, skip; if it serves different bytes, fail.
         run: |
+          set -euo pipefail
+          VERSION="${TAG#v}"
           TARBALL="$(ls tarball/*.tgz)"
-          npm publish "./${TARBALL}"
+          local_integrity="sha512-$(openssl dgst -sha512 -binary "${TARBALL}" | base64 -w0)"
+          published_integrity="$(npm view "qrllib@${VERSION}" dist.integrity 2>/dev/null || true)"
+          if [ -z "${published_integrity}" ]; then
+            npm publish "./${TARBALL}"
+          elif [ "${published_integrity}" = "${local_integrity}" ]; then
+            echo "qrllib@${VERSION} is already published with identical integrity; skipping publish"
+          else
+            echo "::error::qrllib@${VERSION} is already published with different bytes (${published_integrity} != ${local_integrity})"
+            exit 1
+          fi
 
       - name: Verify release is live on npm
         env:
@@ -157,7 +173,8 @@ jobs:
           set -euo pipefail
           VERSION="${TAG#v}"
           ok=""
-          for attempt in 1 2 3 4 5 6 7 8 9 10; do
+          # npm took ~2m40s to serve 1.3.2 after publish; allow 10 minutes.
+          for attempt in $(seq 1 40); do
             served="$(npm view "qrllib@${VERSION}" version 2>/dev/null || true)"
             latest="$(npm view qrllib version 2>/dev/null || true)"
             if [ "${served}" = "${VERSION}" ] && [ "${latest}" = "${VERSION}" ]; then
@@ -165,11 +182,11 @@ jobs:
               ok=1
               break
             fi
-            echo "not yet visible as latest (attempt ${attempt}/10); qrllib@${VERSION}=${served:-missing}, latest=${latest:-missing}; retrying in 15s"
+            echo "not yet visible as latest (attempt ${attempt}/40); qrllib@${VERSION}=${served:-missing}, latest=${latest:-missing}; retrying in 15s"
             sleep 15
           done
           if [ -z "${ok}" ]; then
-            echo "::error::qrllib@${VERSION} is not the latest npm release after 10 attempts"
+            echo "::error::qrllib@${VERSION} is not the latest npm release after 40 attempts (10 minutes)"
             exit 1
           fi
 
@@ -191,7 +208,31 @@ jobs:
           name: python-sdist
           path: dist
 
+      - name: Check whether this sdist is already published
+        id: check
+        env:
+          TAG: ${{ github.ref_name }}
+        # Same idempotency rule as npm: skip when PyPI already serves an
+        # identical sdist for this version, fail when it serves different bytes.
+        run: |
+          set -euo pipefail
+          VERSION="${TAG#v}"
+          SDIST="$(ls dist/*.tar.gz)"
+          local_sha="$(sha256sum "${SDIST}" | cut -d' ' -f1)"
+          published_sha="$(curl -fsS --max-time 20 "https://pypi.org/pypi/pyqrllib/${VERSION}/json" 2>/dev/null \
+                           | python3 -c 'import json,sys,os; n=os.path.basename(sys.argv[1]); print(next((u["digests"]["sha256"] for u in json.load(sys.stdin)["urls"] if u["filename"]==n), ""))' "${SDIST}" 2>/dev/null || true)"
+          if [ -z "${published_sha}" ]; then
+            echo "publish=true" >> "$GITHUB_OUTPUT"
+          elif [ "${published_sha}" = "${local_sha}" ]; then
+            echo "pyqrllib==${VERSION} is already published with an identical sdist; skipping publish"
+            echo "publish=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "::error::pyqrllib==${VERSION} is already published with a different sdist (${published_sha} != ${local_sha})"
+            exit 1
+          fi
+
       - name: Publish
+        if: steps.check.outputs.publish == 'true'
         uses: pypa/gh-action-pypi-publish@dc37677b2e1c63e2034f94d8a5b11f265b73ba33 # v1.14.2
 
       - name: Verify release is live on PyPI
@@ -201,7 +242,7 @@ jobs:
           set -euo pipefail
           VERSION="${TAG#v}"
           ok=""
-          for attempt in 1 2 3 4 5 6 7 8 9 10; do
+          for attempt in $(seq 1 40); do
             # `|| true` matches the npm check above: a transient network error
             # should let the retry loop run, not abort the step under `set -e`.
             served="$(curl -fsS --max-time 20 https://pypi.org/pypi/pyqrllib/json 2>/dev/null \
@@ -211,11 +252,11 @@ jobs:
               ok=1
               break
             fi
-            echo "not yet visible as latest (attempt ${attempt}/10); latest=${served:-missing}; retrying in 15s"
+            echo "not yet visible as latest (attempt ${attempt}/40); latest=${served:-missing}; retrying in 15s"
             sleep 15
           done
           if [ -z "${ok}" ]; then
-            echo "::error::pyqrllib==${VERSION} is not the latest PyPI release after 10 attempts"
+            echo "::error::pyqrllib==${VERSION} is not the latest PyPI release after 40 attempts (10 minutes)"
             exit 1
           fi
 
