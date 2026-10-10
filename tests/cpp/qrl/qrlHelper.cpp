@@ -68,7 +68,7 @@ TEST(QRL_Helper, validateMultiSigAddress)
     corrupted[address.size()-1] ^= 0xFF;
     EXPECT_FALSE(QRLHelper::addressIsValid(corrupted));
 
-    // So must the reserved descriptor byte.
+    // Tampering with the descriptor breaks the checksum, which covers it.
     auto reserved = address;
     reserved[2] = 1;
     EXPECT_FALSE(QRLHelper::addressIsValid(reserved));
@@ -82,6 +82,51 @@ TEST(QRL_Helper, validateMultiSigAddressGeneratedByQRL)
             "11000005bc07de22117e835d760a8081d91ba50eac3b4f1226bae23215ad3f5034d45ed5d5f2a7");
     ASSERT_EQ(QRLDescriptor::getSize()+ADDRESS_HASH_SIZE+4, address.size());
     EXPECT_TRUE(QRLHelper::addressIsValid(address));
+}
+
+// Regression coverage for theQRL/QRL#1816.
+//
+// Address validity is a consensus rule and must match v1.2.4: length, address
+// format and checksum only. Token tx 7e94193f...22f1 in mainnet block 1796388
+// pays a holder whose descriptor byte 0 is 0x0c (hash function 0xC). v1.2.8+
+// ran the XMSS descriptor hardening inside addressIsValid() and rejected it,
+// so fresh nodes could no longer sync past that block.
+
+TEST(QRL_Helper, validateMainnetAddressWithUnknownHashFunction)
+{
+    const auto address = hstr2bin(
+            "0c0d00e3acde5fa627b3c0f2d723108c265f16b9667a19d811b3c99ac329028ec8abf52fc5cca6");
+    ASSERT_EQ(QRLDescriptor::getSize()+ADDRESS_HASH_SIZE+4, address.size());
+    EXPECT_TRUE(QRLHelper::addressIsValid(address));
+
+    auto corrupted = address;
+    corrupted[address.size()-1] ^= 0xFF;
+    EXPECT_FALSE(QRLHelper::addressIsValid(corrupted));
+}
+
+std::vector<uint8_t> addressWithDescriptor(const std::vector<uint8_t>& descr)
+{
+    // Arbitrary 32-byte hash plus a correct checksum over descriptor + hash.
+    auto address = descr;
+    address.resize(QRLDescriptor::getSize()+ADDRESS_HASH_SIZE, 0xAB);
+
+    std::vector<uint8_t> checksum(ADDRESS_HASH_SIZE, 0);
+    picosha2::hash256(address.cbegin(), address.cend(), checksum.begin(), checksum.end());
+    address.insert(address.end(), checksum.cend()-4, checksum.cend());
+    return address;
+}
+
+TEST(QRL_Helper, addressValidityIgnoresDescriptorFieldsOtherThanFormat)
+{
+    // None of these are well-formed XMSS descriptors, but v1.2.4 accepted
+    // all of them, so addressIsValid() must too.
+    EXPECT_TRUE(QRLHelper::addressIsValid(addressWithDescriptor({0x0c, 0x0d, 0x00})));  // hash fn 0xC
+    EXPECT_TRUE(QRLHelper::addressIsValid(addressWithDescriptor({0x21, 0x00, 0x00})));  // sig type 2
+    EXPECT_TRUE(QRLHelper::addressIsValid(addressWithDescriptor({0x00, 0x00, 0x00})));  // height 0
+    EXPECT_TRUE(QRLHelper::addressIsValid(addressWithDescriptor({0x00, 0x02, 0x01})));  // reserved byte
+
+    // The address format is still enforced.
+    EXPECT_FALSE(QRLHelper::addressIsValid(addressWithDescriptor({0x00, 0x12, 0x00})));
 }
 
 TEST(QRL_Helper, multiSigDescriptorRoundTrips)

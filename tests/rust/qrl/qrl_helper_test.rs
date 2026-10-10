@@ -27,3 +27,18 @@ fn validate_address_empty() {
 
     assert!(!qrl_helper::address_is_valid(&address));
 }
+
+// theQRL/QRL#1816: mainnet token holder in block 1796388 with descriptor byte 0
+// = 0x0c (hash function 0xC). Valid under v1.2.4, so it must stay valid.
+#[test]
+fn validate_mainnet_address_with_unknown_hash_function() {
+    let address = hex::decode(
+        "0c0d00e3acde5fa627b3c0f2d723108c265f16b9667a19d811b3c99ac329028ec8abf52fc5cca6",
+    )
+    .unwrap();
+    assert!(qrl_helper::address_is_valid(&address));
+
+    let mut corrupted = address.clone();
+    corrupted[38] ^= 0xFF;
+    assert!(!qrl_helper::address_is_valid(&corrupted));
+}

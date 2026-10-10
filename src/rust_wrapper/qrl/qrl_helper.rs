@@ -34,28 +34,26 @@ pub fn get_address(extended_pk: &Vec<u8>) -> Result<Vec<u8>, QRLError> {
     return Ok(address);
 }
 
+// Address validity is a QRL consensus rule, so it must match the C++
+// QRLHelper::addressIsValid() exactly: length, address format and checksum
+// only. The descriptor is deliberately NOT parsed through
+// QRLDescriptor::from_bytes(), whose XMSS checks would reject addresses already
+// on mainnet (theQRL/QRL#1816).
 pub fn address_is_valid(address: &Vec<u8>) -> bool {
     if address.len() != (QRLDescriptor::get_size() as usize + ADDRESS_HASH_SIZE + 4) {
         return false;
     }
 
-    let descr_result =
-        QRLDescriptor::from_bytes(&address[0..QRLDescriptor::get_size() as usize].to_vec());
-
-    if let Ok(descr) = descr_result {
-        if *descr.get_addr_format_type() != AddrFormatType::SHA256_2X {
-            return false;
-        }
-
-        let address_segment =
-            address[0..QRLDescriptor::get_size() as usize + ADDRESS_HASH_SIZE].to_vec();
-        let hashed_key2: Vec<u8> = sha2_256(&address_segment);
-
-        return address[35] == hashed_key2[28]
-            && address[36] == hashed_key2[29]
-            && address[37] == hashed_key2[30]
-            && address[38] == hashed_key2[31];
-    } else {
+    if (address[1] & 0xF0) >> 4 != AddrFormatType::SHA256_2X as u8 {
         return false;
     }
+
+    let address_segment =
+        address[0..QRLDescriptor::get_size() as usize + ADDRESS_HASH_SIZE].to_vec();
+    let hashed_key2: Vec<u8> = sha2_256(&address_segment);
+
+    return address[35] == hashed_key2[28]
+        && address[36] == hashed_key2[29]
+        && address[37] == hashed_key2[30]
+        && address[38] == hashed_key2[31];
 }
