@@ -43,3 +43,20 @@ class TestHelper(TestCase):
         tampered = bytearray(pyqrllib.hstr2bin(self.MULTI_SIG_ADDRESS))
         tampered[0] = 0x21                       # signature type 2
         self.assertFalse(pyqrllib.QRLHelper.addressIsValid(bytes(tampered)))
+
+    # theQRL/QRL#1816. Token tx 7e94193f...22f1 in mainnet block 1796388 pays
+    # this holder, whose descriptor byte 0 is 0x0c (hash function 0xC). Address
+    # validity is a consensus rule: v1.2.4 accepted it, so it must stay valid
+    # or fresh nodes cannot sync past that block.
+    MAINNET_UNKNOWN_HASH_FN_ADDRESS = ('0c0d00e3acde5fa627b3c0f2d723108c265f16b9667a19d8'
+                                       '11b3c99ac329028ec8abf52fc5cca6')
+
+    def test_mainnet_address_with_unknown_hash_function_is_valid(self):
+        address = bytes(pyqrllib.hstr2bin(self.MAINNET_UNKNOWN_HASH_FN_ADDRESS))
+        self.assertEqual(39, len(address))
+        self.assertTrue(pyqrllib.QRLHelper.addressIsValid(address))
+
+    def test_mainnet_address_with_unknown_hash_function_checksum_enforced(self):
+        corrupted = bytearray(pyqrllib.hstr2bin(self.MAINNET_UNKNOWN_HASH_FN_ADDRESS))
+        corrupted[-1] ^= 0xFF
+        self.assertFalse(pyqrllib.QRLHelper.addressIsValid(bytes(corrupted)))

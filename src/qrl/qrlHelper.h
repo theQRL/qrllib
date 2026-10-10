@@ -36,18 +36,20 @@ public:
         return address;
     }
 
+    // Address validity is a QRL consensus rule, so it must stay exactly as it
+    // was in v1.2.4: length, address format and checksum only. The descriptor
+    // is deliberately NOT parsed through QRLDescriptor::fromBytes(), whose XMSS
+    // hardening (hash function, signature type, height, reserved byte) would
+    // reject addresses already on mainnet - e.g. the 0x0c0d00... token holder
+    // in block 1796388 (theQRL/QRL#1816).
     static bool addressIsValid(const std::vector<uint8_t>& address)
     {
         try {
             if (address.size()!=(QRLDescriptor::getSize()+ADDRESS_HASH_SIZE+4))
                 return false;
 
-            auto descr = QRLDescriptor::fromBytes(
-                    std::vector<uint8_t>(
-                            address.cbegin(),
-                            address.cbegin()+QRLDescriptor::getSize()));
-
-            if (descr.getAddrFormatType()!=eAddrFormatType::SHA256_2X) {
+            const auto addrFormatType = static_cast<eAddrFormatType>((address[1] & 0xF0) >> 4);
+            if (addrFormatType!=eAddrFormatType::SHA256_2X) {
                 return false;
             }
 
